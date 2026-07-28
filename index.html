@@ -3,58 +3,294 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gestor Financiero PWA</title>
+  <title>Gestor Financiero PWA Pro</title>
   <meta name="theme-color" content="#1e293b">
   <link rel="manifest" href="data:application/manifest+json;utf8,{'name':'Gestor Financiero','short_name':'Finanzas','start_url':'.','display':'standalone','background_color':'#f8fafc','theme_color':'#1e293b','icons':[{'src':'https://via.placeholder.com/192','sizes':'192x192','type':'image/png'}]}">
+  
+  <!-- CDN Dependencies -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
   <style>
-    :root { --bg: #f8fafc; --card: #ffffff; --text: #0f172a; --accent: #2563eb; }
-    body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 1rem; }
-    .container { max-width: 600px; margin: 0 auto; }
-    .card { background: var(--card); padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 1rem; }
-    h1 { font-size: 1.25rem; margin-top: 0; text-align: center; }
+    :root {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --border: #e2e8f0;
+    }
+    
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 1rem;
+    }
+
+    .container {
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: var(--card);
+      padding: 1.25rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -2px rgba(0,0,0,0.05);
+      margin-bottom: 1rem;
+      border: 1px solid var(--border);
+    }
+
+    h1 {
+      font-size: 1.35rem;
+      margin-top: 0;
+      text-align: center;
+      color: #1e293b;
+    }
+
     input[type="file"] { display: none; }
-    .btn { display: block; background: var(--accent); color: white; text-align: center; padding: 0.75rem; border-radius: 8px; font-weight: 600; cursor: pointer; }
-    .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 1rem; }
-    .stat-box { background: #f1f5f9; padding: 0.75rem; border-radius: 8px; text-align: center; }
-    .stat-box small { display: block; color: #64748b; font-size: 0.75rem; }
-    .stat-box span { font-weight: bold; font-size: 1.1rem; }
+
+    .btn-group {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      flex: 1;
+      min-width: 140px;
+      background: var(--accent);
+      color: white;
+      text-align: center;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      font-size: 0.9rem;
+      transition: background 0.2s;
+    }
+
+    .btn:hover { background: var(--accent-hover); }
+    .btn-secondary { background: #64748b; }
+    .btn-secondary:hover { background: #475569; }
+    .btn-success { background: #16a34a; }
+    .btn-success:hover { background: #15803d; }
+    .btn-danger { background: #dc2626; }
+    .btn-danger:hover { background: #b91c1c; }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0.5rem;
+    }
+
+    .stat-box {
+      background: #f1f5f9;
+      padding: 0.75rem;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .stat-box small {
+      display: block;
+      color: #64748b;
+      font-size: 0.75rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .stat-box span {
+      font-weight: bold;
+      font-size: 1rem;
+    }
+
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .chart-header h2 {
+      font-size: 1.1rem;
+      margin: 0;
+    }
+
+    .filter-badge {
+      background: #e0f2fe;
+      color: #0369a1;
+      padding: 0.25rem 0.6rem;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .table-container {
+      overflow-x: auto;
+      max-height: 400px;
+      overflow-y: auto;
+      margin-top: 0.5rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    th, td {
+      padding: 0.6rem 0.5rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      background: #f8fafc;
+      position: sticky;
+      top: 0;
+      color: #475569;
+    }
+
+    select.cat-select {
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      font-size: 0.8rem;
+      background: white;
+    }
+
+    .amount-neg { color: #dc2626; font-weight: 600; }
+    .amount-pos { color: #16a34a; font-weight: 600; }
+
+    .reset-filter-btn {
+      display: inline-block;
+      font-size: 0.75rem;
+      color: var(--accent);
+      cursor: pointer;
+      text-decoration: underline;
+      margin-left: 0.5rem;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="card">
-      <h1>Control de Gastos</h1>
-      <label class="btn" for="csvFile">Importar CSV CaixaBank</label>
-      <input type="file" id="csvFile" accept=".csv">
+      <h1>💰 Gestor Financiero PWA</h1>
+      <div class="btn-group">
+        <label class="btn" for="csvFile">📁 Cargar CSV</label>
+        <input type="file" id="csvFile" accept=".csv">
+        <button class="btn btn-success" id="exportBtn" style="display:none;">📊 Exportar Excel</button>
+        <button class="btn btn-danger" id="clearBtn" style="display:none;">🗑️ Borrar Datos</button>
+      </div>
     </div>
 
     <div id="dashboard" style="display:none;">
+      <!-- Resumen General -->
       <div class="card">
         <div class="stats">
-          <div class="stat-box"><small>Ingresos</small><span id="totalIngresos" style="color:#16a34a;">0 €</span></div>
-          <div class="stat-box"><small>Gastos</small><span id="totalGastos" style="color:#dc2626;">0 €</span></div>
+          <div class="stat-box"><small>Ingresos</small><span id="totalIngresos" class="amount-pos">0 €</span></div>
+          <div class="stat-box"><small>Gastos</small><span id="totalGastos" class="amount-neg">0 €</span></div>
+          <div class="stat-box"><small>Balance</small><span id="totalBalance">0 €</span></div>
         </div>
       </div>
+
+      <!-- Gráfico -->
       <div class="card">
-        <canvas id="chartCategorias"></canvas>
+        <div class="chart-header">
+          <h2>Distribución por Creadas</h2>
+          <span id="activeFilterBadge" class="filter-badge" style="display:none;">
+            Filtro: <span id="filterCategoryName"></span>
+            <span class="reset-filter-btn" onclick="resetFilter()">Mostrar todo</span>
+          </span>
+        </div>
+        <p style="font-size: 0.8rem; color: #64748b; margin-top: 0;">Haz clic en una sección del gráfico para filtrar la lista de abajo.</p>
+        <div style="position: relative; max-width: 380px; margin: 0 auto;">
+          <canvas id="chartCategorias"></canvas>
+        </div>
+      </div>
+
+      <!-- Tabla de Movimientos -->
+      <div class="card">
+        <div class="chart-header">
+          <h2>Movimientos (<span id="movCount">0</span>)</h2>
+          <span id="tableFilterStatus" style="font-size: 0.8rem; color: #64748b;"></span>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Concepto</th>
+                <th>Categoría</th>
+                <th style="text-align: right;">Importe</th>
+              </tr>
+            </thead>
+            <tbody id="movementsTable"></tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
 
   <script>
-    let myChart = null;
+    const CATEGORIAS_LISTA = [
+      'Alimentación / Supermercado',
+      'Restauración / Ocio',
+      'Suministros / Hogar',
+      'Vivienda / Comunidad',
+      'Salud / Farmacia',
+      'Hogar / Brico',
+      'Vehículo / Transporte',
+      'Seguros / Servicios',
+      'Impuestos / Tasas',
+      'Inversión / Finanzas',
+      'Nómina / Pensiones',
+      'Otros Ingresos',
+      'Otros Gastos'
+    ];
 
-    function clasificar(concepto) {
+    let moveData = [];
+    let myChart = null;
+    let selectedCategory = null;
+
+    // Reglas avanzadas de clasificación
+    function clasificar(concepto, importe) {
       const c = concepto.toUpperCase();
-      if (c.includes('SUPER') || c.includes('COVIRAN')) return 'Alimentación';
-      if (c.includes('BAR') || c.includes('RESTAURANTE') || c.includes('DEHESA')) return 'Ocio/Restauración';
-      if (c.includes('IBERDROLA') || c.includes('ORANGE') || c.includes('AGUA')) return 'Suministros/Hogar';
-      if (c.includes('PENSION') || c.includes('NOMINA')) return 'Ingresos';
-      return 'Otros';
+      
+      if (importe > 0) {
+        if (c.includes('PENSION') || c.includes('NOMINA') || c.includes('SUELDO')) return 'Nómina / Pensiones';
+        if (c.includes('DIV.') || c.includes('DIVIDENDO') || c.includes('INTERES')) return 'Inversión / Finanzas';
+        return 'Otros Ingresos';
+      }
+
+      if (c.includes('SUPERBRAVO') || c.includes('SUPERMERC') || c.includes('COVIRAN') || c.includes('MERCADONA') || c.includes('CARREFOUR') || c.includes('LIDL') || c.includes('ALDI') || c.includes('DIA ')) return 'Alimentación / Supermercado';
+      if (c.includes('BAR') || c.includes('RESTAURANTE') || c.includes('DEHESA') || c.includes('CAFETERIA') || c.includes('CERVECERIA')) return 'Restauración / Ocio';
+      if (c.includes('IBERDROLA') || c.includes('ENDESA') || c.includes('ORANGE') || c.includes('MOVISTAR') || c.includes('VODAFONE') || c.includes('AGUA') || c.includes('GAS') || c.includes('LIZ')) return 'Suministros / Hogar';
+      if (c.includes('CMDAD.PROPIET') || c.includes('COMUNIDAD') || c.includes('ALQUILER') || c.includes('HIPOTECA')) return 'Vivienda / Comunidad';
+      if (c.includes('FARMACIA') || c.includes('DENT') || c.includes('SALUD') || c.includes('CLINICA') || c.includes('ASISPA')) return 'Salud / Farmacia';
+      if (c.includes('BRICO') || c.includes('LEROY') || c.includes('BAUHAUS') || c.includes('SERTINA')) return 'Hogar / Brico';
+      if (c.includes('GASOLINERA') || c.includes('REPSOL') || c.includes('CEPSA') || c.includes('BP') || c.includes('PARKING') || c.includes('PEAJE')) return 'Vehículo / Transporte';
+      if (c.includes('MYBOX') || c.includes('SEGURO') || c.includes('VISA') || c.includes('MYCARD') || c.includes('CUSTODIA') || c.includes('COMISION')) return 'Seguros / Servicios';
+      if (c.includes('AYTO') || c.includes('AYUNTAMIENTO') || c.includes('AGENCIA TRIBUTARIA') || c.includes('SUMA') || c.includes('TAX')) return 'Impuestos / Tasas';
+
+      return 'Otros Gastos';
     }
 
+    // Cargar de LocalStorage al iniciar
+    window.addEventListener('DOMContentLoaded', () => {
+      const saved = localStorage.getItem('finanzas_pwa_data');
+      if (saved) {
+        try {
+          moveData = JSON.parse(saved);
+          if (moveData.length > 0) renderAll();
+        } catch(e) { console.error(e); }
+      }
+    });
+
+    // Evento Carga CSV
     document.getElementById('csvFile').addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (!file) return;
@@ -64,56 +300,210 @@
         header: true,
         skipEmptyLines: true,
         complete: (results) => {
-          let ingresos = 0, gastos = 0;
-          const categorias = {};
+          moveData = [];
+          results.data.forEach((row, idx) => {
+            const concepto = row['Concepto'] || row['concepto'] || '';
+            const fecha = row['Fecha'] || row['fecha'] || '';
+            const rawImporte = row['Importe'] || row['importe'] || '';
 
-          results.data.forEach(row => {
-            const concepto = row['Concepto'];
-            const rawImporte = row['Importe'];
             if (!concepto || !rawImporte) return;
 
-            const val = parseFloat(rawImporte.replace('EUR', '').replace('.', '').replace(',', '.').trim());
+            const val = parseFloat(rawImporte.replace('EUR', '').replace('.', '').replace(',', '.').replace(/\s/g, '').trim());
             if (isNaN(val)) return;
 
-            if (val > 0) {
-              ingresos += val;
-            } else {
-              const absVal = Math.abs(val);
-              gastos += absVal;
-              const cat = clasificar(concepto);
-              categorias[cat] = (categorias[cat] || 0) + absVal;
-            }
+            const cat = clasificar(concepto, val);
+
+            moveData.push({
+              id: idx + '_' + Date.now(),
+              fecha: fecha.trim(),
+              concepto: concepto.trim(),
+              importe: val,
+              categoria: cat
+            });
           });
 
-          renderDashboard(ingresos, gastos, categorias);
+          saveData();
+          selectedCategory = null;
+          renderAll();
         }
       });
     });
 
-    function renderDashboard(ingresos, gastos, categorias) {
+    function saveData() {
+      localStorage.setItem('finanzas_pwa_data', JSON.stringify(moveData));
+    }
+
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      if (confirm('¿Seguro que deseas borrar todos los datos guardados?')) {
+        localStorage.removeItem('finanzas_pwa_data');
+        moveData = [];
+        selectedCategory = null;
+        document.getElementById('dashboard').style.display = 'none';
+        document.getElementById('exportBtn').style.display = 'none';
+        document.getElementById('clearBtn').style.display = 'none';
+        document.getElementById('csvFile').value = '';
+      }
+    });
+
+    // Cambiar categoría manualmente
+    function updateCategory(id, newCat) {
+      const item = moveData.find(m => m.id === id);
+      if (item) {
+        item.categoria = newCat;
+        saveData();
+        renderAll();
+      }
+    }
+
+    function resetFilter() {
+      selectedCategory = null;
+      renderAll();
+    }
+
+    function renderAll() {
+      if (moveData.length === 0) return;
+
       document.getElementById('dashboard').style.display = 'block';
+      document.getElementById('exportBtn').style.display = 'inline-block';
+      document.getElementById('clearBtn').style.display = 'inline-block';
+
+      // Calcular totales
+      let ingresos = 0, gastos = 0;
+      const catTotals = {};
+
+      moveData.forEach(m => {
+        if (m.importe > 0) {
+          ingresos += m.importe;
+        } else {
+          const absVal = Math.abs(m.importe);
+          gastos += absVal;
+          catTotals[m.categoria] = (catTotals[m.categoria] || 0) + absVal;
+        }
+      });
+
       document.getElementById('totalIngresos').innerText = ingresos.toFixed(2) + ' €';
       document.getElementById('totalGastos').innerText = gastos.toFixed(2) + ' €';
+      const balance = ingresos - gastos;
+      const balanceEl = document.getElementById('totalBalance');
+      balanceEl.innerText = balance.toFixed(2) + ' €';
+      balanceEl.className = balance >= 0 ? 'amount-pos' : 'amount-neg';
+
+      // Actualizar Gráfico
+      renderChart(catTotals);
+
+      // Actualizar Filtro
+      const activeFilterEl = document.getElementById('activeFilterBadge');
+      if (selectedCategory) {
+        activeFilterEl.style.display = 'inline-block';
+        document.getElementById('filterCategoryName').innerText = selectedCategory;
+      } else {
+        activeFilterEl.style.display = 'none';
+      }
+
+      // Filtrar y renderizar Tabla
+      renderTable();
+    }
+
+    function renderChart(catTotals) {
+      const labels = Object.keys(catTotals);
+      const dataValues = Object.values(catTotals);
 
       const ctx = document.getElementById('chartCategorias').getContext('2d');
       if (myChart) myChart.destroy();
 
+      const colors = [
+        '#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6',
+        '#ec4899', '#06b6d4', '#84cc16', '#f97316', '#6366f1',
+        '#14b8a6', '#64748b'
+      ];
+
       myChart = new Chart(ctx, {
         type: 'doughnut',
         data: {
-          labels: Object.keys(categorias),
+          labels: labels,
           datasets: [{
-            data: Object.values(categorias),
-            backgroundColor: ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6']
+            data: dataValues,
+            backgroundColor: colors.slice(0, labels.length)
           }]
         },
         options: {
           responsive: true,
-          plugins: { legend: { position: 'bottom' } }
+          maintainAspectRatio: true,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: { boxWidth: 12, font: { size: 11 } }
+            }
+          },
+          onClick: (evt, activeElements) => {
+            if (activeElements.length > 0) {
+              const index = activeElements[0].index;
+              const clickedCat = labels[index];
+              if (selectedCategory === clickedCat) {
+                selectedCategory = null; // Alternar
+              } else {
+                selectedCategory = clickedCat;
+              }
+              renderAll();
+            }
+          }
         }
       });
     }
 
+    function renderTable() {
+      const tbody = document.getElementById('movementsTable');
+      tbody.innerHTML = '';
+
+      const filteredData = selectedCategory
+        ? moveData.filter(m => m.categoria === selectedCategory || (m.importe > 0 && selectedCategory === 'Nómina / Pensiones'))
+        : moveData;
+
+      document.getElementById('movCount').innerText = filteredData.length;
+
+      filteredData.forEach(m => {
+        const tr = document.createElement('tr');
+        
+        const catOptions = CATEGORIAS_LISTA.map(cat => 
+          `<option value="${cat}" ${m.categoria === cat ? 'selected' : ''}>${cat}</option>`
+        ).join('');
+
+        const amountClass = m.importe >= 0 ? 'amount-pos' : 'amount-neg';
+        const formattedAmount = (m.importe > 0 ? '+' : '') + m.importe.toFixed(2) + ' €';
+
+        tr.innerHTML = `
+          <td style="white-space:nowrap; color:#64748b;">${m.fecha}</td>
+          <td style="font-weight:500;">${m.concepto}</td>
+          <td>
+            <select class="cat-select" onchange="updateCategory('${m.id}', this.value)">
+              ${catOptions}
+            </select>
+          </td>
+          <td class="${amountClass}" style="text-align:right; white-space:nowrap;">${formattedAmount}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Exportar a Excel
+    document.getElementById('exportBtn').addEventListener('click', () => {
+      if (moveData.length === 0) return;
+
+      const dataToExport = moveData.map(m => ({
+        'Fecha': m.fecha,
+        'Concepto': m.concepto,
+        'Categoría': m.categoria,
+        'Importe (€)': m.importe
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Movimientos");
+
+      XLSX.writeFile(workbook, "Movimientos_Clasificados.xlsx");
+    });
+
+    // Service Worker para PWA Offline
     if ('serviceWorker' in navigator) {
       const swCode = `self.addEventListener('fetch', e => e.respondWith(fetch(e.request)));`;
       const blob = new Blob([swCode], { type: 'application/javascript' });
