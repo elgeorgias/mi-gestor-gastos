@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestor Financiero PWA</title>
+  <meta name="theme-color" content="#1e293b">
+  <link rel="manifest" href="data:application/manifest+json;utf8,{
+    'name': 'Gestor Financiero',
+    'short_name': 'Finanzas',
+    'start_url': '.',
+    'display': 'standalone',
+    'background_color': '#f8fafc',
+    'theme_color': '#1e293b',
+    'icons': [{'src': 'https://via.placeholder.com/192', 'sizes': '192x192', 'type': 'image/png'}]
+  }">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <style>
+    :root { --bg: #f8fafc; --card: #ffffff; --text: #0f172a; --accent: #2563eb; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 1rem; }
+    .container { max-width: 600px; margin: 0 auto; }
+    .card { background: var(--card); padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 1rem; }
+    h1 { font-size: 1.25rem; margin-top: 0; text-align: center; }
+    input[type="file"] { display: none; }
+    .btn { display: block; background: var(--accent); color: white; text-align: center; padding: 0.75rem; border-radius: 8px; font-weight: 600; cursor: pointer; }
+    .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 1rem; }
+    .stat-box { background: #f1f5f9; padding: 0.75rem; border-radius: 8px; text-align: center; }
+    .stat-box small { display: block; color: #64748b; font-size: 0.75rem; }
+    .stat-box span { font-weight: bold; font-size: 1.1rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h1>Control de Gastos</h1>
+      <label class="btn" for="csvFile">Importar CSV CaixaBank</label>
+      <input type="file" id="csvFile" accept=".csv">
+    </div>
+
+    <div id="dashboard" style="display:none;">
+      <div class="card">
+        <div class="stats">
+          <div class="stat-box"><small>Ingresos</small><span id="totalIngresos" style="color:#16a34a;">0 €</span></div>
+          <div class="stat-box"><small>Gastos</small><span id="totalGastos" style="color:#dc2626;">0 €</span></div>
+        </div>
+      </div>
+      <div class="card">
+        <canvas id="chartCategorias"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let myChart = null;
+
+    function clasificar(concepto) {
+      const c = concepto.toUpperCase();
+      if (c.includes('SUPER') || c.includes('COVIRAN')) return 'Alimentación';
+      if (c.includes('BAR') || c.includes('RESTAURANTE') || c.includes('DEHESA')) return 'Ocio/Restauración';
+      if (c.includes('IBERDROLA') || c.includes('ORANGE') || c.includes('AGUA')) return 'Suministros/Hogar';
+      if (c.includes('PENSION') || c.includes('NOMINA')) return 'Ingresos';
+      return 'Otros';
+    }
+
+    document.getElementById('csvFile').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      Papa.parse(file, {
+        encoding: "ISO-8859-1",
+        header: true,
+        skipEmptyLines: true,
+        complete: (results) => {
+          let ingresos = 0, gastos = 0;
+          const categorias = {};
+
+          results.data.forEach(row => {
+            const concepto = row['Concepto'];
+            const rawImporte = row['Importe'];
+            if (!concepto || !rawImporte) return;
+
+            const val = parseFloat(rawImporte.replace('EUR', '').replace('.', '').replace(',', '.').trim());
+            if (isNaN(val)) return;
+
+            if (val > 0) {
+              ingresos += val;
+            } else {
+              const absVal = Math.abs(val);
+              gastos += absVal;
+              const cat = clasificar(concepto);
+              categorias[cat] = (categorias[cat] || 0) + absVal;
+            }
+          });
+
+          renderDashboard(ingresos, gastos, categorias);
+        }
+      });
+    });
+
+    function renderDashboard(ingresos, gastos, categorias) {
+      document.getElementById('dashboard').style.display = 'block';
+      document.getElementById('totalIngresos').innerText = ingresos.toFixed(2) + ' €';
+      document.getElementById('totalGastos').innerText = gastos.toFixed(2) + ' €';
+
+      const ctx = document.getElementById('chartCategorias').getContext('2d');
+      if (myChart) myChart.destroy();
+
+      myChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: Object.keys(categorias),
+          datasets: [{
+            data: Object.values(categorias),
+            backgroundColor: ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6']
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { position: 'bottom' } }
+        }
+      });
+    }
+
+    if ('serviceWorker' in navigator) {
+      const swCode = `self.addEventListener('fetch', e => e.respondWith(fetch(e.request)));`;
+      const blob = new Blob([swCode], { type: 'application/javascript' });
+      navigator.serviceWorker.register(URL.createObjectURL(blob));
+    }
+  </script>
+</body>
+</html>
