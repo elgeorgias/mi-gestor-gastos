@@ -50,7 +50,7 @@
     }
 
     .container {
-      max-width: 1100px;
+      max-width: 1200px;
       margin: 0 auto;
     }
 
@@ -136,7 +136,6 @@
       color: white;
     }
 
-    /* Grid Layout for PC/Mobile */
     .dashboard-grid {
       display: grid;
       grid-template-columns: 1fr;
@@ -154,7 +153,7 @@
 
     .stats {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 0.75rem;
     }
 
@@ -169,7 +168,7 @@
     .stat-box small {
       display: block;
       color: var(--text-muted);
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       margin-bottom: 0.3rem;
       text-transform: uppercase;
       letter-spacing: 0.5px;
@@ -177,7 +176,7 @@
 
     .stat-box span {
       font-weight: 700;
-      font-size: 1.15rem;
+      font-size: 1.1rem;
     }
 
     .chart-header {
@@ -218,7 +217,6 @@
       margin-left: 0.25rem;
     }
 
-    /* Tabs for mobile chart view */
     .view-toggle {
       display: flex;
       background: rgba(15, 23, 42, 0.6);
@@ -248,7 +246,7 @@
 
     .table-container {
       overflow-x: auto;
-      max-height: 450px;
+      max-height: 480px;
       overflow-y: auto;
       border-radius: 10px;
       border: 1px solid rgba(255, 255, 255, 0.05);
@@ -262,7 +260,7 @@
     }
 
     th, td {
-      padding: 0.75rem 0.6rem;
+      padding: 0.65rem 0.5rem;
       border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     }
 
@@ -275,24 +273,25 @@
       z-index: 10;
     }
 
-    select.cat-select {
+    select.cat-select, input.input-table {
       width: 100%;
-      max-width: 160px;
-      padding: 0.35rem 0.5rem;
+      padding: 0.35rem 0.4rem;
       border-radius: 6px;
       border: 1px solid rgba(255, 255, 255, 0.15);
       font-size: 0.8rem;
       background: #0f172a;
       color: var(--text);
       outline: none;
+      font-family: inherit;
     }
 
-    select.cat-select:focus {
+    select.cat-select:focus, input.input-table:focus {
       border-color: var(--accent);
     }
 
     .amount-neg { color: #f87171; font-weight: 600; }
     .amount-pos { color: #34d399; font-weight: 600; }
+    .amount-neutral { color: var(--text-muted); font-weight: 600; }
 
     /* Custom scrollbar for table */
     .table-container::-webkit-scrollbar {
@@ -307,14 +306,14 @@
       border-radius: 3px;
     }
 
-    @media (max-width: 600px) {
+    @media (max-width: 750px) {
       body { padding: 0.5rem; }
       .card { padding: 1rem; }
-      .stats { grid-template-columns: 1fr; gap: 0.5rem; }
-      .stat-box { display: flex; justify-content: space-between; align-items: center; text-align: left; padding: 0.75rem 1rem; }
-      .stat-box small { margin-bottom: 0; }
-      th, td { padding: 0.5rem 0.4rem; font-size: 0.8rem; }
-      select.cat-select { max-width: 120px; font-size: 0.75rem; }
+      .stats { grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+      .stat-box { padding: 0.75rem; text-align: center; }
+      .stat-box small { margin-bottom: 0.2rem; }
+      th, td { padding: 0.5rem 0.3rem; font-size: 0.75rem; }
+      select.cat-select, input.input-table { font-size: 0.75rem; padding: 0.25rem; }
     }
   </style>
 </head>
@@ -341,6 +340,7 @@
           <div class="stat-box"><small>Ingresos</small><span id="totalIngresos" class="amount-pos">0,00 €</span></div>
           <div class="stat-box"><small>Gastos</small><span id="totalGastos" class="amount-neg">0,00 €</span></div>
           <div class="stat-box"><small>Balance Net</small><span id="totalBalance">0,00 €</span></div>
+          <div class="stat-box"><small>Entre Cuentas</small><span id="totalEntreCuentas" class="amount-neutral">0,00 €</span></div>
         </div>
       </div>
 
@@ -394,11 +394,13 @@
             <table>
               <thead>
                 <tr>
-                  <th>Fecha</th>
-                  <th>Concepto</th>
-                  <th>Cat 1 (Principal)</th>
-                  <th>Cat 2 (Detalle)</th>
-                  <th style="text-align: right;">Importe</th>
+                  <th style="min-width:85px;">Fecha Orig.</th>
+                  <th style="min-width:110px;">Fecha Aplicable</th>
+                  <th style="min-width:150px;">Concepto</th>
+                  <th style="min-width:140px;">Cat 1 (Principal)</th>
+                  <th style="min-width:140px;">Cat 2 (Detalle)</th>
+                  <th style="min-width:90px; text-align: right;">Importe</th>
+                  <th style="min-width:140px;">Notas</th>
                 </tr>
               </thead>
               <tbody id="movementsTable"></tbody>
@@ -410,9 +412,11 @@
   </div>
 
   <script>
-    // Configuración de Categorías de 2 niveles
+    // Configuración de Categorías de 2 niveles actualizadas
     const CATEGORIAS_ESTRUCTURA = {
       'Alimentación': ['Supermercado', 'Restaurante', 'Cafetería / Bar', 'Comida a domicilio'],
+      'Compras': ['Ropa', 'Electrónica', 'Otros'],
+      'Transfer/Traspasos': ['Gastos', 'Ingresos', 'Entre cuentas'],
       'Vivienda': ['Alquiler / Hipoteca', 'Comunidad', 'Electricidad / Gas', 'Agua / Internet'],
       'Seguros y Servicios': ['Seguro Hogar', 'Seguro Vida / Salud', 'Comisiones / Servicios'],
       'Transporte': ['Gasolina / Combustible', 'Transporte Público / Taxi', 'Parking / Peaje'],
@@ -430,9 +434,32 @@
     let currentCatLevel = 1; // 1: Cat1, 2: Cat2
     let selectedCategoryFilter = null;
 
+    // Convertir DD/MM/YYYY a YYYY-MM-DD
+    function formatFechaISO(fechaStr) {
+      if (!fechaStr) return '';
+      if (fechaStr.includes('-')) return fechaStr; // Ya está en formato ISO
+      const parts = fechaStr.split('/');
+      if (parts.length === 3) {
+        const d = parts[0].padStart(2, '0');
+        const m = parts[1].padStart(2, '0');
+        const y = parts[2];
+        return `${y}-${m}-${d}`;
+      }
+      return fechaStr;
+    }
+
     // Reglas de autoclasificación previa
     function clasificarAuto(concepto, importe) {
       const c = concepto.toUpperCase();
+
+      if (c.includes('TRANSFER') || c.includes('TRASPASO') || c.includes('PAGO TRANSFERENCIAS')) {
+        if (c.includes('ENTRE CUENTAS') || c.includes('PROPIA') || c.includes('MISMO TITULAR')) {
+          return { cat1: 'Transfer/Traspasos', cat2: 'Entre cuentas' };
+        }
+        return importe < 0 
+          ? { cat1: 'Transfer/Traspasos', cat2: 'Gastos' }
+          : { cat1: 'Transfer/Traspasos', cat2: 'Ingresos' };
+      }
 
       if (importe > 0) {
         if (c.includes('NOMINA') || c.includes('PAG NOMINAS') || c.includes('SUELDO')) {
@@ -445,6 +472,8 @@
       }
 
       // Gastos
+      if (c.includes('ZARA') || c.includes('MANGO') || c.includes('PULL') || c.includes('CORTE INGLES')) return { cat1: 'Compras', cat2: 'Ropa' };
+      if (c.includes('AMAZON') || c.includes('MEDIA MARKT') || c.includes('APPLE') || c.includes('FNAC')) return { cat1: 'Compras', cat2: 'Electrónica' };
       if (c.includes('TGTG') || c.includes('TOO GOOD TO GO')) return { cat1: 'Alimentación', cat2: 'Comida a domicilio' };
       if (c.includes('SUPERMERC') || c.includes('MERCADONA') || c.includes('CARREFOUR') || c.includes('LIDL') || c.includes('ALDI') || c.includes('DIA ') || c.includes('SANCHINARRO H.')) {
         return { cat1: 'Alimentación', cat2: 'Supermercado' };
@@ -469,7 +498,7 @@
 
     // Carga de LocalStorage al iniciar
     window.addEventListener('DOMContentLoaded', () => {
-      const saved = localStorage.getItem('finanzas_pwa_data_v2');
+      const saved = localStorage.getItem('finanzas_pwa_data_v3');
       if (saved) {
         try {
           moveData = JSON.parse(saved);
@@ -500,14 +529,17 @@
             if (isNaN(val)) return;
 
             const autoCat = clasificarAuto(concepto, val);
+            const fechaISO = formatFechaISO(fecha.trim());
 
             moveData.push({
               id: idx + '_' + Date.now(),
               fecha: fecha.trim(),
+              fechaAplicable: fechaISO,
               concepto: concepto.trim(),
               importe: val,
               cat1: autoCat.cat1,
-              cat2: autoCat.cat2
+              cat2: autoCat.cat2,
+              notas: ''
             });
           });
 
@@ -519,12 +551,12 @@
     });
 
     function saveData() {
-      localStorage.setItem('finanzas_pwa_data_v2', JSON.stringify(moveData));
+      localStorage.setItem('finanzas_pwa_data_v3', JSON.stringify(moveData));
     }
 
     document.getElementById('clearBtn').addEventListener('click', () => {
       if (confirm('¿Borrar todos los datos cargados?')) {
-        localStorage.removeItem('finanzas_pwa_data_v2');
+        localStorage.removeItem('finanzas_pwa_data_v3');
         moveData = [];
         selectedCategoryFilter = null;
         document.getElementById('dashboard').style.display = 'none';
@@ -538,7 +570,6 @@
       const item = moveData.find(m => m.id === id);
       if (item) {
         item.cat1 = newCat1;
-        // Asignar primer hijo de cat2 si cambia cat1
         const subCats = CATEGORIAS_ESTRUCTURA[newCat1] || ['General / Varios'];
         item.cat2 = subCats[0];
         saveData();
@@ -552,6 +583,22 @@
         item.cat2 = newCat2;
         saveData();
         renderAll();
+      }
+    }
+
+    function updateFechaAplicable(id, val) {
+      const item = moveData.find(m => m.id === id);
+      if (item) {
+        item.fechaAplicable = val;
+        saveData();
+      }
+    }
+
+    function updateNotas(id, val) {
+      const item = moveData.find(m => m.id === id);
+      if (item) {
+        item.notas = val;
+        saveData();
       }
     }
 
@@ -576,11 +623,15 @@
       document.getElementById('clearBtn').style.display = 'inline-flex';
 
       // Totales
-      let ingresos = 0, gastos = 0;
+      let ingresos = 0, gastos = 0, entreCuentas = 0;
       const catTotals = {};
 
       moveData.forEach(m => {
-        if (m.importe > 0) {
+        const isEntreCuentas = (m.cat1 === 'Transfer/Traspasos' && m.cat2 === 'Entre cuentas');
+        
+        if (isEntreCuentas) {
+          entreCuentas += Math.abs(m.importe);
+        } else if (m.importe > 0) {
           ingresos += m.importe;
         } else {
           const absVal = Math.abs(m.importe);
@@ -592,6 +643,8 @@
 
       document.getElementById('totalIngresos').innerText = ingresos.toFixed(2).replace('.', ',') + ' €';
       document.getElementById('totalGastos').innerText = gastos.toFixed(2).replace('.', ',') + ' €';
+      document.getElementById('totalEntreCuentas').innerText = entreCuentas.toFixed(2).replace('.', ',') + ' €';
+      
       const balance = ingresos - gastos;
       const balanceEl = document.getElementById('totalBalance');
       balanceEl.innerText = balance.toFixed(2).replace('.', ',') + ' €';
@@ -708,11 +761,15 @@
           `<option value="${c2}" ${m.cat2 === c2 ? 'selected' : ''}>${c2}</option>`
         ).join('');
 
-        const amountClass = m.importe >= 0 ? 'amount-pos' : 'amount-neg';
+        const isEntreCuentas = (m.cat1 === 'Transfer/Traspasos' && m.cat2 === 'Entre cuentas');
+        const amountClass = isEntreCuentas ? 'amount-neutral' : (m.importe >= 0 ? 'amount-pos' : 'amount-neg');
         const formattedAmount = (m.importe > 0 ? '+' : '') + m.importe.toFixed(2).replace('.', ',') + ' €';
 
         tr.innerHTML = `
           <td style="white-space:nowrap; color: var(--text-muted);">${m.fecha}</td>
+          <td>
+            <input type="date" class="input-table" value="${m.fechaAplicable || ''}" onchange="updateFechaAplicable('${m.id}', this.value)">
+          </td>
           <td style="font-weight:500;">${m.concepto}</td>
           <td>
             <select class="cat-select" onchange="updateCat1('${m.id}', this.value)">
@@ -725,21 +782,26 @@
             </select>
           </td>
           <td class="${amountClass}" style="text-align:right; white-space:nowrap;">${formattedAmount}</td>
+          <td>
+            <input type="text" class="input-table" placeholder="Añadir nota..." value="${m.notas || ''}" onchange="updateNotas('${m.id}', this.value)">
+          </td>
         `;
         tbody.appendChild(tr);
       });
     }
 
-    // Exportar a Excel (Concepto, Fecha, Importe, Cat 1, Cat 2)
+    // Exportar a Excel (Concepto, Fecha Original, Fecha Aplicable, Importe, Cat 1, Cat 2, Notas)
     document.getElementById('exportBtn').addEventListener('click', () => {
       if (moveData.length === 0) return;
 
       const dataToExport = moveData.map(m => ({
-        'Fecha': m.fecha,
+        'Fecha Original': m.fecha,
+        'Fecha Aplicable': m.fechaAplicable || '',
         'Concepto': m.concepto,
         'Categoría 1 (Principal)': m.cat1,
         'Categoría 2 (Detalle)': m.cat2,
-        'Cantidad (€)': m.importe
+        'Cantidad (€)': m.importe,
+        'Notas': m.notas || ''
       }));
 
       const worksheet = XLSX.utils.json_to_sheet(dataToExport);
