@@ -3,10 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gestor Financiero PWA Pro</title>
-  <meta name="theme-color" content="#1e293b">
-  <link rel="manifest" href="data:application/manifest+json;utf8,{'name':'Gestor Financiero','short_name':'Finanzas','start_url':'.','display':'standalone','background_color':'#f8fafc','theme_color':'#1e293b','icons':[{'src':'https://via.placeholder.com/192','sizes':'192x192','type':'image/png'}]}">
+  <title>Gestor de Gastos y Finanzas</title>
+  <meta name="theme-color" content="#0f172a">
+  <link rel="manifest" href="data:application/manifest+json;utf8,{'name':'Gestor de Gastos','short_name':'Gastos','start_url':'.','display':'standalone','background_color':'#0f172a','theme_color':'#0f172a'}">
   
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
   <!-- CDN Dependencies -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
@@ -14,175 +19,317 @@
 
   <style>
     :root {
-      --bg: #f8fafc;
-      --card: #ffffff;
-      --text: #0f172a;
-      --accent: #2563eb;
-      --accent-hover: #1d4ed8;
-      --border: #e2e8f0;
+      --bg: #0f172a;
+      --card-bg: rgba(30, 41, 59, 0.7);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --radius: 16px;
     }
     
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: var(--bg);
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      background-color: var(--bg);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.15) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.15) 0px, transparent 50%);
+      background-attachment: fixed;
       color: var(--text);
       margin: 0;
       padding: 1rem;
+      min-height: 100vh;
     }
 
     .container {
-      max-width: 700px;
+      max-width: 1100px;
       margin: 0 auto;
     }
 
-    .card {
-      background: var(--card);
-      padding: 1.25rem;
-      border-radius: 12px;
-      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -2px rgba(0,0,0,0.05);
-      margin-bottom: 1rem;
-      border: 1px solid var(--border);
+    .header {
+      text-align: center;
+      margin-bottom: 1.5rem;
     }
 
-    h1 {
-      font-size: 1.35rem;
-      margin-top: 0;
-      text-align: center;
-      color: #1e293b;
+    .header h1 {
+      font-size: 1.8rem;
+      margin: 0 0 0.5rem 0;
+      background: linear-gradient(135deg, #60a5fa, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .header p {
+      color: var(--text-muted);
+      margin: 0;
+      font-size: 0.95rem;
+    }
+
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      margin-bottom: 1.25rem;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
     }
 
     input[type="file"] { display: none; }
 
     .btn-group {
       display: flex;
-      gap: 0.5rem;
+      gap: 0.75rem;
       flex-wrap: wrap;
+      justify-content: center;
     }
 
     .btn {
-      flex: 1;
-      min-width: 140px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
       background: var(--accent);
       color: white;
-      text-align: center;
-      padding: 0.75rem 1rem;
-      border-radius: 8px;
+      padding: 0.75rem 1.25rem;
+      border-radius: 10px;
       font-weight: 600;
       cursor: pointer;
       border: none;
       font-size: 0.9rem;
-      transition: background 0.2s;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
     }
 
-    .btn:hover { background: var(--accent-hover); }
-    .btn-secondary { background: #64748b; }
-    .btn-secondary:hover { background: #475569; }
-    .btn-success { background: #16a34a; }
-    .btn-success:hover { background: #15803d; }
-    .btn-danger { background: #dc2626; }
-    .btn-danger:hover { background: #b91c1c; }
+    .btn:hover {
+      background: var(--accent-hover);
+      transform: translateY(-1px);
+    }
+
+    .btn-success {
+      background: var(--success);
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+    .btn-success:hover { background: #059669; }
+
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.2);
+      color: #fca5a5;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      box-shadow: none;
+    }
+    .btn-danger:hover {
+      background: var(--danger);
+      color: white;
+    }
+
+    /* Grid Layout for PC/Mobile */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.25rem;
+    }
+
+    @media (min-width: 850px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+      .grid-full {
+        grid-column: 1 / -1;
+      }
+    }
 
     .stats {
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 0.5rem;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
     }
 
     .stat-box {
-      background: #f1f5f9;
-      padding: 0.75rem;
-      border-radius: 8px;
+      background: rgba(15, 23, 42, 0.6);
+      padding: 1rem 0.75rem;
+      border-radius: 12px;
       text-align: center;
+      border: 1px solid rgba(255, 255, 255, 0.05);
     }
 
     .stat-box small {
       display: block;
-      color: #64748b;
-      font-size: 0.75rem;
-      margin-bottom: 0.25rem;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      margin-bottom: 0.3rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
     .stat-box span {
-      font-weight: bold;
-      font-size: 1rem;
+      font-weight: 700;
+      font-size: 1.15rem;
     }
 
     .chart-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 0.5rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
     }
 
     .chart-header h2 {
       font-size: 1.1rem;
       margin: 0;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
     }
 
     .filter-badge {
-      background: #e0f2fe;
-      color: #0369a1;
-      padding: 0.25rem 0.6rem;
-      border-radius: 12px;
+      background: rgba(59, 130, 246, 0.2);
+      color: #93c5fd;
+      border: 1px solid rgba(59, 130, 246, 0.4);
+      padding: 0.3rem 0.75rem;
+      border-radius: 20px;
       font-size: 0.8rem;
       font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .reset-filter-btn {
+      color: #ef4444;
+      cursor: pointer;
+      font-weight: bold;
+      margin-left: 0.25rem;
+    }
+
+    /* Tabs for mobile chart view */
+    .view-toggle {
+      display: flex;
+      background: rgba(15, 23, 42, 0.6);
+      padding: 0.25rem;
+      border-radius: 10px;
+      gap: 0.25rem;
+      margin-bottom: 1rem;
+    }
+
+    .view-toggle-btn {
+      flex: 1;
+      padding: 0.5rem;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .view-toggle-btn.active {
+      background: var(--accent);
+      color: white;
     }
 
     .table-container {
       overflow-x: auto;
-      max-height: 400px;
+      max-height: 450px;
       overflow-y: auto;
-      margin-top: 0.5rem;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
       font-size: 0.85rem;
+      text-align: left;
     }
 
     th, td {
-      padding: 0.6rem 0.5rem;
-      text-align: left;
-      border-bottom: 1px solid var(--border);
+      padding: 0.75rem 0.6rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     }
 
     th {
-      background: #f8fafc;
+      background: #1e293b;
       position: sticky;
       top: 0;
-      color: #475569;
+      color: var(--text-muted);
+      font-weight: 600;
+      z-index: 10;
     }
 
     select.cat-select {
-      padding: 0.2rem 0.4rem;
-      border-radius: 4px;
-      border: 1px solid var(--border);
+      width: 100%;
+      max-width: 160px;
+      padding: 0.35rem 0.5rem;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
       font-size: 0.8rem;
-      background: white;
+      background: #0f172a;
+      color: var(--text);
+      outline: none;
     }
 
-    .amount-neg { color: #dc2626; font-weight: 600; }
-    .amount-pos { color: #16a34a; font-weight: 600; }
+    select.cat-select:focus {
+      border-color: var(--accent);
+    }
 
-    .reset-filter-btn {
-      display: inline-block;
-      font-size: 0.75rem;
-      color: var(--accent);
-      cursor: pointer;
-      text-decoration: underline;
-      margin-left: 0.5rem;
+    .amount-neg { color: #f87171; font-weight: 600; }
+    .amount-pos { color: #34d399; font-weight: 600; }
+
+    /* Custom scrollbar for table */
+    .table-container::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .table-container::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.6);
+    }
+    .table-container::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 3px;
+    }
+
+    @media (max-width: 600px) {
+      body { padding: 0.5rem; }
+      .card { padding: 1rem; }
+      .stats { grid-template-columns: 1fr; gap: 0.5rem; }
+      .stat-box { display: flex; justify-content: space-between; align-items: center; text-align: left; padding: 0.75rem 1rem; }
+      .stat-box small { margin-bottom: 0; }
+      th, td { padding: 0.5rem 0.4rem; font-size: 0.8rem; }
+      select.cat-select { max-width: 120px; font-size: 0.75rem; }
     }
   </style>
 </head>
 <body>
   <div class="container">
+    <div class="header">
+      <h1>📊 Gestor de Gastos</h1>
+      <p>Control visual de tus movimientos bancarios</p>
+    </div>
+
     <div class="card">
-      <h1>💰 Gestor Financiero PWA</h1>
       <div class="btn-group">
         <label class="btn" for="csvFile">📁 Cargar CSV</label>
         <input type="file" id="csvFile" accept=".csv">
-        <button class="btn btn-success" id="exportBtn" style="display:none;">📊 Exportar Excel</button>
+        <button class="btn btn-success" id="exportBtn" style="display:none;">📥 Exportar Excel</button>
         <button class="btn btn-danger" id="clearBtn" style="display:none;">🗑️ Borrar Datos</button>
       </div>
     </div>
@@ -191,97 +338,138 @@
       <!-- Resumen General -->
       <div class="card">
         <div class="stats">
-          <div class="stat-box"><small>Ingresos</small><span id="totalIngresos" class="amount-pos">0 €</span></div>
-          <div class="stat-box"><small>Gastos</small><span id="totalGastos" class="amount-neg">0 €</span></div>
-          <div class="stat-box"><small>Balance</small><span id="totalBalance">0 €</span></div>
+          <div class="stat-box"><small>Ingresos</small><span id="totalIngresos" class="amount-pos">0,00 €</span></div>
+          <div class="stat-box"><small>Gastos</small><span id="totalGastos" class="amount-neg">0,00 €</span></div>
+          <div class="stat-box"><small>Balance Net</small><span id="totalBalance">0,00 €</span></div>
         </div>
       </div>
 
-      <!-- Gráfico -->
-      <div class="card">
-        <div class="chart-header">
-          <h2>Distribución por Creadas</h2>
-          <span id="activeFilterBadge" class="filter-badge" style="display:none;">
-            Filtro: <span id="filterCategoryName"></span>
-            <span class="reset-filter-btn" onclick="resetFilter()">Mostrar todo</span>
-          </span>
-        </div>
-        <p style="font-size: 0.8rem; color: #64748b; margin-top: 0;">Haz clic en una sección del gráfico para filtrar la lista de abajo.</p>
-        <div style="position: relative; max-width: 380px; margin: 0 auto;">
-          <canvas id="chartCategorias"></canvas>
-        </div>
-      </div>
+      <div class="dashboard-grid">
+        <!-- Gráficos por Categorías -->
+        <div class="card">
+          <div class="chart-header">
+            <h2>📈 Distribución de Gastos</h2>
+            <span id="activeFilterBadge" class="filter-badge" style="display:none;">
+              <span id="filterCategoryName"></span>
+              <span class="reset-filter-btn" onclick="resetFilter()" title="Quitar filtro">✕</span>
+            </span>
+          </div>
 
-      <!-- Tabla de Movimientos -->
-      <div class="card">
-        <div class="chart-header">
-          <h2>Movimientos (<span id="movCount">0</span>)</h2>
-          <span id="tableFilterStatus" style="font-size: 0.8rem; color: #64748b;"></span>
+          <div class="view-toggle">
+            <button class="view-toggle-btn active" id="btnCat1" onclick="switchCategoryLevel(1)">Cat. Principal (Cat 1)</button>
+            <button class="view-toggle-btn" id="btnCat2" onclick="switchCategoryLevel(2)">Subcategoría (Cat 2)</button>
+          </div>
+
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0;">Haz clic en una porción del gráfico para filtrar la tabla.</p>
+          <div style="position: relative; max-width: 380px; margin: 0 auto;">
+            <canvas id="chartCategorias"></canvas>
+          </div>
         </div>
-        <div class="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>Fecha</th>
-                <th>Concepto</th>
-                <th>Categoría</th>
-                <th style="text-align: right;">Importe</th>
-              </tr>
-            </thead>
-            <tbody id="movementsTable"></tbody>
-          </table>
+
+        <!-- Resumen de Totales por Categoría -->
+        <div class="card">
+          <div class="chart-header">
+            <h2>🏷️ Totales por Categoría</h2>
+          </div>
+          <div class="table-container" style="max-height: 350px;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Categoría</th>
+                  <th style="text-align: right;">Total (€)</th>
+                </tr>
+              </thead>
+              <tbody id="catSummaryTable"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Tabla de Movimientos (Ocupa todo el ancho) -->
+        <div class="card grid-full">
+          <div class="chart-header">
+            <h2>📋 Movimientos (<span id="movCount">0</span>)</h2>
+            <span id="tableFilterStatus" style="font-size: 0.8rem; color: var(--text-muted);"></span>
+          </div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Concepto</th>
+                  <th>Cat 1 (Principal)</th>
+                  <th>Cat 2 (Detalle)</th>
+                  <th style="text-align: right;">Importe</th>
+                </tr>
+              </thead>
+              <tbody id="movementsTable"></tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
   <script>
-    const CATEGORIAS_LISTA = [
-      'Alimentación / Supermercado',
-      'Restauración / Ocio',
-      'Suministros / Hogar',
-      'Vivienda / Comunidad',
-      'Salud / Farmacia',
-      'Hogar / Brico',
-      'Vehículo / Transporte',
-      'Seguros / Servicios',
-      'Impuestos / Tasas',
-      'Inversión / Finanzas',
-      'Nómina / Pensiones',
-      'Otros Ingresos',
-      'Otros Gastos'
-    ];
+    // Configuración de Categorías de 2 niveles
+    const CATEGORIAS_ESTRUCTURA = {
+      'Alimentación': ['Supermercado', 'Restaurante', 'Cafetería / Bar', 'Comida a domicilio'],
+      'Vivienda': ['Alquiler / Hipoteca', 'Comunidad', 'Electricidad / Gas', 'Agua / Internet'],
+      'Seguros y Servicios': ['Seguro Hogar', 'Seguro Vida / Salud', 'Comisiones / Servicios'],
+      'Transporte': ['Gasolina / Combustible', 'Transporte Público / Taxi', 'Parking / Peaje'],
+      'Inversiones y Ahorro': ['Fondos / Acciones', 'Planes de Pensiones'],
+      'Actividades y Ocio': ['Deportes / Club', 'Hotel / Apartamento', 'Viajes / Turismo', 'Entretenimiento'],
+      'Suscripciones': ['Plataformas TV / Música', 'Software / Apps'],
+      'Ingresos': ['Nómina / Sueldo', 'Dividendo / Intereses', 'Otros Ingresos'],
+      'Otros': ['General / Varios']
+    };
+
+    const CAT1_LISTA = Object.keys(CATEGORIAS_ESTRUCTURA);
 
     let moveData = [];
     let myChart = null;
-    let selectedCategory = null;
+    let currentCatLevel = 1; // 1: Cat1, 2: Cat2
+    let selectedCategoryFilter = null;
 
-    // Reglas avanzadas de clasificación
-    function clasificar(concepto, importe) {
+    // Reglas de autoclasificación previa
+    function clasificarAuto(concepto, importe) {
       const c = concepto.toUpperCase();
-      
+
       if (importe > 0) {
-        if (c.includes('PENSION') || c.includes('NOMINA') || c.includes('SUELDO')) return 'Nómina / Pensiones';
-        if (c.includes('DIV.') || c.includes('DIVIDENDO') || c.includes('INTERES')) return 'Inversión / Finanzas';
-        return 'Otros Ingresos';
+        if (c.includes('NOMINA') || c.includes('PAG NOMINAS') || c.includes('SUELDO')) {
+          return { cat1: 'Ingresos', cat2: 'Nómina / Sueldo' };
+        }
+        if (c.includes('DIV.') || c.includes('DIVIDENDO') || c.includes('INTERES')) {
+          return { cat1: 'Ingresos', cat2: 'Dividendo / Intereses' };
+        }
+        return { cat1: 'Ingresos', cat2: 'Otros Ingresos' };
       }
 
-      if (c.includes('SUPERBRAVO') || c.includes('SUPERMERC') || c.includes('COVIRAN') || c.includes('MERCADONA') || c.includes('CARREFOUR') || c.includes('LIDL') || c.includes('ALDI') || c.includes('DIA ')) return 'Alimentación / Supermercado';
-      if (c.includes('BAR') || c.includes('RESTAURANTE') || c.includes('DEHESA') || c.includes('CAFETERIA') || c.includes('CERVECERIA')) return 'Restauración / Ocio';
-      if (c.includes('IBERDROLA') || c.includes('ENDESA') || c.includes('ORANGE') || c.includes('MOVISTAR') || c.includes('VODAFONE') || c.includes('AGUA') || c.includes('GAS') || c.includes('LIZ')) return 'Suministros / Hogar';
-      if (c.includes('CMDAD.PROPIET') || c.includes('COMUNIDAD') || c.includes('ALQUILER') || c.includes('HIPOTECA')) return 'Vivienda / Comunidad';
-      if (c.includes('FARMACIA') || c.includes('DENT') || c.includes('SALUD') || c.includes('CLINICA') || c.includes('ASISPA')) return 'Salud / Farmacia';
-      if (c.includes('BRICO') || c.includes('LEROY') || c.includes('BAUHAUS') || c.includes('SERTINA')) return 'Hogar / Brico';
-      if (c.includes('GASOLINERA') || c.includes('REPSOL') || c.includes('CEPSA') || c.includes('BP') || c.includes('PARKING') || c.includes('PEAJE')) return 'Vehículo / Transporte';
-      if (c.includes('MYBOX') || c.includes('SEGURO') || c.includes('VISA') || c.includes('MYCARD') || c.includes('CUSTODIA') || c.includes('COMISION')) return 'Seguros / Servicios';
-      if (c.includes('AYTO') || c.includes('AYUNTAMIENTO') || c.includes('AGENCIA TRIBUTARIA') || c.includes('SUMA') || c.includes('TAX')) return 'Impuestos / Tasas';
+      // Gastos
+      if (c.includes('TGTG') || c.includes('TOO GOOD TO GO')) return { cat1: 'Alimentación', cat2: 'Comida a domicilio' };
+      if (c.includes('SUPERMERC') || c.includes('MERCADONA') || c.includes('CARREFOUR') || c.includes('LIDL') || c.includes('ALDI') || c.includes('DIA ') || c.includes('SANCHINARRO H.')) {
+        return { cat1: 'Alimentación', cat2: 'Supermercado' };
+      }
+      if (c.includes('BAR') || c.includes('RESTAURANTE') || c.includes('DEHESA') || c.includes('CAFETERIA') || c.includes('CERVECERIA')) {
+        return { cat1: 'Alimentación', cat2: 'Restaurante' };
+      }
+      if (c.includes('SEGURO HOGAR')) return { cat1: 'Seguros y Servicios', cat2: 'Seguro Hogar' };
+      if (c.includes('SEGURO VIDA') || c.includes('SEGURO')) return { cat1: 'Seguros y Servicios', cat2: 'Seguro Vida / Salud' };
+      if (c.includes('CUSTODIA') || c.includes('COMISION')) return { cat1: 'Seguros y Servicios', cat2: 'Comisiones / Servicios' };
+      if (c.includes('INDEXA') || c.includes('FONDOS') || c.includes('INVERSION')) return { cat1: 'Inversiones y Ahorro', cat2: 'Fondos / Acciones' };
+      if (c.includes('FREE2MOVE') || c.includes('MOVILIDAD') || c.includes('GASOLINERA') || c.includes('REPSOL') || c.includes('CEPSA')) {
+        return { cat1: 'Transporte', cat2: 'Transporte Público / Taxi' };
+      }
+      if (c.includes('ALQUILER') || c.includes('HIPOTECA') || c.includes('COMUNIDAD')) return { cat1: 'Vivienda', cat2: 'Alquiler / Hipoteca' };
+      if (c.includes('IBERDROLA') || c.includes('ENDESA') || c.includes('ORANGE') || c.includes('MOVISTAR') || c.includes('AGUA')) {
+        return { cat1: 'Vivienda', cat2: 'Electricidad / Gas' };
+      }
 
-      return 'Otros Gastos';
+      return { cat1: 'Otros', cat2: 'General / Varios' };
     }
 
-    // Cargar de LocalStorage al iniciar
+    // Carga de LocalStorage al iniciar
     window.addEventListener('DOMContentLoaded', () => {
-      const saved = localStorage.getItem('finanzas_pwa_data');
+      const saved = localStorage.getItem('finanzas_pwa_data_v2');
       if (saved) {
         try {
           moveData = JSON.parse(saved);
@@ -290,7 +478,7 @@
       }
     });
 
-    // Evento Carga CSV
+    // Cargar CSV (Concepto, Fecha, Importe)
     document.getElementById('csvFile').addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (!file) return;
@@ -302,42 +490,43 @@
         complete: (results) => {
           moveData = [];
           results.data.forEach((row, idx) => {
-            const concepto = row['Concepto'] || row['concepto'] || '';
-            const fecha = row['Fecha'] || row['fecha'] || '';
-            const rawImporte = row['Importe'] || row['importe'] || '';
+            const concepto = row['Concepto'] || row['concepto'] || row['CONCEPTO'] || '';
+            const fecha = row['Fecha'] || row['fecha'] || row['FECHA'] || '';
+            const rawImporte = row['Importe'] || row['importe'] || row['IMPORTE'] || row['Cantidad'] || row['cantidad'] || '';
 
             if (!concepto || !rawImporte) return;
 
-            const val = parseFloat(rawImporte.replace('EUR', '').replace('.', '').replace(',', '.').replace(/\s/g, '').trim());
+            const val = parseFloat(rawImporte.replace('EUR', '').replace('€', '').replace(/\./g, '').replace(',', '.').replace(/\s/g, '').trim());
             if (isNaN(val)) return;
 
-            const cat = clasificar(concepto, val);
+            const autoCat = clasificarAuto(concepto, val);
 
             moveData.push({
               id: idx + '_' + Date.now(),
               fecha: fecha.trim(),
               concepto: concepto.trim(),
               importe: val,
-              categoria: cat
+              cat1: autoCat.cat1,
+              cat2: autoCat.cat2
             });
           });
 
           saveData();
-          selectedCategory = null;
+          selectedCategoryFilter = null;
           renderAll();
         }
       });
     });
 
     function saveData() {
-      localStorage.setItem('finanzas_pwa_data', JSON.stringify(moveData));
+      localStorage.setItem('finanzas_pwa_data_v2', JSON.stringify(moveData));
     }
 
     document.getElementById('clearBtn').addEventListener('click', () => {
-      if (confirm('¿Seguro que deseas borrar todos los datos guardados?')) {
-        localStorage.removeItem('finanzas_pwa_data');
+      if (confirm('¿Borrar todos los datos cargados?')) {
+        localStorage.removeItem('finanzas_pwa_data_v2');
         moveData = [];
-        selectedCategory = null;
+        selectedCategoryFilter = null;
         document.getElementById('dashboard').style.display = 'none';
         document.getElementById('exportBtn').style.display = 'none';
         document.getElementById('clearBtn').style.display = 'none';
@@ -345,18 +534,37 @@
       }
     });
 
-    // Cambiar categoría manualmente
-    function updateCategory(id, newCat) {
+    function updateCat1(id, newCat1) {
       const item = moveData.find(m => m.id === id);
       if (item) {
-        item.categoria = newCat;
+        item.cat1 = newCat1;
+        // Asignar primer hijo de cat2 si cambia cat1
+        const subCats = CATEGORIAS_ESTRUCTURA[newCat1] || ['General / Varios'];
+        item.cat2 = subCats[0];
         saveData();
         renderAll();
       }
     }
 
+    function updateCat2(id, newCat2) {
+      const item = moveData.find(m => m.id === id);
+      if (item) {
+        item.cat2 = newCat2;
+        saveData();
+        renderAll();
+      }
+    }
+
+    function switchCategoryLevel(level) {
+      currentCatLevel = level;
+      document.getElementById('btnCat1').classList.toggle('active', level === 1);
+      document.getElementById('btnCat2').classList.toggle('active', level === 2);
+      selectedCategoryFilter = null;
+      renderAll();
+    }
+
     function resetFilter() {
-      selectedCategory = null;
+      selectedCategoryFilter = null;
       renderAll();
     }
 
@@ -364,10 +572,10 @@
       if (moveData.length === 0) return;
 
       document.getElementById('dashboard').style.display = 'block';
-      document.getElementById('exportBtn').style.display = 'inline-block';
-      document.getElementById('clearBtn').style.display = 'inline-block';
+      document.getElementById('exportBtn').style.display = 'inline-flex';
+      document.getElementById('clearBtn').style.display = 'inline-flex';
 
-      // Calcular totales
+      // Totales
       let ingresos = 0, gastos = 0;
       const catTotals = {};
 
@@ -377,31 +585,33 @@
         } else {
           const absVal = Math.abs(m.importe);
           gastos += absVal;
-          catTotals[m.categoria] = (catTotals[m.categoria] || 0) + absVal;
+          const key = currentCatLevel === 1 ? m.cat1 : `${m.cat1} > ${m.cat2}`;
+          catTotals[key] = (catTotals[key] || 0) + absVal;
         }
       });
 
-      document.getElementById('totalIngresos').innerText = ingresos.toFixed(2) + ' €';
-      document.getElementById('totalGastos').innerText = gastos.toFixed(2) + ' €';
+      document.getElementById('totalIngresos').innerText = ingresos.toFixed(2).replace('.', ',') + ' €';
+      document.getElementById('totalGastos').innerText = gastos.toFixed(2).replace('.', ',') + ' €';
       const balance = ingresos - gastos;
       const balanceEl = document.getElementById('totalBalance');
-      balanceEl.innerText = balance.toFixed(2) + ' €';
+      balanceEl.innerText = balance.toFixed(2).replace('.', ',') + ' €';
       balanceEl.className = balance >= 0 ? 'amount-pos' : 'amount-neg';
 
-      // Actualizar Gráfico
+      // Gráfico y tabla de totales
       renderChart(catTotals);
+      renderCategorySummaryTable(catTotals);
 
-      // Actualizar Filtro
+      // Badge de Filtro
       const activeFilterEl = document.getElementById('activeFilterBadge');
-      if (selectedCategory) {
-        activeFilterEl.style.display = 'inline-block';
-        document.getElementById('filterCategoryName').innerText = selectedCategory;
+      if (selectedCategoryFilter) {
+        activeFilterEl.style.display = 'inline-flex';
+        document.getElementById('filterCategoryName').innerText = selectedCategoryFilter;
       } else {
         activeFilterEl.style.display = 'none';
       }
 
-      // Filtrar y renderizar Tabla
-      renderTable();
+      // Tabla de Movimientos
+      renderMovementsTable();
     }
 
     function renderChart(catTotals) {
@@ -411,10 +621,9 @@
       const ctx = document.getElementById('chartCategorias').getContext('2d');
       if (myChart) myChart.destroy();
 
-      const colors = [
-        '#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6',
-        '#ec4899', '#06b6d4', '#84cc16', '#f97316', '#6366f1',
-        '#14b8a6', '#64748b'
+      const palette = [
+        '#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6',
+        '#06b6d4', '#f97316', '#14b8a6', '#6366f1', '#64748b'
       ];
 
       myChart = new Chart(ctx, {
@@ -423,7 +632,9 @@
           labels: labels,
           datasets: [{
             data: dataValues,
-            backgroundColor: colors.slice(0, labels.length)
+            backgroundColor: palette.slice(0, labels.length),
+            borderWidth: 2,
+            borderColor: '#1e293b'
           }]
         },
         options: {
@@ -432,18 +643,14 @@
           plugins: {
             legend: {
               position: 'bottom',
-              labels: { boxWidth: 12, font: { size: 11 } }
+              labels: { boxWidth: 12, color: '#94a3b8', font: { family: 'Plus Jakarta Sans', size: 11 } }
             }
           },
           onClick: (evt, activeElements) => {
             if (activeElements.length > 0) {
               const index = activeElements[0].index;
               const clickedCat = labels[index];
-              if (selectedCategory === clickedCat) {
-                selectedCategory = null; // Alternar
-              } else {
-                selectedCategory = clickedCat;
-              }
+              selectedCategoryFilter = (selectedCategoryFilter === clickedCat) ? null : clickedCat;
               renderAll();
             }
           }
@@ -451,32 +658,70 @@
       });
     }
 
-    function renderTable() {
+    function renderCategorySummaryTable(catTotals) {
+      const tbody = document.getElementById('catSummaryTable');
+      tbody.innerHTML = '';
+
+      const sorted = Object.entries(catTotals).sort((a, b) => b[1] - a[1]);
+
+      sorted.forEach(([cat, val]) => {
+        const tr = document.createElement('tr');
+        tr.style.cursor = 'pointer';
+        tr.onclick = () => {
+          selectedCategoryFilter = selectedCategoryFilter === cat ? null : cat;
+          renderAll();
+        };
+        if (selectedCategoryFilter === cat) {
+          tr.style.background = 'rgba(59, 130, 246, 0.2)';
+        }
+        tr.innerHTML = `
+          <td style="font-weight: 500;">${cat}</td>
+          <td style="text-align: right; font-weight: 600;" class="amount-neg">${val.toFixed(2).replace('.', ',')} €</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderMovementsTable() {
       const tbody = document.getElementById('movementsTable');
       tbody.innerHTML = '';
 
-      const filteredData = selectedCategory
-        ? moveData.filter(m => m.categoria === selectedCategory || (m.importe > 0 && selectedCategory === 'Nómina / Pensiones'))
-        : moveData;
+      const filteredData = moveData.filter(m => {
+        if (!selectedCategoryFilter) return true;
+        if (currentCatLevel === 1) return m.cat1 === selectedCategoryFilter;
+        return `${m.cat1} > ${m.cat2}` === selectedCategoryFilter;
+      });
 
       document.getElementById('movCount').innerText = filteredData.length;
 
       filteredData.forEach(m => {
         const tr = document.createElement('tr');
         
-        const catOptions = CATEGORIAS_LISTA.map(cat => 
-          `<option value="${cat}" ${m.categoria === cat ? 'selected' : ''}>${cat}</option>`
+        // Opciones Cat1
+        const cat1Options = CAT1_LISTA.map(c1 => 
+          `<option value="${c1}" ${m.cat1 === c1 ? 'selected' : ''}>${c1}</option>`
+        ).join('');
+
+        // Opciones Cat2
+        const availableCat2 = CATEGORIAS_ESTRUCTURA[m.cat1] || ['General / Varios'];
+        const cat2Options = availableCat2.map(c2 => 
+          `<option value="${c2}" ${m.cat2 === c2 ? 'selected' : ''}>${c2}</option>`
         ).join('');
 
         const amountClass = m.importe >= 0 ? 'amount-pos' : 'amount-neg';
-        const formattedAmount = (m.importe > 0 ? '+' : '') + m.importe.toFixed(2) + ' €';
+        const formattedAmount = (m.importe > 0 ? '+' : '') + m.importe.toFixed(2).replace('.', ',') + ' €';
 
         tr.innerHTML = `
-          <td style="white-space:nowrap; color:#64748b;">${m.fecha}</td>
+          <td style="white-space:nowrap; color: var(--text-muted);">${m.fecha}</td>
           <td style="font-weight:500;">${m.concepto}</td>
           <td>
-            <select class="cat-select" onchange="updateCategory('${m.id}', this.value)">
-              ${catOptions}
+            <select class="cat-select" onchange="updateCat1('${m.id}', this.value)">
+              ${cat1Options}
+            </select>
+          </td>
+          <td>
+            <select class="cat-select" onchange="updateCat2('${m.id}', this.value)">
+              ${cat2Options}
             </select>
           </td>
           <td class="${amountClass}" style="text-align:right; white-space:nowrap;">${formattedAmount}</td>
@@ -485,15 +730,16 @@
       });
     }
 
-    // Exportar a Excel
+    // Exportar a Excel (Concepto, Fecha, Importe, Cat 1, Cat 2)
     document.getElementById('exportBtn').addEventListener('click', () => {
       if (moveData.length === 0) return;
 
       const dataToExport = moveData.map(m => ({
         'Fecha': m.fecha,
         'Concepto': m.concepto,
-        'Categoría': m.categoria,
-        'Importe (€)': m.importe
+        'Categoría 1 (Principal)': m.cat1,
+        'Categoría 2 (Detalle)': m.cat2,
+        'Cantidad (€)': m.importe
       }));
 
       const worksheet = XLSX.utils.json_to_sheet(dataToExport);
@@ -503,7 +749,7 @@
       XLSX.writeFile(workbook, "Movimientos_Clasificados.xlsx");
     });
 
-    // Service Worker para PWA Offline
+    // Service Worker para PWA
     if ('serviceWorker' in navigator) {
       const swCode = `self.addEventListener('fetch', e => e.respondWith(fetch(e.request)));`;
       const blob = new Blob([swCode], { type: 'application/javascript' });
