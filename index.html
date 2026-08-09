@@ -581,17 +581,6 @@
     <div id="dashboard" style="display:none;">
       <!-- Filtros Globales -->
       <div class="filters-bar">
-        <div class="filter-item filter-range-actions" style="flex:1 1 100%;">
-          <label>Rango rápido</label>
-          <div class="quick-range-buttons">
-            <button type="button" class="btn btn-small" onclick="setDateRangeQuick('currentMonth')">Mes actual</button>
-            <button type="button" class="btn btn-small" onclick="setDateRangeQuick('previousMonth')">Mes anterior</button>
-            <button type="button" class="btn btn-small" onclick="setDateRangeQuick('yearToDate')">Todo el año</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="filters-bar">
         <div class="filter-item" style="position:relative;">
           <label>Fecha inicio</label>
           <div class="date-input-wrapper">
@@ -660,10 +649,16 @@
       </div>
 
       <div class="filters-bar filters-actions-row">
-        <div class="filter-item" style="flex: 1;">
-          <button type="button" class="btn" onclick="applyFilters()">Aplicar filtros</button>
+        <div class="filter-item filter-range-actions" style="flex: 1 1 55%;">
+          <label>Rango rápido</label>
+          <div class="quick-range-buttons">
+            <button type="button" class="btn btn-small" onclick="setDateRangeQuick('currentMonth')">Mes actual</button>
+            <button type="button" class="btn btn-small" onclick="setDateRangeQuick('previousMonth')">Mes anterior</button>
+            <button type="button" class="btn btn-small" onclick="setDateRangeQuick('yearToDate')">Todo el año</button>
+          </div>
         </div>
-        <div class="filter-item" style="flex: 1; display:flex; justify-content:flex-end; align-items:flex-end;">
+        <div class="filter-item" style="flex: 1 1 40%; display:flex; justify-content:flex-end; align-items:flex-end; gap:0.7rem;">
+          <button type="button" class="btn" onclick="applyFilters()">Aplicar filtros</button>
           <button type="button" class="btn btn-warning" onclick="clearGeneralFilters()">Limpiar filtros</button>
         </div>
       </div>
@@ -682,7 +677,7 @@
         <div class="chart-header">
           <h2>📋 Movimientos (<span id="movCount">0</span>)</h2>
           <div class="table-actions">
-            <button type="button" class="btn btn-small btn-warning" onclick="clearTableColumnFilters()">Limpiar filtros tabla</button>
+            <button type="button" class="btn btn-small btn-warning" onclick="clearTableColumnFilters()">Limpiar</button>
             <div class="tab-group" id="chartViewTabs">
               <button type="button" class="tab-btn active" data-view="todos">Todos</button>
               <button type="button" class="tab-btn" data-view="ingresos">Ingresos</button>
@@ -1534,6 +1529,7 @@
 
       filteredData = filteredData.filter(m => {
         const tipoGeneral = getTipoGeneralMovimiento(m);
+        if (currentView === 'todos' && tipoGeneral === 'no-computables') return false;
         if (currentView === 'ingresos' && tipoGeneral !== 'ingresos') return false;
         if (currentView === 'gastos' && tipoGeneral !== 'gastos') return false;
         if (currentView === 'no-computables' && tipoGeneral !== 'no-computables') return false;
