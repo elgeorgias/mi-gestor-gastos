@@ -230,6 +230,43 @@
       min-width: 150px;
     }
 
+    .filter-range-actions {
+      min-width: 220px;
+    }
+
+    .quick-range-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .filter-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.6rem;
+      align-items: end;
+      width: 100%;
+    }
+
+    .filters-actions-row {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      background: rgba(15, 23, 42, 0.6);
+      padding: 0.9rem 1rem 0.8rem;
+      border-radius: 12px;
+      margin-top: 0.75rem;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .filters-actions-row .filter-item {
+      flex: 1 1 50%;
+      min-width: 150px;
+      margin-bottom: 0;
+    }
+
     .filter-item label {
       font-size: 0.75rem;
       color: var(--text-muted);
@@ -535,9 +572,7 @@
         <input type="file" id="csvFile" accept=".csv">
         <label class="btn" for="jsonFile">📁 Importar BD (JSON)</label>
         <input type="file" id="jsonFile" accept=".json">
-        <button class="btn btn-success" id="exportBtn" style="display:none;">📥 Exportar Excel</button>
-        <button class="btn btn-success" id="exportCsvBtn" style="display:none;">📥 Exportar CSV</button>
-        <button class="btn btn-success" id="exportJsonBtn" style="display:none;">📥 Exportar BD (JSON)</button>
+        <button class="btn btn-success" id="exportBtn" style="display:none;">📥 Exportar CSV + JSON</button>
         <button class="btn btn-warning" onclick="openCatModal()">🗂️ Categorías</button>
         <button class="btn btn-danger" id="clearBtn" style="display:none;">🧹 Limpiar</button>
       </div>
@@ -545,6 +580,17 @@
 
     <div id="dashboard" style="display:none;">
       <!-- Filtros Globales -->
+      <div class="filters-bar">
+        <div class="filter-item filter-range-actions" style="flex:1 1 100%;">
+          <label>Rango rápido</label>
+          <div class="quick-range-buttons">
+            <button type="button" class="btn btn-small" onclick="setDateRangeQuick('currentMonth')">Mes actual</button>
+            <button type="button" class="btn btn-small" onclick="setDateRangeQuick('previousMonth')">Mes anterior</button>
+            <button type="button" class="btn btn-small" onclick="setDateRangeQuick('yearToDate')">Todo el año</button>
+          </div>
+        </div>
+      </div>
+
       <div class="filters-bar">
         <div class="filter-item" style="position:relative;">
           <label>Fecha inicio</label>
@@ -611,8 +657,13 @@
             <option value="Jorge">Jorge</option>
           </select>
         </div>
-        <div class="filter-item filter-actions">
+      </div>
+
+      <div class="filters-bar filters-actions-row">
+        <div class="filter-item" style="flex: 1;">
           <button type="button" class="btn" onclick="applyFilters()">Aplicar filtros</button>
+        </div>
+        <div class="filter-item" style="flex: 1; display:flex; justify-content:flex-end; align-items:flex-end;">
           <button type="button" class="btn btn-warning" onclick="clearGeneralFilters()">Limpiar filtros</button>
         </div>
       </div>
@@ -1072,6 +1123,40 @@
       }
     }
 
+    function setDateRange(fromIso, toIso) {
+      const desdeHidden = document.getElementById('filterDesde');
+      const hastaHidden = document.getElementById('filterHasta');
+      const desdeDisplay = document.getElementById('filterDesdeDisplay');
+      const hastaDisplay = document.getElementById('filterHastaDisplay');
+      desdeHidden.value = fromIso || '';
+      hastaHidden.value = toIso || '';
+      desdeDisplay.value = fromIso ? formatDisplayDate(fromIso) : '';
+      hastaDisplay.value = toIso ? formatDisplayDate(toIso) : '';
+      applyFilters();
+    }
+
+    function setDateRangeQuick(type) {
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = today.getMonth();
+      let start, end;
+
+      if (type === 'currentMonth') {
+        start = new Date(year, month, 1);
+        end = new Date(year, month + 1, 0);
+      } else if (type === 'previousMonth') {
+        start = new Date(year, month - 1, 1);
+        end = new Date(year, month, 0);
+      } else if (type === 'yearToDate') {
+        start = new Date(year, 0, 1);
+        end = today;
+      }
+
+      const fromIso = start ? dateToStr(start.getFullYear(), start.getMonth(), start.getDate()) : '';
+      const toIso = end ? dateToStr(end.getFullYear(), end.getMonth(), end.getDate()) : '';
+      setDateRange(fromIso, toIso);
+    }
+
     function clearDateFilter(kind) {
       const hiddenInput = document.getElementById(kind === 'desde' ? 'filterDesde' : 'filterHasta');
       const displayInput = document.getElementById(kind === 'desde' ? 'filterDesdeDisplay' : 'filterHastaDisplay');
@@ -1339,8 +1424,6 @@
         moveData = [];
         document.getElementById('dashboard').style.display = 'none';
         document.getElementById('exportBtn').style.display = 'none';
-        document.getElementById('exportCsvBtn').style.display = 'none';
-        document.getElementById('exportJsonBtn').style.display = 'none';
         document.getElementById('clearBtn').style.display = 'none';
         document.getElementById('csvFile').value = '';
         document.getElementById('jsonFile').value = '';
@@ -1421,8 +1504,6 @@
 
       document.getElementById('dashboard').style.display = 'block';
       document.getElementById('exportBtn').style.display = 'inline-flex';
-      document.getElementById('exportCsvBtn').style.display = 'inline-flex';
-      document.getElementById('exportJsonBtn').style.display = 'inline-flex';
       document.getElementById('clearBtn').style.display = 'inline-flex';
 
       const fDesde = appliedFilters.desde;
@@ -1757,30 +1838,9 @@
       });
     }
 
-    // Exportar Excel
     document.getElementById('exportBtn').addEventListener('click', () => {
       if (moveData.length === 0) return;
-      const dataToExport = moveData.map(m => ({
-        'Fecha Original': m.fecha,
-        'Fecha Aplicable': m.fechaAplicable || '',
-        'Concepto': m.concepto,
-        'Más datos': m.masDatos || '',
-        'Dueño': m.dueño,
-        'Categoría 1 (Principal)': m.cat1,
-        'Categoría 2 (Detalle)': m.cat2,
-        'Cantidad (€)': m.importe,
-        'Notas': m.notas || '',
-        'Revisado': m.revisado ? 'Sí' : 'No'
-      }));
-      const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Movimientos");
-      XLSX.writeFile(workbook, `Movimientos_Clasificados_${timestampSuffix()}.xlsx`);
-    });
 
-    // Exportar CSV
-    document.getElementById('exportCsvBtn').addEventListener('click', () => {
-      if (moveData.length === 0) return;
       const rows = moveData.map(m => ({
         'Fecha Original': m.fecha,
         'Fecha Aplicable': m.fechaAplicable || '',
@@ -1793,28 +1853,25 @@
         'Notas': m.notas || '',
         'Revisado': m.revisado ? 'Sí' : 'No'
       }));
-      const csvContent = Papa.unparse(rows);
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `Movimientos_Clasificados_${timestampSuffix()}.csv`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    });
 
-    // Exportar JSON
-    document.getElementById('exportJsonBtn').addEventListener('click', () => {
-      if (moveData.length === 0) return;
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(moveData, null, 2));
-      const downloadAnchorNode = document.createElement('a');
-      downloadAnchorNode.setAttribute("href", dataStr);
-      downloadAnchorNode.setAttribute("download", `finanzas_db_${timestampSuffix()}.json`);
-      document.body.appendChild(downloadAnchorNode);
-      downloadAnchorNode.click();
-      downloadAnchorNode.remove();
+      const csvContent = Papa.unparse(rows);
+      const csvBlob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const csvUrl = URL.createObjectURL(csvBlob);
+      const csvLink = document.createElement('a');
+      csvLink.href = csvUrl;
+      csvLink.download = `Movimientos_Clasificados_${timestampSuffix()}.csv`;
+      document.body.appendChild(csvLink);
+      csvLink.click();
+      document.body.removeChild(csvLink);
+      URL.revokeObjectURL(csvUrl);
+
+      const jsonDataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(moveData, null, 2));
+      const jsonLink = document.createElement('a');
+      jsonLink.setAttribute("href", jsonDataStr);
+      jsonLink.setAttribute("download", `finanzas_db_${timestampSuffix()}.json`);
+      document.body.appendChild(jsonLink);
+      jsonLink.click();
+      document.body.removeChild(jsonLink);
     });
 
     // Importar JSON

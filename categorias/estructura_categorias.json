@@ -3,23 +3,24 @@
     "Supermercado",
     "Restaurante",
     "Cafetería / Bar",
-    "Comida a domicilio"
+    "Comida preparada"
   ],
   "Compras": [
     "Ropa",
     "Electrónica",
     "Otros"
   ],
-  "Transfer/Traspasos": [
+  "Transfer": [
     "Gastos",
     "Ingresos",
     "Entre cuentas"
   ],
   "Vivienda": [
-    "Alquiler / Hipoteca",
     "Comunidad",
     "Electricidad / Gas",
-    "Agua / Internet"
+    "Agua / Internet",
+    "Alquiler",
+    "Hipoteca"
   ],
   "Seguros y Servicios": [
     "Seguro Hogar",
@@ -29,7 +30,8 @@
   "Transporte": [
     "Gasolina / Combustible",
     "Transporte Público / Taxi",
-    "Parking / Peaje"
+    "Parking / Peaje",
+    "Coche"
   ],
   "Inversiones y Ahorro": [
     "Fondos / Acciones",
@@ -48,7 +50,8 @@
   "Ingresos": [
     "Nómina / Sueldo",
     "Dividendo / Intereses",
-    "Otros Ingresos"
+    "Otros Ingresos",
+    "Alquiler"
   ],
   "Otros": [
     "General / Varios"
