@@ -63,6 +63,7 @@
       font-size: 1.8rem;
       margin: 0 0 0.5rem 0;
       background: linear-gradient(135deg, #60a5fa, #a78bfa);
+      background-clip: text;
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       display: flex;
@@ -117,6 +118,12 @@
     .btn:hover {
       background: var(--accent-hover);
       transform: translateY(-1px);
+    }
+
+    .btn-small {
+      padding: 0.5rem 0.8rem;
+      font-size: 0.8rem;
+      box-shadow: none;
     }
 
     .btn-success {
@@ -231,40 +238,62 @@
       letter-spacing: 0.5px;
     }
 
-    /* ── Calendar Picker ── */
-    .date-range-wrapper {
-      position: relative;
-      flex: 2;
-      min-width: 230px;
+    .tab-group {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
     }
 
-    .date-range-btn {
+    .tab-btn {
+      background: rgba(255,255,255,0.08);
+      color: var(--text-muted);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 999px;
+      padding: 0.4rem 0.8rem;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .tab-btn.active {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+    }
+
+    .table-filter-input {
       width: 100%;
+      padding: 0.35rem 0.4rem;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.15);
+      font-size: 0.78rem;
+      background: #0f172a;
+      color: var(--text);
+      outline: none;
+      font-family: inherit;
+    }
+
+    .date-input-wrapper {
+      position: relative;
       display: flex;
       align-items: center;
-      gap: 0.5rem;
-      padding: 0.55rem 0.8rem;
-      background: #0f172a;
-      border: 1px solid rgba(255,255,255,0.15);
-      border-radius: 8px;
-      color: var(--text);
-      font-size: 0.85rem;
-      font-family: inherit;
-      cursor: pointer;
-      transition: border-color 0.2s;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .date-range-btn:hover, .date-range-btn.open {
-      border-color: var(--accent);
-    }
-    .date-range-btn svg {
-      flex-shrink: 0;
-      opacity: 0.6;
     }
 
-    .cal-popover {
+    .date-picker-btn {
+      position: absolute;
+      right: 0.35rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 0.95rem;
+      padding: 0.2rem;
+    }
+
+    .date-picker-popover {
       display: none;
       position: absolute;
       top: calc(100% + 6px);
@@ -273,11 +302,11 @@
       background: #1e293b;
       border: 1px solid rgba(255,255,255,0.12);
       border-radius: 14px;
-      padding: 1rem;
+      padding: 0.8rem;
       box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-      min-width: 320px;
+      min-width: 280px;
     }
-    .cal-popover.show { display: block; }
+    .date-picker-popover.show { display: block; }
 
     .cal-nav {
       display: flex;
@@ -335,46 +364,10 @@
     }
     .cal-day.other-month { color: #475569; cursor: default; }
     .cal-day.empty { cursor: default; }
-    .cal-day.in-range {
-      background: rgba(59,130,246,0.15);
-      border-radius: 0;
-    }
-    .cal-day.range-start, .cal-day.range-end {
-      background: var(--accent);
-      color: white;
-      border-radius: 6px;
-      font-weight: 600;
-    }
     .cal-day.today {
       outline: 1px solid rgba(59,130,246,0.5);
       outline-offset: -1px;
     }
-
-    .cal-footer {
-      display: flex;
-      gap: 0.5rem;
-      margin-top: 0.75rem;
-      justify-content: flex-end;
-    }
-    .cal-footer button {
-      padding: 0.3rem 0.75rem;
-      border-radius: 6px;
-      border: none;
-      font-size: 0.8rem;
-      font-family: inherit;
-      cursor: pointer;
-      font-weight: 600;
-    }
-    .cal-footer .btn-clear {
-      background: rgba(255,255,255,0.07);
-      color: var(--text-muted);
-    }
-    .cal-footer .btn-clear:hover { color: var(--text); background: rgba(255,255,255,0.12); }
-    .cal-footer .btn-apply {
-      background: var(--accent);
-      color: white;
-    }
-    .cal-footer .btn-apply:hover { background: var(--accent-hover); }
 
     .table-container {
       overflow-x: auto;
@@ -419,6 +412,37 @@
 
     select.cat-select:focus, input.input-table:focus, .filter-select:focus {
       border-color: var(--accent);
+    }
+
+    .review-cell {
+      text-align: center;
+      width: 64px;
+    }
+
+    .review-toggle {
+      width: 1.1rem;
+      height: 1.1rem;
+      accent-color: #22c55e;
+      cursor: pointer;
+      transform: scale(1.25);
+    }
+
+    .review-status {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 0.8rem;
+      height: 0.8rem;
+      border-radius: 999px;
+      box-shadow: 0 0 0 2px rgba(255,255,255,0.12);
+    }
+
+    .review-status.revisado {
+      background: #22c55e;
+    }
+
+    .review-status.pendiente {
+      background: #ef4444;
     }
 
     .amount-neg { color: #f87171; font-weight: 600; }
@@ -509,60 +533,87 @@
       <div class="btn-group">
         <label class="btn" for="csvFile">📁 Cargar CSV</label>
         <input type="file" id="csvFile" accept=".csv">
-        <label class="btn" for="jsonFile" style="background: #6366f1;">📁 Importar BD (JSON)</label>
+        <label class="btn" for="jsonFile">📁 Importar BD (JSON)</label>
         <input type="file" id="jsonFile" accept=".json">
         <button class="btn btn-success" id="exportBtn" style="display:none;">📥 Exportar Excel</button>
-        <button class="btn" id="exportJsonBtn" style="display:none; background: #8b5cf6;">📥 Exportar BD (JSON)</button>
-        <button class="btn btn-warning" onclick="openCatModal()">⚙️ Configurar Categorías</button>
-        <button class="btn btn-danger" id="clearBtn" style="display:none;">🗑️ Borrar Datos</button>
+        <button class="btn btn-success" id="exportCsvBtn" style="display:none;">📥 Exportar CSV</button>
+        <button class="btn btn-success" id="exportJsonBtn" style="display:none;">📥 Exportar BD (JSON)</button>
+        <button class="btn btn-warning" onclick="openCatModal()">🗂️ Categorías</button>
+        <button class="btn btn-danger" id="clearBtn" style="display:none;">🧹 Limpiar</button>
       </div>
     </div>
 
     <div id="dashboard" style="display:none;">
       <!-- Filtros Globales -->
-      <!-- Hidden inputs retain the filter values for applyFilters() -->
-      <input type="hidden" id="filterDesde">
-      <input type="hidden" id="filterHasta">
-
       <div class="filters-bar">
-        <!-- Date Range Calendar Picker -->
-        <div class="date-range-wrapper" id="dateRangeWrapper">
-          <label style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:0.3rem;">Rango de Fechas</label>
-          <button class="date-range-btn" id="dateRangeBtn" onclick="toggleCalPopover(event)">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            <span id="dateRangeLabel">Todas las fechas</span>
-          </button>
-          <div class="cal-popover" id="calPopover">
-            <div class="cal-nav">
-              <button onclick="calNav(-1)">&#8249;</button>
-              <span id="calMonthLabel" onclick="calGoToday()"></span>
-              <button onclick="calNav(1)">&#8250;</button>
+        <div class="filter-item" style="position:relative;">
+          <label>Fecha inicio</label>
+          <div class="date-input-wrapper">
+            <input type="text" class="filter-select" id="filterDesdeDisplay" placeholder="dd/mm/aaaa" oninput="handleDateInput('desde', this.value)">
+            <input type="hidden" id="filterDesde">
+            <button type="button" class="date-picker-btn" onclick="toggleDatePicker('desde', event)">📅</button>
+            <button type="button" class="date-picker-btn" style="right: 2rem;" onclick="clearDateFilter('desde')" title="Borrar fecha">✕</button>
+            <div class="date-picker-popover" id="datePickerDesde">
+              <div class="cal-nav">
+                <button type="button" onclick="changeDatePickerMonth('desde', -1)">&#8249;</button>
+                <span id="datePickerDesdeMonth" onclick="setDatePickerToToday('desde')"></span>
+                <button type="button" onclick="changeDatePickerMonth('desde', 1)">&#8250;</button>
+              </div>
+              <div class="cal-grid" id="datePickerDesdeGrid"></div>
             </div>
-            <div class="cal-grid" id="calGrid"></div>
-            <div class="cal-footer">
-              <button class="btn-clear" onclick="calClear()">Limpiar</button>
-              <button class="btn-apply" onclick="calApply()">Aplicar</button>
+          </div>
+        </div>
+        <div class="filter-item" style="position:relative;">
+          <label>Fecha fin</label>
+          <div class="date-input-wrapper">
+            <input type="text" class="filter-select" id="filterHastaDisplay" placeholder="dd/mm/aaaa" oninput="handleDateInput('hasta', this.value)">
+            <input type="hidden" id="filterHasta">
+            <button type="button" class="date-picker-btn" onclick="toggleDatePicker('hasta', event)">📅</button>
+            <button type="button" class="date-picker-btn" style="right: 2rem;" onclick="clearDateFilter('hasta')" title="Borrar fecha">✕</button>
+            <div class="date-picker-popover" id="datePickerHasta">
+              <div class="cal-nav">
+                <button type="button" onclick="changeDatePickerMonth('hasta', -1)">&#8249;</button>
+                <span id="datePickerHastaMonth" onclick="setDatePickerToToday('hasta')"></span>
+                <button type="button" onclick="changeDatePickerMonth('hasta', 1)">&#8250;</button>
+              </div>
+              <div class="cal-grid" id="datePickerHastaGrid"></div>
             </div>
           </div>
         </div>
 
         <div class="filter-item">
+          <label>Cat. 1</label>
+          <select class="filter-select" id="filterCat1" onchange="updateCat2FilterOptions()">
+            <option value="todos">Todas</option>
+          </select>
+        </div>
+        <div class="filter-item">
+          <label>Cat. 2</label>
+          <select class="filter-select" id="filterCat2">
+            <option value="todos">Todas</option>
+          </select>
+        </div>
+        <div class="filter-item">
           <label>Tipo de Mov.</label>
-          <select class="filter-select" id="filterTipo" onchange="applyFilters()">
+          <select class="filter-select" id="filterTipo">
             <option value="todos">Todos</option>
             <option value="ingresos">Ingresos</option>
             <option value="gastos">Gastos</option>
-            <option value="entrecuentas">Entre Cuentas</option>
+            <option value="entrecuentas">No computables</option>
           </select>
         </div>
         <div class="filter-item">
           <label>Dueño</label>
-          <select class="filter-select" id="filterDueno" onchange="applyFilters()">
+          <select class="filter-select" id="filterDueno">
             <option value="todos">Todos</option>
             <option value="Familia">Familia</option>
             <option value="Belén">Belén</option>
             <option value="Jorge">Jorge</option>
           </select>
+        </div>
+        <div class="filter-item filter-actions">
+          <button type="button" class="btn" onclick="applyFilters()">Aplicar filtros</button>
+          <button type="button" class="btn btn-warning" onclick="clearGeneralFilters()">Limpiar filtros</button>
         </div>
       </div>
 
@@ -573,6 +624,67 @@
           <div class="stat-box"><small>Gastos</small><span id="totalGastos" class="amount-neg">0,00 €</span></div>
           <div class="stat-box"><small>Balance Net</small><span id="totalBalance">0,00 €</span></div>
           <div class="stat-box"><small>Entre Cuentas</small><span id="totalEntreCuentas" class="amount-neutral">0,00 €</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="chart-header">
+          <h2>📋 Movimientos (<span id="movCount">0</span>)</h2>
+          <div class="table-actions">
+            <button type="button" class="btn btn-small btn-warning" onclick="clearTableColumnFilters()">Limpiar filtros tabla</button>
+            <div class="tab-group" id="chartViewTabs">
+              <button type="button" class="tab-btn active" data-view="todos">Todos</button>
+              <button type="button" class="tab-btn" data-view="ingresos">Ingresos</button>
+              <button type="button" class="tab-btn" data-view="gastos">Gastos</button>
+              <button type="button" class="tab-btn" data-view="no-computables">No computables</button>
+            </div>
+          </div>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th style="min-width:90px;">Revisado</th>
+                <th style="min-width:85px;">Fecha Orig.</th>
+                <th style="min-width:110px;">Fecha Aplicable</th>
+                <th style="min-width:150px;">Concepto</th>
+                <th style="min-width:150px;">Más datos</th>
+                <th style="min-width:140px;">Cat 1 (Principal)</th>
+                <th style="min-width:140px;">Cat 2 (Detalle)</th>
+                <th style="min-width:90px; text-align: right;">Importe</th>
+                <th style="min-width:140px;">Notas</th>
+                <th style="min-width:130px;">Dueño</th>
+              </tr>
+              <tr>
+                <th class="review-cell">Estado</th>
+                <th><input type="text" class="table-filter-input" id="tableFilterFechaOrig" oninput="applyFilters()" placeholder="Filtrar"></th>
+                <th><input type="text" class="table-filter-input" id="tableFilterFechaAplicable" oninput="applyFilters()" placeholder="Filtrar"></th>
+                <th><input type="text" class="table-filter-input" id="tableFilterConcepto" oninput="applyFilters()" placeholder="Filtrar"></th>
+                <th><input type="text" class="table-filter-input" id="tableFilterMasDatos" oninput="applyFilters()" placeholder="Filtrar"></th>
+                <th>
+                  <select class="table-filter-input" id="tableFilterCat1" onchange="applyFilters()">
+                    <option value="">Todos</option>
+                  </select>
+                </th>
+                <th>
+                  <select class="table-filter-input" id="tableFilterCat2" onchange="applyFilters()">
+                    <option value="">Todos</option>
+                  </select>
+                </th>
+                <th><input type="text" class="table-filter-input" id="tableFilterImporte" oninput="applyFilters()" placeholder="Filtrar"></th>
+                <th><input type="text" class="table-filter-input" id="tableFilterNotas" oninput="applyFilters()" placeholder="Filtrar"></th>
+                <th>
+                  <select class="table-filter-input" id="tableFilterDueno" onchange="applyFilters()">
+                    <option value="">Todos</option>
+                    <option value="Familia">Familia</option>
+                    <option value="Belén">Belén</option>
+                    <option value="Jorge">Jorge</option>
+                  </select>
+                </th>
+              </tr>
+            </thead>
+            <tbody id="movementsTable"></tbody>
+          </table>
         </div>
       </div>
 
@@ -597,30 +709,6 @@
           </div>
         </div>
 
-        <!-- Tabla de Movimientos (Ocupa todo el ancho) -->
-        <div class="card grid-full">
-          <div class="chart-header">
-            <h2>📋 Movimientos (<span id="movCount">0</span>)</h2>
-          </div>
-          <div class="table-container">
-            <table>
-              <thead>
-                <tr>
-                  <th style="min-width:85px;">Fecha Orig.</th>
-                  <th style="min-width:110px;">Fecha Aplicable</th>
-                  <th style="min-width:150px;">Concepto</th>
-                  <th style="min-width:150px;">Más datos</th>
-                  <th style="min-width:130px;">Dueño</th>
-                  <th style="min-width:140px;">Cat 1 (Principal)</th>
-                  <th style="min-width:140px;">Cat 2 (Detalle)</th>
-                  <th style="min-width:90px; text-align: right;">Importe</th>
-                  <th style="min-width:140px;">Notas</th>
-                </tr>
-              </thead>
-              <tbody id="movementsTable"></tbody>
-            </table>
-          </div>
-        </div>
       </div>
     </div>
   </div>
@@ -650,9 +738,9 @@
   <script>
     // --- LÓGICA DE CATEGORÍAS ---
     const DEFAULT_CATEGORIAS = {
-      'Alimentación': ['Supermercado', 'Restaurante', 'Cafetería / Bar', 'Comida a domicilio'],
+      'Alimentación': ['Supermercado', 'Restaurante', 'Cafetería / Bar', 'Comida preparada'],
       'Compras': ['Ropa', 'Electrónica', 'Otros'],
-      'Transfer/Traspasos': ['Gastos', 'Ingresos', 'Entre cuentas'],
+      'Transfer': ['Gastos', 'Ingresos', 'Propias'],
       'Vivienda': ['Alquiler / Hipoteca', 'Comunidad', 'Electricidad / Gas', 'Agua / Internet'],
       'Seguros y Servicios': ['Seguro Hogar', 'Seguro Vida / Salud', 'Comisiones / Servicios'],
       'Transporte': ['Gasolina / Combustible', 'Transporte Público / Taxi', 'Parking / Peaje'],
@@ -666,17 +754,21 @@
     let CATEGORIAS_ESTRUCTURA = {};
     let CAT1_LISTA = [];
 
-    function cargarCategorias() {
-      const guardadas = localStorage.getItem('finanzas_pwa_categorias');
-      if (guardadas) {
-        try {
-          CATEGORIAS_ESTRUCTURA = JSON.parse(guardadas);
-        } catch(e) {
-          CATEGORIAS_ESTRUCTURA = JSON.parse(JSON.stringify(DEFAULT_CATEGORIAS));
+    async function cargarCategorias() {
+      try {
+        const response = await fetch('categorias/estructura_categorias.json');
+        if (response.ok) {
+          const json = await response.json();
+          CATEGORIAS_ESTRUCTURA = normalizarCategorias(json);
+          CAT1_LISTA = Object.keys(CATEGORIAS_ESTRUCTURA);
+          localStorage.setItem('finanzas_pwa_categorias', JSON.stringify(CATEGORIAS_ESTRUCTURA));
+          return;
         }
-      } else {
-        CATEGORIAS_ESTRUCTURA = JSON.parse(JSON.stringify(DEFAULT_CATEGORIAS));
-      }
+      } catch (e) {}
+
+      const guardadas = localStorage.getItem('finanzas_pwa_categorias');
+      const baseCategorias = guardadas ? JSON.parse(guardadas) : JSON.parse(JSON.stringify(DEFAULT_CATEGORIAS));
+      CATEGORIAS_ESTRUCTURA = normalizarCategorias(baseCategorias);
       CAT1_LISTA = Object.keys(CATEGORIAS_ESTRUCTURA);
     }
     
@@ -837,6 +929,44 @@
       return fechaStr;
     }
 
+    function normalizarCat1(cat1) {
+      if (!cat1) return 'Otros';
+      const normalized = String(cat1).trim();
+      if (normalized === 'Transfer/Traspasos' || normalized === 'Transfer' || normalized === 'Transfer/Propios') return 'Transfer';
+      return normalized;
+    }
+
+    function getTipoGeneralMovimiento(mov) {
+      const cat1 = normalizarCat1(mov.cat1);
+      if (cat1 === 'Ingresos') return 'ingresos';
+      if (cat1 === 'Transfer' || cat1 === 'Inversiones y Ahorro') return 'no-computables';
+      return 'gastos';
+    }
+
+    function normalizarCategorias(categorias) {
+      const result = {};
+      Object.entries(categorias || {}).forEach(([cat1, subcats]) => {
+        if (!Array.isArray(subcats)) return;
+        const valores = subcats
+          .map(v => String(v || '').trim())
+          .filter(Boolean);
+        const cat1Normalizada = normalizarCat1(cat1);
+        result[cat1Normalizada] = cat1Normalizada === 'Transfer'
+          ? Array.from(new Set(valores.map(v => v === 'Propias' ? 'Entre cuentas' : v)))
+          : Array.from(new Set(valores));
+      });
+      return result;
+    }
+
+    function getDefaultCat2(cat1) {
+      const subcats = CATEGORIAS_ESTRUCTURA[cat1] || [];
+      if (cat1 === 'Transfer') {
+        const preferred = subcats.find(s => s === 'Entre cuentas' || s === 'Propias');
+        return preferred === 'Propias' ? 'Entre cuentas' : (preferred || 'Entre cuentas');
+      }
+      return subcats[0] || 'General / Varios';
+    }
+
     function normalizarCabecera(valor) {
       return String(valor || '')
         .replace(/^\uFEFF/, '')
@@ -877,8 +1007,9 @@
     function clasificarAuto(concepto, importe) {
       const c = concepto.toUpperCase();
       if (c.includes('TRANSFER') || c.includes('TRASPASO') || c.includes('PAGO TRANSFERENCIAS')) {
-        if (c.includes('ENTRE CUENTAS') || c.includes('PROPIA') || c.includes('MISMO TITULAR')) return { cat1: 'Transfer/Traspasos', cat2: 'Entre cuentas' };
-        return importe < 0 ? { cat1: 'Transfer/Traspasos', cat2: 'Gastos' } : { cat1: 'Transfer/Traspasos', cat2: 'Ingresos' };
+        if (c.includes('ENTRE CUENTAS') || c.includes('PROPIA') || c.includes('MISMO TITULAR')) return { cat1: 'Transfer', cat2: 'Entre cuentas' };
+        const defaultCat2 = getDefaultCat2('Transfer');
+        return { cat1: 'Transfer', cat2: defaultCat2 };
       }
       if (importe > 0) {
         if (c.includes('NOMINA') || c.includes('PAG NOMINAS') || c.includes('SUELDO')) return { cat1: 'Ingresos', cat2: 'Nómina / Sueldo' };
@@ -901,13 +1032,194 @@
       return { cat1: 'Otros', cat2: 'General / Varios' };
     }
 
-    window.addEventListener('DOMContentLoaded', () => {
-      cargarCategorias();
+    let datePickerState = { kind: 'desde', year: new Date().getFullYear(), month: new Date().getMonth() };
+
+    function dateToStr(y, m, d) {
+      return `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    }
+
+    function formatDisplayDate(isoStr) {
+      if (!isoStr) return '';
+      const [y, m, d] = isoStr.split('-');
+      return `${d}/${m}/${y}`;
+    }
+
+    function parseFechaFiltro(valor) {
+      const texto = String(valor || '').trim();
+      if (!texto) return '';
+      const iso = texto.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
+      const eu = texto.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+      if (eu) {
+        const d = eu[1].padStart(2, '0');
+        const m = eu[2].padStart(2, '0');
+        const y = eu[3];
+        return `${y}-${m}-${d}`;
+      }
+      return '';
+    }
+
+    function handleDateInput(kind, value) {
+      const parsed = parseFechaFiltro(value);
+      const hiddenInput = document.getElementById(kind === 'desde' ? 'filterDesde' : 'filterHasta');
+      const displayInput = document.getElementById(kind === 'desde' ? 'filterDesdeDisplay' : 'filterHastaDisplay');
+      if (parsed) {
+        hiddenInput.value = parsed;
+        displayInput.value = formatDisplayDate(parsed);
+      } else if (!value) {
+        hiddenInput.value = '';
+        displayInput.value = '';
+      }
+    }
+
+    function clearDateFilter(kind) {
+      const hiddenInput = document.getElementById(kind === 'desde' ? 'filterDesde' : 'filterHasta');
+      const displayInput = document.getElementById(kind === 'desde' ? 'filterDesdeDisplay' : 'filterHastaDisplay');
+      hiddenInput.value = '';
+      displayInput.value = '';
+    }
+
+    function hideDatePicker(kind) {
+      const pop = document.getElementById(kind === 'desde' ? 'datePickerDesde' : 'datePickerHasta');
+      pop.classList.remove('show');
+      pop.style.display = 'none';
+    }
+
+    function toggleDatePicker(kind, event) {
+      event.preventDefault();
+      event.stopPropagation();
+      const pop = document.getElementById(kind === 'desde' ? 'datePickerDesde' : 'datePickerHasta');
+      const isOpen = pop.classList.contains('show');
+      document.querySelectorAll('.date-picker-popover').forEach(p => {
+        p.classList.remove('show');
+        p.style.display = 'none';
+      });
+      if (isOpen) return;
+      const hiddenInput = document.getElementById(kind === 'desde' ? 'filterDesde' : 'filterHasta');
+      if (hiddenInput.value) {
+        const [y, m, d] = hiddenInput.value.split('-').map(Number);
+        datePickerState.kind = kind;
+        datePickerState.year = y;
+        datePickerState.month = m - 1;
+      } else {
+        datePickerState.kind = kind;
+        datePickerState.year = new Date().getFullYear();
+        datePickerState.month = new Date().getMonth();
+      }
+      pop.classList.add('show');
+      pop.style.display = 'block';
+      renderDatePicker(kind);
+    }
+
+    function renderDatePicker(kind) {
+      const pop = document.getElementById(kind === 'desde' ? 'datePickerDesde' : 'datePickerHasta');
+      const monthLabel = document.getElementById(kind === 'desde' ? 'datePickerDesdeMonth' : 'datePickerHastaMonth');
+      const grid = document.getElementById(kind === 'desde' ? 'datePickerDesdeGrid' : 'datePickerHastaGrid');
+      const monthNames = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+      const dowNames = ['Lu','Ma','Mi','Ju','Vi','Sa','Do'];
+
+      monthLabel.textContent = `${monthNames[datePickerState.month]} ${datePickerState.year}`;
+      grid.innerHTML = '';
+
+      dowNames.forEach(day => {
+        const el = document.createElement('div');
+        el.className = 'cal-dow';
+        el.textContent = day;
+        grid.appendChild(el);
+      });
+
+      const firstDay = new Date(datePickerState.year, datePickerState.month, 1).getDay();
+      const startOffset = (firstDay + 6) % 7;
+      const daysInMonth = new Date(datePickerState.year, datePickerState.month + 1, 0).getDate();
+
+      for (let i = 0; i < startOffset; i++) {
+        const el = document.createElement('div');
+        el.className = 'cal-day empty';
+        grid.appendChild(el);
+      }
+
+      const hiddenInput = document.getElementById(kind === 'desde' ? 'filterDesde' : 'filterHasta');
+      const selected = hiddenInput.value;
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dayStr = dateToStr(datePickerState.year, datePickerState.month, d);
+        const el = document.createElement('button');
+        el.type = 'button';
+        el.className = 'cal-day';
+        el.textContent = d;
+        if (selected === dayStr) el.classList.add('today');
+        el.addEventListener('click', () => selectDatePicker(kind, dayStr));
+        grid.appendChild(el);
+      }
+
+      pop.style.display = 'block';
+    }
+
+    function changeDatePickerMonth(kind, delta) {
+      datePickerState.month += delta;
+      if (datePickerState.month < 0) {
+        datePickerState.month = 11;
+        datePickerState.year -= 1;
+      }
+      if (datePickerState.month > 11) {
+        datePickerState.month = 0;
+        datePickerState.year += 1;
+      }
+      renderDatePicker(kind);
+    }
+
+    function setDatePickerToToday(kind) {
+      const today = new Date();
+      datePickerState.year = today.getFullYear();
+      datePickerState.month = today.getMonth();
+      renderDatePicker(kind);
+    }
+
+    function selectDatePicker(kind, value) {
+      const hiddenInput = document.getElementById(kind === 'desde' ? 'filterDesde' : 'filterHasta');
+      const displayInput = document.getElementById(kind === 'desde' ? 'filterDesdeDisplay' : 'filterHastaDisplay');
+      hiddenInput.value = value;
+      displayInput.value = formatDisplayDate(value);
+      hideDatePicker(kind);
+    }
+
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.date-input-wrapper')) {
+        document.querySelectorAll('.date-picker-popover').forEach(p => {
+          p.classList.remove('show');
+          p.style.display = 'none';
+        });
+      }
+    });
+
+    function updateCat2FilterOptions() {
+      const cat1Select = document.getElementById('filterCat1');
+      const cat2Select = document.getElementById('filterCat2');
+      const selectedCat1 = cat1Select.value;
+      const options = selectedCat1 === 'todos'
+        ? Object.values(CATEGORIAS_ESTRUCTURA).flat()
+        : (CATEGORIAS_ESTRUCTURA[selectedCat1] || []);
+      const uniqueOptions = Array.from(new Set(options));
+      cat2Select.innerHTML = '<option value="todos">Todas</option>' + uniqueOptions.map(v => `<option value="${v}">${v}</option>`).join('');
+    }
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      await cargarCategorias();
+      const cat1Select = document.getElementById('filterCat1');
+      cat1Select.innerHTML = '<option value="todos">Todas</option>' + CAT1_LISTA.map(c => `<option value="${c}">${c}</option>`).join('');
+      updateCat2FilterOptions();
+      syncTableFilterOptions();
       const saved = localStorage.getItem('finanzas_pwa_data_v4'); // V4 por la migración de Dueño
       if (saved) {
         try {
-          moveData = JSON.parse(saved);
-          if (moveData.length > 0) renderAll();
+          moveData = JSON.parse(saved).map(m => ({
+            ...m,
+            cat1: normalizarCat1(m.cat1),
+            cat2: m.cat1 === 'Transfer' || m.cat1 === 'Transfer/Traspasos'
+              ? getDefaultCat2('Transfer')
+              : (m.cat2 || ''),
+            revisado: typeof m.revisado === 'boolean' ? m.revisado : false
+          }));
+          if (moveData.length > 0) renderAll(getTableFilterValues());
         } catch(e) { console.error(e); }
       } else {
         // Migration from v3
@@ -919,7 +1231,7 @@
               if (!m.dueño) m.dueño = 'Familia'; // Migración
             });
             saveData();
-            if (moveData.length > 0) renderAll();
+            if (moveData.length > 0) renderAll(getTableFilterValues());
           } catch(e){}
         }
       }
@@ -983,7 +1295,8 @@
               dueño: 'Familia', // Dueño por defecto
               cat1: autoCat.cat1,
               cat2: autoCat.cat2,
-              notas: ''
+              notas: '',
+              revisado: false
             });
           });
 
@@ -997,21 +1310,28 @@
       localStorage.setItem('finanzas_pwa_data_v4', JSON.stringify(moveData));
     }
 
-    // Actualizaciones de fila
     function updateField(id, field, value) {
       const item = moveData.find(m => m.id === id);
       if (item) {
         item[field] = value;
         if (field === 'cat1') {
-          const subCats = CATEGORIAS_ESTRUCTURA[value] || ['General / Varios'];
-          item.cat2 = subCats[0];
+          const cat1Value = value;
+          item.cat2 = getDefaultCat2(cat1Value);
         }
         saveData();
         if (field !== 'notas' && field !== 'fechaAplicable') {
-          renderAll(); // Rerender if category or owner changes
+          const visibleMatch = currentVisibleData.find(m => m.id === id);
+          if (visibleMatch) {
+            visibleMatch[field] = value;
+            if (field === 'cat1') {
+              visibleMatch.cat2 = getDefaultCat2(value);
+            }
+          }
+          renderAll(getTableFilterValues());
         }
       }
     }
+
 
     document.getElementById('clearBtn').addEventListener('click', () => {
       if (confirm('¿Borrar todos los datos cargados?')) {
@@ -1019,6 +1339,7 @@
         moveData = [];
         document.getElementById('dashboard').style.display = 'none';
         document.getElementById('exportBtn').style.display = 'none';
+        document.getElementById('exportCsvBtn').style.display = 'none';
         document.getElementById('exportJsonBtn').style.display = 'none';
         document.getElementById('clearBtn').style.display = 'none';
         document.getElementById('csvFile').value = '';
@@ -1026,212 +1347,135 @@
       }
     });
 
-    function applyFilters() {
-      renderAll();
+    let appliedFilters = {
+      desde: '',
+      hasta: '',
+      cat1: 'todos',
+      cat2: 'todos',
+      tipo: 'todos',
+      dueno: 'todos'
+    };
+    let currentVisibleData = [];
+    let currentView = 'todos';
+
+    function getCurrentFilterValues() {
+      return {
+        desde: document.getElementById('filterDesde').value,
+        hasta: document.getElementById('filterHasta').value,
+        cat1: document.getElementById('filterCat1').value,
+        cat2: document.getElementById('filterCat2').value,
+        tipo: document.getElementById('filterTipo').value,
+        dueno: document.getElementById('filterDueno').value
+      };
     }
 
-    // ── Calendar Picker Logic ──
-    let calCurrentYear = new Date().getFullYear();
-    let calCurrentMonth = new Date().getMonth(); // 0-indexed
-    let calSelectStart = null; // 'YYYY-MM-DD'
-    let calSelectEnd = null;
-    let calHover = null;
-    let calPickingEnd = false;
-
-    const MONTH_NAMES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
-                         'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-    const DOW_NAMES = ['Lu','Ma','Mi','Ju','Vi','Sa','Do'];
-
-    function toggleCalPopover(e) {
-      e.stopPropagation();
-      const pop = document.getElementById('calPopover');
-      const btn = document.getElementById('dateRangeBtn');
-      const isOpen = pop.classList.contains('show');
-      if (isOpen) {
-        pop.classList.remove('show');
-        btn.classList.remove('open');
-      } else {
-        pop.classList.add('show');
-        btn.classList.add('open');
-        renderCalGrid();
-      }
-    }
-
-    document.addEventListener('click', (e) => {
-      const wrapper = document.getElementById('dateRangeWrapper');
-      if (wrapper && !wrapper.contains(e.target)) {
-        document.getElementById('calPopover').classList.remove('show');
-        document.getElementById('dateRangeBtn').classList.remove('open');
-      }
-    });
-
-    function calNav(dir) {
-      calCurrentMonth += dir;
-      if (calCurrentMonth < 0) { calCurrentMonth = 11; calCurrentYear--; }
-      if (calCurrentMonth > 11) { calCurrentMonth = 0; calCurrentYear++; }
-      renderCalGrid();
-    }
-
-    function calGoToday() {
-      const now = new Date();
-      calCurrentYear = now.getFullYear();
-      calCurrentMonth = now.getMonth();
-      renderCalGrid();
-    }
-
-    function dateToStr(y, m, d) {
-      return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    }
-
-    function renderCalGrid() {
-      const label = document.getElementById('calMonthLabel');
-      label.textContent = `${MONTH_NAMES[calCurrentMonth]} ${calCurrentYear}`;
-
-      const grid = document.getElementById('calGrid');
-      grid.innerHTML = '';
-
-      // Day of week headers
-      DOW_NAMES.forEach(d => {
-        const el = document.createElement('div');
-        el.className = 'cal-dow';
-        el.textContent = d;
-        grid.appendChild(el);
-      });
-
-      const firstDay = new Date(calCurrentYear, calCurrentMonth, 1).getDay();
-      // Convert Sunday=0 to Monday=0 week start
-      const startOffset = (firstDay + 6) % 7;
-      const daysInMonth = new Date(calCurrentYear, calCurrentMonth + 1, 0).getDate();
-      const today = new Date();
-      const todayStr = dateToStr(today.getFullYear(), today.getMonth(), today.getDate());
-
-      // Blank cells before month start
-      for (let i = 0; i < startOffset; i++) {
-        const el = document.createElement('button');
-        el.className = 'cal-day empty';
-        grid.appendChild(el);
-      }
-
-      for (let d = 1; d <= daysInMonth; d++) {
-        const dayStr = dateToStr(calCurrentYear, calCurrentMonth, d);
-        const el = document.createElement('button');
-        el.className = 'cal-day';
-        el.textContent = d;
-        if (dayStr === todayStr) el.classList.add('today');
-
-        // Determine range state
-        const start = calSelectStart;
-        const end = calSelectEnd || calHover;
-        const lo = start && end ? (start <= end ? start : end) : start;
-        const hi = start && end ? (start <= end ? end : start) : start;
-
-        if (start && dayStr === start) el.classList.add('range-start');
-        if (end && dayStr === end) el.classList.add('range-end');
-        if (lo && hi && dayStr > lo && dayStr < hi) el.classList.add('in-range');
-
-        el.addEventListener('mouseenter', () => {
-          if (calPickingEnd && calSelectStart) {
-            calHover = dayStr;
-            renderCalGrid();
-          }
-        });
-        el.addEventListener('click', () => calDayClick(dayStr));
-        grid.appendChild(el);
-      }
-    }
-
-    function calDayClick(dayStr) {
-      if (!calPickingEnd || !calSelectStart) {
-        // First click: set start
-        calSelectStart = dayStr;
-        calSelectEnd = null;
-        calHover = null;
-        calPickingEnd = true;
-      } else {
-        // Second click: set end
-        calSelectEnd = dayStr;
-        calHover = null;
-        calPickingEnd = false;
-        // Ensure order
-        if (calSelectStart > calSelectEnd) {
-          [calSelectStart, calSelectEnd] = [calSelectEnd, calSelectStart];
-        }
-      }
-      renderCalGrid();
-    }
-
-    function calApply() {
-      document.getElementById('filterDesde').value = calSelectStart || '';
-      document.getElementById('filterHasta').value = calSelectEnd || calSelectStart || '';
-      updateDateRangeLabel();
-      document.getElementById('calPopover').classList.remove('show');
-      document.getElementById('dateRangeBtn').classList.remove('open');
-      applyFilters();
-    }
-
-    function calClear() {
-      calSelectStart = null;
-      calSelectEnd = null;
-      calHover = null;
-      calPickingEnd = false;
+    function clearGeneralFilters() {
       document.getElementById('filterDesde').value = '';
       document.getElementById('filterHasta').value = '';
-      updateDateRangeLabel();
-      renderCalGrid();
+      document.getElementById('filterDesdeDisplay').value = '';
+      document.getElementById('filterHastaDisplay').value = '';
+      document.getElementById('filterCat1').value = 'todos';
+      document.getElementById('filterCat2').value = 'todos';
+      document.getElementById('filterTipo').value = 'todos';
+      document.getElementById('filterDueno').value = 'todos';
+      updateCat2FilterOptions();
       applyFilters();
     }
 
-    function updateDateRangeLabel() {
-      const desde = document.getElementById('filterDesde').value;
-      const hasta = document.getElementById('filterHasta').value;
-      const lbl = document.getElementById('dateRangeLabel');
-      if (!desde && !hasta) {
-        lbl.textContent = 'Todas las fechas';
-      } else if (desde && (!hasta || desde === hasta)) {
-        lbl.textContent = formatDisplayDate(desde);
-      } else {
-        lbl.textContent = `${formatDisplayDate(desde)} → ${formatDisplayDate(hasta)}`;
-      }
+    function clearTableColumnFilters() {
+      ['tableFilterFechaOrig','tableFilterFechaAplicable','tableFilterConcepto','tableFilterMasDatos','tableFilterDueno','tableFilterCat1','tableFilterCat2','tableFilterImporte','tableFilterNotas'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+      applyFilters();
     }
 
+    function getTableFilterValues() {
+      return {
+        fechaOrig: document.getElementById('tableFilterFechaOrig').value.trim().toLowerCase(),
+        fechaAplicable: document.getElementById('tableFilterFechaAplicable').value.trim().toLowerCase(),
+        concepto: document.getElementById('tableFilterConcepto').value.trim().toLowerCase(),
+        masDatos: document.getElementById('tableFilterMasDatos').value.trim().toLowerCase(),
+        dueno: document.getElementById('tableFilterDueno').value,
+        cat1: document.getElementById('tableFilterCat1').value,
+        cat2: document.getElementById('tableFilterCat2').value,
+        importe: document.getElementById('tableFilterImporte').value.trim().toLowerCase(),
+        notas: document.getElementById('tableFilterNotas').value.trim().toLowerCase()
+      };
+    }
+
+    function applyFilters() {
+      appliedFilters = getCurrentFilterValues();
+      renderAll(getTableFilterValues());
+    }
+
+// ── Filtro de Fechas por Rango ──
     function formatDisplayDate(isoStr) {
       if (!isoStr) return '';
       const [y,m,d] = isoStr.split('-');
       return `${d}/${m}/${y}`;
     }
 
-    function renderAll() {
+    function renderAll(tableFilters = null) {
       if (moveData.length === 0) return;
 
       document.getElementById('dashboard').style.display = 'block';
       document.getElementById('exportBtn').style.display = 'inline-flex';
+      document.getElementById('exportCsvBtn').style.display = 'inline-flex';
       document.getElementById('exportJsonBtn').style.display = 'inline-flex';
       document.getElementById('clearBtn').style.display = 'inline-flex';
 
-      // Obtener Filtros
-      const fDesde = document.getElementById('filterDesde').value;
-      const fHasta = document.getElementById('filterHasta').value;
-      const fTipo = document.getElementById('filterTipo').value;
-      const fDueno = document.getElementById('filterDueno').value;
+      const fDesde = appliedFilters.desde;
+      const fHasta = appliedFilters.hasta;
+      const fCat1 = appliedFilters.cat1;
+      const fCat2 = appliedFilters.cat2;
+      const fTipo = appliedFilters.tipo;
+      const fDueno = appliedFilters.dueno;
 
-      // Filtrar Datos
-      const filteredData = moveData.filter(m => {
-        // Filtro Fecha (usamos fechaAplicable si existe, sino fecha original formateada ISO)
+      let filteredData = moveData.filter(m => {
         const fechaEvaluar = m.fechaAplicable || formatFechaISO(m.fecha);
         if (fDesde && fechaEvaluar < fDesde) return false;
         if (fHasta && fechaEvaluar > fHasta) return false;
         
-        // Filtro Tipo
-        const isTransfer = (m.cat1 === 'Transfer/Traspasos');
-        if (fTipo === 'ingresos' && (m.importe <= 0 || isTransfer)) return false;
-        if (fTipo === 'gastos' && (m.importe > 0 || isTransfer)) return false;
-        if (fTipo === 'entrecuentas' && !isTransfer) return false;
+        const cat1Normalizada = normalizarCat1(m.cat1);
+        if (fCat1 !== 'todos' && cat1Normalizada !== fCat1) return false;
+        if (fCat2 !== 'todos' && m.cat2 !== fCat2) return false;
 
-        // Filtro Dueño
+        const tipoGeneral = getTipoGeneralMovimiento(m);
+        if (fTipo === 'ingresos' && tipoGeneral !== 'ingresos') return false;
+        if (fTipo === 'gastos' && tipoGeneral !== 'gastos') return false;
+        if (fTipo === 'entrecuentas' && tipoGeneral !== 'no-computables') return false;
+
         if (fDueno !== 'todos' && m.dueño !== fDueno) return false;
 
         return true;
       });
+
+      filteredData = filteredData.filter(m => {
+        const tipoGeneral = getTipoGeneralMovimiento(m);
+        if (currentView === 'ingresos' && tipoGeneral !== 'ingresos') return false;
+        if (currentView === 'gastos' && tipoGeneral !== 'gastos') return false;
+        if (currentView === 'no-computables' && tipoGeneral !== 'no-computables') return false;
+        return true;
+      });
+
+      filteredData = filteredData.filter(m => {
+        if (!tableFilters) return true;
+        if (tableFilters.fechaOrig && !String(m.fecha || '').toLowerCase().includes(tableFilters.fechaOrig)) return false;
+        if (tableFilters.fechaAplicable && !String(m.fechaAplicable || '').toLowerCase().includes(tableFilters.fechaAplicable)) return false;
+        if (tableFilters.concepto && !String(m.concepto || '').toLowerCase().includes(tableFilters.concepto)) return false;
+        if (tableFilters.masDatos && !String(m.masDatos || '').toLowerCase().includes(tableFilters.masDatos)) return false;
+        if (tableFilters.dueno && m.dueño !== tableFilters.dueno) return false;
+        if (tableFilters.cat1 && normalizarCat1(m.cat1) !== tableFilters.cat1) return false;
+        if (tableFilters.cat2 && m.cat2 !== tableFilters.cat2) return false;
+        if (tableFilters.importe && !String(m.importe.toFixed(2)).includes(tableFilters.importe)) return false;
+        if (tableFilters.notas && !String(m.notas || '').toLowerCase().includes(tableFilters.notas)) return false;
+        return true;
+      });
+
+      currentVisibleData = filteredData;
+
+      const viewType = currentView === 'ingresos' ? 'ingresos' : (currentView === 'gastos' ? 'gastos' : (currentView === 'no-computables' ? 'no-computables' : 'todos'));
 
       // Totales
       let ingresos = 0, gastos = 0, entreCuentas = 0;
@@ -1241,19 +1485,36 @@
       const cat2TotalsMap = {}; // Clave: "Cat1|Cat2"
 
       filteredData.forEach(m => {
-        const isTransfer = (m.cat1 === 'Transfer/Traspasos');
-        
+        const cat1Normalizada = normalizarCat1(m.cat1);
+        const tipoGeneral = getTipoGeneralMovimiento(m);
+        const isTransfer = (cat1Normalizada === 'Transfer');
+        const absVal = Math.abs(m.importe);
+
+        if (viewType === 'ingresos' && tipoGeneral !== 'ingresos') return;
+        if (viewType === 'gastos' && tipoGeneral !== 'gastos') return;
+        if (viewType === 'no-computables' && tipoGeneral !== 'no-computables') return;
+
         if (isTransfer) {
-          entreCuentas += Math.abs(m.importe);
+          entreCuentas += absVal;
+          if (viewType === 'todos' || viewType === 'no-computables') {
+            cat1TotalsMap[m.cat1] = (cat1TotalsMap[m.cat1] || 0) + absVal;
+            const cat2Key = `${m.cat1}|${m.cat2}`;
+            cat2TotalsMap[cat2Key] = (cat2TotalsMap[cat2Key] || 0) + absVal;
+          }
         } else if (m.importe > 0) {
           ingresos += m.importe;
+          if (viewType === 'todos' || viewType === 'ingresos') {
+            cat1TotalsMap[m.cat1] = (cat1TotalsMap[m.cat1] || 0) + m.importe;
+            const cat2Key = `${m.cat1}|${m.cat2}`;
+            cat2TotalsMap[cat2Key] = (cat2TotalsMap[cat2Key] || 0) + m.importe;
+          }
         } else {
-          const absVal = Math.abs(m.importe);
           gastos += absVal;
-          
-          cat1TotalsMap[m.cat1] = (cat1TotalsMap[m.cat1] || 0) + absVal;
-          const cat2Key = `${m.cat1}|${m.cat2}`;
-          cat2TotalsMap[cat2Key] = (cat2TotalsMap[cat2Key] || 0) + absVal;
+          if (viewType === 'todos' || viewType === 'gastos') {
+            cat1TotalsMap[m.cat1] = (cat1TotalsMap[m.cat1] || 0) + absVal;
+            const cat2Key = `${m.cat1}|${m.cat2}`;
+            cat2TotalsMap[cat2Key] = (cat2TotalsMap[cat2Key] || 0) + absVal;
+          }
         }
       });
 
@@ -1268,14 +1529,39 @@
       balanceEl.className = balance >= 0 ? 'amount-pos' : 'amount-neg';
 
       // Gráficos
-      renderConcentricChart(cat1TotalsMap, cat2TotalsMap);
-      renderBarChart(cat1TotalsMap);
+      renderConcentricChart(cat1TotalsMap, cat2TotalsMap, viewType);
+      renderBarChart(cat1TotalsMap, viewType);
 
       // Tabla
       renderMovementsTable(filteredData);
+      syncTableFilterOptions();
     }
 
-    function renderConcentricChart(cat1Map, cat2Map) {
+    function syncTableFilterOptions() {
+      const cat1Select = document.getElementById('tableFilterCat1');
+      const cat2Select = document.getElementById('tableFilterCat2');
+      if (!cat1Select || !cat2Select) return;
+      const selected = cat1Select.value;
+      cat1Select.innerHTML = '<option value="">Todos</option>' + CAT1_LISTA.map(c => `<option value="${c}" ${selected === c ? 'selected' : ''}>${c}</option>`).join('');
+      const options = selected ? (CATEGORIAS_ESTRUCTURA[selected] || []) : Object.values(CATEGORIAS_ESTRUCTURA).flat();
+      const uniqueOptions = Array.from(new Set(options));
+      const selectedCat2 = cat2Select.value;
+      cat2Select.innerHTML = '<option value="">Todos</option>' + uniqueOptions.map(v => `<option value="${v}" ${selectedCat2 === v ? 'selected' : ''}>${v}</option>`).join('');
+    }
+
+    function setChartView(view) {
+      currentView = view;
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.view === view));
+      applyFilters();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => setChartView(btn.dataset.view));
+      });
+    });
+
+    function renderConcentricChart(cat1Map, cat2Map, viewType = 'todos') {
       const ctx = document.getElementById('chartCategorias').getContext('2d');
       if (doughnutChart) doughnutChart.destroy();
 
@@ -1353,7 +1639,7 @@
       });
     }
 
-    function renderBarChart(cat1Map) {
+    function renderBarChart(cat1Map, viewType = 'todos') {
       const ctx = document.getElementById('chartTotalesBar').getContext('2d');
       if (barChart) barChart.destroy();
 
@@ -1366,7 +1652,7 @@
         data: {
           labels: labels,
           datasets: [{
-            label: 'Total Gastos (€)',
+            label: viewType === 'ingresos' ? 'Total Ingresos (€)' : (viewType === 'no-computables' ? 'Total No computables (€)' : 'Total Gastos (€)'),
             data: data,
             backgroundColor: '#3b82f6',
             borderRadius: 6
@@ -1411,16 +1697,18 @@
         ).join('');
 
         // Cat1
+        const currentCat1 = normalizarCat1(m.cat1);
         const cat1Options = CAT1_LISTA.map(c1 => 
-          `<option value="${c1}" ${m.cat1 === c1 ? 'selected' : ''}>${c1}</option>`
+          `<option value="${c1}" ${currentCat1 === c1 ? 'selected' : ''}>${c1}</option>`
         );
         // Fallback si la cat1 no existe en la estructura (fue eliminada)
-        if (!CAT1_LISTA.includes(m.cat1)) {
-          cat1Options.unshift(`<option value="${m.cat1}" selected>${m.cat1} (Eliminada)</option>`);
+        if (!CAT1_LISTA.includes(currentCat1)) {
+          cat1Options.unshift(`<option value="${currentCat1}" selected>${currentCat1} (Eliminada)</option>`);
         }
 
         // Cat2
-        const availableCat2 = CATEGORIAS_ESTRUCTURA[m.cat1] || [m.cat2];
+        const cat1Value = normalizarCat1(m.cat1);
+        const availableCat2 = CATEGORIAS_ESTRUCTURA[cat1Value] || [m.cat2];
         const cat2Options = availableCat2.map(c2 => 
           `<option value="${c2}" ${m.cat2 === c2 ? 'selected' : ''}>${c2}</option>`
         );
@@ -1428,22 +1716,23 @@
           cat2Options.unshift(`<option value="${m.cat2}" selected>${m.cat2} (Eliminada)</option>`);
         }
 
-        const isEntreCuentas = (m.cat1 === 'Transfer/Traspasos');
+        const isEntreCuentas = (normalizarCat1(m.cat1) === 'Transfer');
         const amountClass = isEntreCuentas ? 'amount-neutral' : (m.importe >= 0 ? 'amount-pos' : 'amount-neg');
         const formattedAmount = (m.importe > 0 ? '+' : '') + m.importe.toFixed(2).replace('.', ',') + ' €';
 
         tr.innerHTML = `
+          <td class="review-cell">
+            <div style="display:flex; align-items:center; justify-content:center; gap:0.35rem;">
+              <span class="review-status ${m.revisado ? 'revisado' : 'pendiente'}" title="${m.revisado ? 'Revisado' : 'Pendiente'}"></span>
+              <input type="checkbox" class="review-toggle" ${m.revisado ? 'checked' : ''} onchange="updateField('${m.id}', 'revisado', this.checked)">
+            </div>
+          </td>
           <td style="white-space:nowrap; color: var(--text-muted);">${m.fecha}</td>
           <td>
             <input type="date" class="input-table" value="${m.fechaAplicable || ''}" onchange="updateField('${m.id}', 'fechaAplicable', this.value)">
           </td>
           <td style="font-weight:500;">${m.concepto}</td>
           <td style="color: var(--text-muted); font-size: 0.85em;">${m.masDatos || ''}</td>
-          <td>
-            <select class="cat-select" onchange="updateField('${m.id}', 'dueño', this.value)">
-              ${duenoOptions}
-            </select>
-          </td>
           <td>
             <select class="cat-select" onchange="updateField('${m.id}', 'cat1', this.value)">
               ${cat1Options.join('')}
@@ -1457,6 +1746,11 @@
           <td class="${amountClass}" style="text-align:right; white-space:nowrap;">${formattedAmount}</td>
           <td>
             <input type="text" class="input-table" placeholder="Añadir nota..." value="${m.notas || ''}" onchange="updateField('${m.id}', 'notas', this.value)">
+          </td>
+          <td>
+            <select class="cat-select" onchange="updateField('${m.id}', 'dueño', this.value)">
+              ${duenoOptions}
+            </select>
           </td>
         `;
         tbody.appendChild(tr);
@@ -1475,12 +1769,40 @@
         'Categoría 1 (Principal)': m.cat1,
         'Categoría 2 (Detalle)': m.cat2,
         'Cantidad (€)': m.importe,
-        'Notas': m.notas || ''
+        'Notas': m.notas || '',
+        'Revisado': m.revisado ? 'Sí' : 'No'
       }));
       const worksheet = XLSX.utils.json_to_sheet(dataToExport);
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Movimientos");
       XLSX.writeFile(workbook, `Movimientos_Clasificados_${timestampSuffix()}.xlsx`);
+    });
+
+    // Exportar CSV
+    document.getElementById('exportCsvBtn').addEventListener('click', () => {
+      if (moveData.length === 0) return;
+      const rows = moveData.map(m => ({
+        'Fecha Original': m.fecha,
+        'Fecha Aplicable': m.fechaAplicable || '',
+        'Concepto': m.concepto,
+        'Más datos': m.masDatos || '',
+        'Dueño': m.dueño,
+        'Categoría 1 (Principal)': m.cat1,
+        'Categoría 2 (Detalle)': m.cat2,
+        'Cantidad (€)': m.importe,
+        'Notas': m.notas || '',
+        'Revisado': m.revisado ? 'Sí' : 'No'
+      }));
+      const csvContent = Papa.unparse(rows);
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Movimientos_Clasificados_${timestampSuffix()}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
     });
 
     // Exportar JSON
@@ -1506,7 +1828,7 @@
           if (Array.isArray(importedData)) {
             moveData = importedData;
             // Migración por si el JSON antiguo no tiene dueño
-            moveData.forEach(m => { if (!m.dueño) m.dueño = 'Familia'; });
+            moveData.forEach(m => { if (!m.dueño) m.dueño = 'Familia'; if (typeof m.revisado === 'undefined') m.revisado = false; });
             saveData();
             renderAll();
             alert("Base de datos importada correctamente.");
@@ -1522,7 +1844,7 @@
     });
 
     // Service Worker para PWA
-    if ('serviceWorker' in navigator) {
+    if ('serviceWorker' in navigator && location.protocol !== 'file:') {
       const swCode = `self.addEventListener('fetch', e => e.respondWith(fetch(e.request)));`;
       const blob = new Blob([swCode], { type: 'application/javascript' });
       navigator.serviceWorker.register(URL.createObjectURL(blob));
