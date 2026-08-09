@@ -125,6 +125,12 @@
     }
     .btn-success:hover { background: #059669; }
 
+    .btn-warning {
+      background: var(--warning);
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+    }
+    .btn-warning:hover { background: #d97706; }
+
     .btn-danger {
       background: rgba(239, 68, 68, 0.2);
       color: #fca5a5;
@@ -197,52 +203,178 @@
       gap: 0.5rem;
     }
 
-    .filter-badge {
-      background: rgba(59, 130, 246, 0.2);
-      color: #93c5fd;
-      border: 1px solid rgba(59, 130, 246, 0.4);
-      padding: 0.3rem 0.75rem;
-      border-radius: 20px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      display: inline-flex;
+    /* Filters Bar */
+    .filters-bar {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      background: rgba(15, 23, 42, 0.6);
+      padding: 1rem;
+      border-radius: 12px;
+      margin-bottom: 1.25rem;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      align-items: flex-end;
+    }
+
+    .filter-item {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-width: 150px;
+    }
+
+    .filter-item label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-bottom: 0.3rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* ── Calendar Picker ── */
+    .date-range-wrapper {
+      position: relative;
+      flex: 2;
+      min-width: 230px;
+    }
+
+    .date-range-btn {
+      width: 100%;
+      display: flex;
       align-items: center;
       gap: 0.5rem;
-    }
-
-    .reset-filter-btn {
-      color: #ef4444;
+      padding: 0.55rem 0.8rem;
+      background: #0f172a;
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 0.85rem;
+      font-family: inherit;
       cursor: pointer;
-      font-weight: bold;
-      margin-left: 0.25rem;
+      transition: border-color 0.2s;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .date-range-btn:hover, .date-range-btn.open {
+      border-color: var(--accent);
+    }
+    .date-range-btn svg {
+      flex-shrink: 0;
+      opacity: 0.6;
     }
 
-    .view-toggle {
+    .cal-popover {
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      z-index: 200;
+      background: #1e293b;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 14px;
+      padding: 1rem;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+      min-width: 320px;
+    }
+    .cal-popover.show { display: block; }
+
+    .cal-nav {
       display: flex;
-      background: rgba(15, 23, 42, 0.6);
-      padding: 0.25rem;
-      border-radius: 10px;
-      gap: 0.25rem;
-      margin-bottom: 1rem;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
     }
+    .cal-nav button {
+      background: rgba(255,255,255,0.07);
+      border: none;
+      color: var(--text);
+      border-radius: 6px;
+      width: 28px;
+      height: 28px;
+      cursor: pointer;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s;
+    }
+    .cal-nav button:hover { background: rgba(255,255,255,0.15); }
+    .cal-nav span {
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--text);
+      cursor: pointer;
+    }
+    .cal-nav span:hover { color: var(--accent); }
 
-    .view-toggle-btn {
-      flex: 1;
-      padding: 0.5rem;
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 2px;
+      text-align: center;
+    }
+    .cal-dow {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      padding: 0.2rem 0;
+      font-weight: 600;
+    }
+    .cal-day {
+      font-size: 0.8rem;
+      padding: 0.35rem 0;
+      border-radius: 6px;
+      cursor: pointer;
       border: none;
       background: transparent;
-      color: var(--text-muted);
-      font-size: 0.85rem;
+      color: var(--text);
+      transition: background 0.15s, color 0.15s;
+    }
+    .cal-day:hover:not(.empty):not(.other-month) {
+      background: rgba(59,130,246,0.25);
+    }
+    .cal-day.other-month { color: #475569; cursor: default; }
+    .cal-day.empty { cursor: default; }
+    .cal-day.in-range {
+      background: rgba(59,130,246,0.15);
+      border-radius: 0;
+    }
+    .cal-day.range-start, .cal-day.range-end {
+      background: var(--accent);
+      color: white;
+      border-radius: 6px;
       font-weight: 600;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.2s;
+    }
+    .cal-day.today {
+      outline: 1px solid rgba(59,130,246,0.5);
+      outline-offset: -1px;
     }
 
-    .view-toggle-btn.active {
+    .cal-footer {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+      justify-content: flex-end;
+    }
+    .cal-footer button {
+      padding: 0.3rem 0.75rem;
+      border-radius: 6px;
+      border: none;
+      font-size: 0.8rem;
+      font-family: inherit;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .cal-footer .btn-clear {
+      background: rgba(255,255,255,0.07);
+      color: var(--text-muted);
+    }
+    .cal-footer .btn-clear:hover { color: var(--text); background: rgba(255,255,255,0.12); }
+    .cal-footer .btn-apply {
       background: var(--accent);
       color: white;
     }
+    .cal-footer .btn-apply:hover { background: var(--accent-hover); }
 
     .table-container {
       overflow-x: auto;
@@ -273,19 +405,19 @@
       z-index: 10;
     }
 
-    select.cat-select, input.input-table {
+    select.cat-select, input.input-table, .filter-select {
       width: 100%;
-      padding: 0.35rem 0.4rem;
+      padding: 0.4rem 0.5rem;
       border-radius: 6px;
       border: 1px solid rgba(255, 255, 255, 0.15);
-      font-size: 0.8rem;
+      font-size: 0.85rem;
       background: #0f172a;
       color: var(--text);
       outline: none;
       font-family: inherit;
     }
 
-    select.cat-select:focus, input.input-table:focus {
+    select.cat-select:focus, input.input-table:focus, .filter-select:focus {
       border-color: var(--accent);
     }
 
@@ -293,27 +425,76 @@
     .amount-pos { color: #34d399; font-weight: 600; }
     .amount-neutral { color: var(--text-muted); font-weight: 600; }
 
-    /* Custom scrollbar for table */
-    .table-container::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
+    /* Custom scrollbar */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.6); }
+    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 4px; }
+
+    /* Modal Categories */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(4px);
     }
-    .table-container::-webkit-scrollbar-track {
-      background: rgba(15, 23, 42, 0.6);
+    .modal-content {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      width: 90%;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 1.5rem;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
     }
-    .table-container::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 3px;
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+    .modal-header h2 { margin: 0; font-size: 1.4rem; }
+    .modal-close {
+      background: transparent; border: none; color: var(--text-muted);
+      font-size: 1.5rem; cursor: pointer;
     }
 
+    .cat-edit-group {
+      background: rgba(15, 23, 42, 0.5);
+      border: 1px solid rgba(255,255,255,0.05);
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+    }
+    .cat-edit-title {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 0.75rem;
+    }
+    .subcat-list {
+      display: flex; flex-wrap: wrap; gap: 0.5rem;
+    }
+    .subcat-badge {
+      background: rgba(59, 130, 246, 0.2);
+      border: 1px solid rgba(59, 130, 246, 0.4);
+      padding: 0.2rem 0.6rem;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      display: flex; align-items: center; gap: 0.4rem;
+    }
+    .subcat-badge span { cursor: pointer; color: #fca5a5; }
+    
     @media (max-width: 750px) {
       body { padding: 0.5rem; }
       .card { padding: 1rem; }
       .stats { grid-template-columns: 1fr 1fr; gap: 0.5rem; }
-      .stat-box { padding: 0.75rem; text-align: center; }
-      .stat-box small { margin-bottom: 0.2rem; }
+      .stat-box { padding: 0.75rem; }
       th, td { padding: 0.5rem 0.3rem; font-size: 0.75rem; }
-      select.cat-select, input.input-table { font-size: 0.75rem; padding: 0.25rem; }
+      select.cat-select, input.input-table, .filter-select { font-size: 0.75rem; padding: 0.3rem; }
     }
   </style>
 </head>
@@ -328,12 +509,63 @@
       <div class="btn-group">
         <label class="btn" for="csvFile">📁 Cargar CSV</label>
         <input type="file" id="csvFile" accept=".csv">
+        <label class="btn" for="jsonFile" style="background: #6366f1;">📁 Importar BD (JSON)</label>
+        <input type="file" id="jsonFile" accept=".json">
         <button class="btn btn-success" id="exportBtn" style="display:none;">📥 Exportar Excel</button>
+        <button class="btn" id="exportJsonBtn" style="display:none; background: #8b5cf6;">📥 Exportar BD (JSON)</button>
+        <button class="btn btn-warning" onclick="openCatModal()">⚙️ Configurar Categorías</button>
         <button class="btn btn-danger" id="clearBtn" style="display:none;">🗑️ Borrar Datos</button>
       </div>
     </div>
 
     <div id="dashboard" style="display:none;">
+      <!-- Filtros Globales -->
+      <!-- Hidden inputs retain the filter values for applyFilters() -->
+      <input type="hidden" id="filterDesde">
+      <input type="hidden" id="filterHasta">
+
+      <div class="filters-bar">
+        <!-- Date Range Calendar Picker -->
+        <div class="date-range-wrapper" id="dateRangeWrapper">
+          <label style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:0.3rem;">Rango de Fechas</label>
+          <button class="date-range-btn" id="dateRangeBtn" onclick="toggleCalPopover(event)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <span id="dateRangeLabel">Todas las fechas</span>
+          </button>
+          <div class="cal-popover" id="calPopover">
+            <div class="cal-nav">
+              <button onclick="calNav(-1)">&#8249;</button>
+              <span id="calMonthLabel" onclick="calGoToday()"></span>
+              <button onclick="calNav(1)">&#8250;</button>
+            </div>
+            <div class="cal-grid" id="calGrid"></div>
+            <div class="cal-footer">
+              <button class="btn-clear" onclick="calClear()">Limpiar</button>
+              <button class="btn-apply" onclick="calApply()">Aplicar</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="filter-item">
+          <label>Tipo de Mov.</label>
+          <select class="filter-select" id="filterTipo" onchange="applyFilters()">
+            <option value="todos">Todos</option>
+            <option value="ingresos">Ingresos</option>
+            <option value="gastos">Gastos</option>
+            <option value="entrecuentas">Entre Cuentas</option>
+          </select>
+        </div>
+        <div class="filter-item">
+          <label>Dueño</label>
+          <select class="filter-select" id="filterDueno" onchange="applyFilters()">
+            <option value="todos">Todos</option>
+            <option value="Familia">Familia</option>
+            <option value="Belén">Belén</option>
+            <option value="Jorge">Jorge</option>
+          </select>
+        </div>
+      </div>
+
       <!-- Resumen General -->
       <div class="card">
         <div class="stats">
@@ -345,42 +577,23 @@
       </div>
 
       <div class="dashboard-grid">
-        <!-- Gráficos por Categorías -->
+        <!-- Gráficos Concéntricos por Categorías -->
         <div class="card">
           <div class="chart-header">
             <h2>📈 Distribución de Gastos</h2>
-            <span id="activeFilterBadge" class="filter-badge" style="display:none;">
-              <span id="filterCategoryName"></span>
-              <span class="reset-filter-btn" onclick="resetFilter()" title="Quitar filtro">✕</span>
-            </span>
           </div>
-
-          <div class="view-toggle">
-            <button class="view-toggle-btn active" id="btnCat1" onclick="switchCategoryLevel(1)">Cat. Principal (Cat 1)</button>
-            <button class="view-toggle-btn" id="btnCat2" onclick="switchCategoryLevel(2)">Subcategoría (Cat 2)</button>
-          </div>
-
-          <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0;">Haz clic en una porción del gráfico para filtrar la tabla.</p>
-          <div style="position: relative; max-width: 380px; margin: 0 auto;">
+          <div style="position: relative; max-width: 450px; margin: 0 auto;">
             <canvas id="chartCategorias"></canvas>
           </div>
         </div>
 
-        <!-- Resumen de Totales por Categoría -->
+        <!-- Gráfico de Barras de Totales por Categoría -->
         <div class="card">
           <div class="chart-header">
             <h2>🏷️ Totales por Categoría</h2>
           </div>
-          <div class="table-container" style="max-height: 350px;">
-            <table>
-              <thead>
-                <tr>
-                  <th>Categoría</th>
-                  <th style="text-align: right;">Total (€)</th>
-                </tr>
-              </thead>
-              <tbody id="catSummaryTable"></tbody>
-            </table>
+          <div style="position: relative; max-width: 450px; margin: 0 auto; height: 350px;">
+            <canvas id="chartTotalesBar"></canvas>
           </div>
         </div>
 
@@ -388,7 +601,6 @@
         <div class="card grid-full">
           <div class="chart-header">
             <h2>📋 Movimientos (<span id="movCount">0</span>)</h2>
-            <span id="tableFilterStatus" style="font-size: 0.8rem; color: var(--text-muted);"></span>
           </div>
           <div class="table-container">
             <table>
@@ -397,6 +609,8 @@
                   <th style="min-width:85px;">Fecha Orig.</th>
                   <th style="min-width:110px;">Fecha Aplicable</th>
                   <th style="min-width:150px;">Concepto</th>
+                  <th style="min-width:150px;">Más datos</th>
+                  <th style="min-width:130px;">Dueño</th>
                   <th style="min-width:140px;">Cat 1 (Principal)</th>
                   <th style="min-width:140px;">Cat 2 (Detalle)</th>
                   <th style="min-width:90px; text-align: right;">Importe</th>
@@ -411,9 +625,31 @@
     </div>
   </div>
 
+  <!-- Modal Configuración Categorías -->
+  <div class="modal-overlay" id="catModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>⚙️ Configurar Categorías</h2>
+        <button class="modal-close" onclick="closeCatModal()">✕</button>
+      </div>
+      
+      <div style="margin-bottom: 1.5rem;">
+        <p style="font-size: 0.9rem; color: var(--text-muted);">
+          Edita la estructura de categorías. Los cambios se guardarán automáticamente en tu navegador.
+        </p>
+        <div class="btn-group" style="justify-content: flex-start;">
+          <button class="btn btn-success" onclick="addCat1()">+ Añadir Categoría Principal</button>
+          <button class="btn" style="background: #8b5cf6;" onclick="exportarCategorias()">📥 Exportar Estructura (JSON)</button>
+        </div>
+      </div>
+
+      <div id="catEditorList"></div>
+    </div>
+  </div>
+
   <script>
-    // Configuración de Categorías de 2 niveles actualizadas
-    const CATEGORIAS_ESTRUCTURA = {
+    // --- LÓGICA DE CATEGORÍAS ---
+    const DEFAULT_CATEGORIAS = {
       'Alimentación': ['Supermercado', 'Restaurante', 'Cafetería / Bar', 'Comida a domicilio'],
       'Compras': ['Ropa', 'Electrónica', 'Otros'],
       'Transfer/Traspasos': ['Gastos', 'Ingresos', 'Entre cuentas'],
@@ -427,17 +663,170 @@
       'Otros': ['General / Varios']
     };
 
-    const CAT1_LISTA = Object.keys(CATEGORIAS_ESTRUCTURA);
+    let CATEGORIAS_ESTRUCTURA = {};
+    let CAT1_LISTA = [];
 
+    function cargarCategorias() {
+      const guardadas = localStorage.getItem('finanzas_pwa_categorias');
+      if (guardadas) {
+        try {
+          CATEGORIAS_ESTRUCTURA = JSON.parse(guardadas);
+        } catch(e) {
+          CATEGORIAS_ESTRUCTURA = JSON.parse(JSON.stringify(DEFAULT_CATEGORIAS));
+        }
+      } else {
+        CATEGORIAS_ESTRUCTURA = JSON.parse(JSON.stringify(DEFAULT_CATEGORIAS));
+      }
+      CAT1_LISTA = Object.keys(CATEGORIAS_ESTRUCTURA);
+    }
+    
+    function guardarCategorias() {
+      localStorage.setItem('finanzas_pwa_categorias', JSON.stringify(CATEGORIAS_ESTRUCTURA));
+      CAT1_LISTA = Object.keys(CATEGORIAS_ESTRUCTURA);
+      renderCatEditor();
+      if (moveData.length > 0) renderAll();
+    }
+
+    // Modal UI
+    function openCatModal() {
+      document.getElementById('catModal').style.display = 'flex';
+      renderCatEditor();
+    }
+    function closeCatModal() {
+      document.getElementById('catModal').style.display = 'none';
+    }
+
+    function renderCatEditor() {
+      const container = document.getElementById('catEditorList');
+      container.innerHTML = '';
+      
+      Object.keys(CATEGORIAS_ESTRUCTURA).forEach(cat1 => {
+        const subcats = CATEGORIAS_ESTRUCTURA[cat1];
+        
+        const group = document.createElement('div');
+        group.className = 'cat-edit-group';
+        
+        let subcatsHtml = subcats.map((sc, idx) => 
+          `<div class="subcat-badge">
+             ${sc}
+             <span onclick="removeCat2('${cat1}', ${idx})" title="Eliminar subcategoría">✕</span>
+           </div>`
+        ).join('');
+
+        group.innerHTML = `
+          <div class="cat-edit-title">
+            <strong style="color: var(--accent);">${cat1}</strong>
+            <div>
+              <button class="btn" style="padding: 0.2rem 0.5rem; font-size:0.75rem;" onclick="addCat2('${cat1}')">+ Subcat</button>
+              <button class="btn btn-danger" style="padding: 0.2rem 0.5rem; font-size:0.75rem; margin-left: 0.5rem;" onclick="removeCat1('${cat1}')">Eliminar</button>
+            </div>
+          </div>
+          <div class="subcat-list">${subcatsHtml}</div>
+        `;
+        container.appendChild(group);
+      });
+    }
+
+    function addCat1() {
+      const name = prompt("Nombre de la nueva Categoría Principal:");
+      if (name && name.trim() && !CATEGORIAS_ESTRUCTURA[name.trim()]) {
+        CATEGORIAS_ESTRUCTURA[name.trim()] = ['General / Varios'];
+        guardarCategorias();
+      }
+    }
+    function removeCat1(cat1) {
+      if (confirm(`¿Seguro que quieres eliminar la categoría "${cat1}" y todas sus subcategorías? Los gastos antiguos mantendrán el texto pero no aparecerán en el selector.`)) {
+        delete CATEGORIAS_ESTRUCTURA[cat1];
+        guardarCategorias();
+      }
+    }
+    function addCat2(cat1) {
+      const name = prompt(`Nueva subcategoría para "${cat1}":`);
+      if (name && name.trim() && !CATEGORIAS_ESTRUCTURA[cat1].includes(name.trim())) {
+        CATEGORIAS_ESTRUCTURA[cat1].push(name.trim());
+        guardarCategorias();
+      }
+    }
+    function removeCat2(cat1, idx) {
+      if (confirm("¿Eliminar esta subcategoría?")) {
+        CATEGORIAS_ESTRUCTURA[cat1].splice(idx, 1);
+        if (CATEGORIAS_ESTRUCTURA[cat1].length === 0) {
+          CATEGORIAS_ESTRUCTURA[cat1].push('General / Varios'); // Evitar cat1 sin cat2
+        }
+        guardarCategorias();
+      }
+    }
+
+    function timestampSuffix() {
+      const now = new Date();
+      const pad = (n, len = 2) => String(n).padStart(len, '0');
+      return `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+    }
+
+    function exportarCategorias() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(CATEGORIAS_ESTRUCTURA, null, 2));
+      const downloadAnchorNode = document.createElement('a');
+      downloadAnchorNode.setAttribute("href", dataStr);
+      downloadAnchorNode.setAttribute("download", `estructura_categorias_${timestampSuffix()}.json`);
+      document.body.appendChild(downloadAnchorNode);
+      downloadAnchorNode.click();
+      downloadAnchorNode.remove();
+    }
+
+
+    // --- LÓGICA PRINCIPAL DE LA APP ---
     let moveData = [];
-    let myChart = null;
-    let currentCatLevel = 1; // 1: Cat1, 2: Cat2
-    let selectedCategoryFilter = null;
+    let doughnutChart = null;
+    let barChart = null;
+    const DUEÑOS = ['Familia', 'Belén', 'Jorge'];
 
-    // Convertir DD/MM/YYYY a YYYY-MM-DD
+    // Colores base para Cat1 (en formato HSL para facilitar variaciones)
+    const PALETTE_BASE = [
+      '#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6',
+      '#06b6d4', '#f97316', '#14b8a6', '#6366f1', '#64748b',
+      '#ef4444', '#84cc16'
+    ];
+
+    // Convierte hex a HSL
+    function hexToHsl(hex) {
+      let r = parseInt(hex.slice(1,3),16)/255;
+      let g = parseInt(hex.slice(3,5),16)/255;
+      let b = parseInt(hex.slice(5,7),16)/255;
+      const max = Math.max(r,g,b), min = Math.min(r,g,b);
+      let h, s, l = (max+min)/2;
+      if (max===min) { h=s=0; }
+      else {
+        const d = max-min;
+        s = l>0.5 ? d/(2-max-min) : d/(max+min);
+        switch(max){
+          case r: h=((g-b)/d+(g<b?6:0))/6; break;
+          case g: h=((b-r)/d+2)/6; break;
+          case b: h=((r-g)/d+4)/6; break;
+        }
+      }
+      return [h*360, s*100, l*100];
+    }
+
+    // Genera color de subcategoría: misma familia de hue pero variando luminosidad y saturación
+    function getSubcatColor(baseHex, index, total) {
+      const [h, s, l] = hexToHsl(baseHex);
+      // Distribuir subcats entre versiones más claras (55% L) y más oscuras (30% L)
+      // con leve rotación de hue (±12°) para mayor distinción
+      const steps = Math.max(total, 1);
+      const t = steps === 1 ? 0.5 : index / (steps - 1);
+      // Luminosidad: desde 58% (claro) hasta 32% (oscuro)
+      const newL = 58 - t * 26;
+      // Saturación: ligera variación
+      const newS = Math.min(100, s + 10 - t * 15);
+      // Hue: pequeña rotación para distinción
+      const hueShift = (index % 2 === 0 ? 1 : -1) * Math.floor(index/2) * 8;
+      const newH = (h + hueShift + 360) % 360;
+      return `hsl(${newH.toFixed(1)},${newS.toFixed(1)}%,${newL.toFixed(1)}%)`;
+    }
+
     function formatFechaISO(fechaStr) {
       if (!fechaStr) return '';
-      if (fechaStr.includes('-')) return fechaStr; // Ya está en formato ISO
+      if (fechaStr.includes('-')) return fechaStr;
       const parts = fechaStr.split('/');
       if (parts.length === 3) {
         const d = parts[0].padStart(2, '0');
@@ -448,84 +837,137 @@
       return fechaStr;
     }
 
-    // Reglas de autoclasificación previa
+    function normalizarCabecera(valor) {
+      return String(valor || '')
+        .replace(/^\uFEFF/, '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^\w\s]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .toLowerCase();
+    }
+
+    function normalizarBusqueda(valor) {
+      return normalizarCabecera(valor).replace(/\s+/g, '');
+    }
+
+    function obtenerImporte(valor) {
+      let texto = String(valor || '').replace(/(?:EUR|€)/gi, '').replace(/[\s\u00A0']/g, '').trim();
+      if (!texto) return NaN;
+      const ultimaComa = texto.lastIndexOf(',');
+      const ultimoPunto = texto.lastIndexOf('.');
+      if (ultimaComa !== -1 && ultimoPunto !== -1) {
+        texto = ultimaComa > ultimoPunto ? texto.replace(/\./g, '').replace(',', '.') : texto.replace(/,/g, '');
+      } else if (ultimaComa !== -1) {
+        texto = texto.replace(',', '.');
+      }
+      return Number(texto);
+    }
+
+    function encontrarCabecera(filas) {
+      return filas.findIndex(fila => {
+        const cabeceras = fila.map(normalizarBusqueda);
+        return cabeceras.includes(normalizarBusqueda('fecha')) &&
+          cabeceras.some(cabecera => ['concepto', 'movimiento', 'descripcion'].some(nombre => cabecera === normalizarBusqueda(nombre))) &&
+          cabeceras.some(cabecera => ['importe', 'cantidad'].some(nombre => cabecera === normalizarBusqueda(nombre)));
+      });
+    }
+
     function clasificarAuto(concepto, importe) {
       const c = concepto.toUpperCase();
-
       if (c.includes('TRANSFER') || c.includes('TRASPASO') || c.includes('PAGO TRANSFERENCIAS')) {
-        if (c.includes('ENTRE CUENTAS') || c.includes('PROPIA') || c.includes('MISMO TITULAR')) {
-          return { cat1: 'Transfer/Traspasos', cat2: 'Entre cuentas' };
-        }
-        return importe < 0 
-          ? { cat1: 'Transfer/Traspasos', cat2: 'Gastos' }
-          : { cat1: 'Transfer/Traspasos', cat2: 'Ingresos' };
+        if (c.includes('ENTRE CUENTAS') || c.includes('PROPIA') || c.includes('MISMO TITULAR')) return { cat1: 'Transfer/Traspasos', cat2: 'Entre cuentas' };
+        return importe < 0 ? { cat1: 'Transfer/Traspasos', cat2: 'Gastos' } : { cat1: 'Transfer/Traspasos', cat2: 'Ingresos' };
       }
-
       if (importe > 0) {
-        if (c.includes('NOMINA') || c.includes('PAG NOMINAS') || c.includes('SUELDO')) {
-          return { cat1: 'Ingresos', cat2: 'Nómina / Sueldo' };
-        }
-        if (c.includes('DIV.') || c.includes('DIVIDENDO') || c.includes('INTERES')) {
-          return { cat1: 'Ingresos', cat2: 'Dividendo / Intereses' };
-        }
+        if (c.includes('NOMINA') || c.includes('PAG NOMINAS') || c.includes('SUELDO')) return { cat1: 'Ingresos', cat2: 'Nómina / Sueldo' };
+        if (c.includes('DIV.') || c.includes('DIVIDENDO') || c.includes('INTERES')) return { cat1: 'Ingresos', cat2: 'Dividendo / Intereses' };
         return { cat1: 'Ingresos', cat2: 'Otros Ingresos' };
       }
-
-      // Gastos
       if (c.includes('ZARA') || c.includes('MANGO') || c.includes('PULL') || c.includes('CORTE INGLES')) return { cat1: 'Compras', cat2: 'Ropa' };
       if (c.includes('AMAZON') || c.includes('MEDIA MARKT') || c.includes('APPLE') || c.includes('FNAC')) return { cat1: 'Compras', cat2: 'Electrónica' };
       if (c.includes('TGTG') || c.includes('TOO GOOD TO GO')) return { cat1: 'Alimentación', cat2: 'Comida a domicilio' };
-      if (c.includes('SUPERMERC') || c.includes('MERCADONA') || c.includes('CARREFOUR') || c.includes('LIDL') || c.includes('ALDI') || c.includes('DIA ') || c.includes('SANCHINARRO H.')) {
-        return { cat1: 'Alimentación', cat2: 'Supermercado' };
-      }
-      if (c.includes('BAR') || c.includes('RESTAURANTE') || c.includes('DEHESA') || c.includes('CAFETERIA') || c.includes('CERVECERIA')) {
-        return { cat1: 'Alimentación', cat2: 'Restaurante' };
-      }
+      if (c.includes('SUPERMERC') || c.includes('MERCADONA') || c.includes('CARREFOUR') || c.includes('LIDL') || c.includes('ALDI')) return { cat1: 'Alimentación', cat2: 'Supermercado' };
+      if (c.includes('BAR') || c.includes('RESTAURANTE') || c.includes('DEHESA') || c.includes('CAFETERIA')) return { cat1: 'Alimentación', cat2: 'Restaurante' };
       if (c.includes('SEGURO HOGAR')) return { cat1: 'Seguros y Servicios', cat2: 'Seguro Hogar' };
       if (c.includes('SEGURO VIDA') || c.includes('SEGURO')) return { cat1: 'Seguros y Servicios', cat2: 'Seguro Vida / Salud' };
       if (c.includes('CUSTODIA') || c.includes('COMISION')) return { cat1: 'Seguros y Servicios', cat2: 'Comisiones / Servicios' };
       if (c.includes('INDEXA') || c.includes('FONDOS') || c.includes('INVERSION')) return { cat1: 'Inversiones y Ahorro', cat2: 'Fondos / Acciones' };
-      if (c.includes('FREE2MOVE') || c.includes('MOVILIDAD') || c.includes('GASOLINERA') || c.includes('REPSOL') || c.includes('CEPSA')) {
-        return { cat1: 'Transporte', cat2: 'Transporte Público / Taxi' };
-      }
+      if (c.includes('FREE2MOVE') || c.includes('MOVILIDAD') || c.includes('GASOLINERA')) return { cat1: 'Transporte', cat2: 'Transporte Público / Taxi' };
       if (c.includes('ALQUILER') || c.includes('HIPOTECA') || c.includes('COMUNIDAD')) return { cat1: 'Vivienda', cat2: 'Alquiler / Hipoteca' };
-      if (c.includes('IBERDROLA') || c.includes('ENDESA') || c.includes('ORANGE') || c.includes('MOVISTAR') || c.includes('AGUA')) {
-        return { cat1: 'Vivienda', cat2: 'Electricidad / Gas' };
-      }
+      if (c.includes('IBERDROLA') || c.includes('ENDESA') || c.includes('ORANGE') || c.includes('MOVISTAR') || c.includes('AGUA')) return { cat1: 'Vivienda', cat2: 'Electricidad / Gas' };
 
       return { cat1: 'Otros', cat2: 'General / Varios' };
     }
 
-    // Carga de LocalStorage al iniciar
     window.addEventListener('DOMContentLoaded', () => {
-      const saved = localStorage.getItem('finanzas_pwa_data_v3');
+      cargarCategorias();
+      const saved = localStorage.getItem('finanzas_pwa_data_v4'); // V4 por la migración de Dueño
       if (saved) {
         try {
           moveData = JSON.parse(saved);
           if (moveData.length > 0) renderAll();
         } catch(e) { console.error(e); }
+      } else {
+        // Migration from v3
+        const oldSaved = localStorage.getItem('finanzas_pwa_data_v3');
+        if (oldSaved) {
+          try {
+            moveData = JSON.parse(oldSaved);
+            moveData.forEach(m => {
+              if (!m.dueño) m.dueño = 'Familia'; // Migración
+            });
+            saveData();
+            if (moveData.length > 0) renderAll();
+          } catch(e){}
+        }
       }
     });
 
-    // Cargar CSV (Concepto, Fecha, Importe)
+    // Cargar CSV
     document.getElementById('csvFile').addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (!file) return;
 
       Papa.parse(file, {
-        encoding: "ISO-8859-1",
-        header: true,
-        skipEmptyLines: true,
+        encoding: "windows-1252",
+        skipEmptyLines: 'greedy',
         complete: (results) => {
+          const filaCabecera = encontrarCabecera(results.data);
+          if (filaCabecera === -1) {
+            alert('CSV no compatible.');
+            document.getElementById('csvFile').value = '';
+            return;
+          }
+
+          const cabeceras = results.data[filaCabecera].map(normalizarCabecera);
+          const indice = (...nombres) => {
+            const targets = nombres.map(normalizarBusqueda);
+            return cabeceras.findIndex(cabecera => {
+              const header = normalizarBusqueda(cabecera);
+              return targets.some(target =>
+                header === target ||
+                header.includes(target) ||
+                target.includes(header) ||
+                (header.includes('datos') && target.includes('datos'))
+              );
+            });
+          };
+          const indiceFecha = indice('fecha');
+          const indiceConcepto = indice('concepto', 'movimiento', 'descripcion');
+          const indiceMasDatos = indice('mas datos', 'masdatos', 'm s datos');
+          const indiceImporte = indice('importe', 'cantidad');
+
           moveData = [];
-          results.data.forEach((row, idx) => {
-            const concepto = row['Concepto'] || row['concepto'] || row['CONCEPTO'] || '';
-            const fecha = row['Fecha'] || row['fecha'] || row['FECHA'] || '';
-            const rawImporte = row['Importe'] || row['importe'] || row['IMPORTE'] || row['Cantidad'] || row['cantidad'] || '';
+          results.data.slice(filaCabecera + 1).forEach((row, idx) => {
+            const concepto = row[indiceConcepto] || '';
+            const masDatos = indiceMasDatos !== -1 ? (row[indiceMasDatos] || '') : '';
+            const fecha = row[indiceFecha] || '';
+            const rawImporte = row[indiceImporte] || '';
 
             if (!concepto || !rawImporte) return;
-
-            const val = parseFloat(rawImporte.replace('EUR', '').replace('€', '').replace(/\./g, '').replace(',', '.').replace(/\s/g, '').trim());
+            const val = obtenerImporte(rawImporte);
             if (isNaN(val)) return;
 
             const autoCat = clasificarAuto(concepto, val);
@@ -536,7 +978,9 @@
               fecha: fecha.trim(),
               fechaAplicable: fechaISO,
               concepto: concepto.trim(),
+              masDatos: masDatos.trim(),
               importe: val,
+              dueño: 'Familia', // Dueño por defecto
               cat1: autoCat.cat1,
               cat2: autoCat.cat2,
               notas: ''
@@ -544,75 +988,216 @@
           });
 
           saveData();
-          selectedCategoryFilter = null;
           renderAll();
         }
       });
     });
 
     function saveData() {
-      localStorage.setItem('finanzas_pwa_data_v3', JSON.stringify(moveData));
+      localStorage.setItem('finanzas_pwa_data_v4', JSON.stringify(moveData));
+    }
+
+    // Actualizaciones de fila
+    function updateField(id, field, value) {
+      const item = moveData.find(m => m.id === id);
+      if (item) {
+        item[field] = value;
+        if (field === 'cat1') {
+          const subCats = CATEGORIAS_ESTRUCTURA[value] || ['General / Varios'];
+          item.cat2 = subCats[0];
+        }
+        saveData();
+        if (field !== 'notas' && field !== 'fechaAplicable') {
+          renderAll(); // Rerender if category or owner changes
+        }
+      }
     }
 
     document.getElementById('clearBtn').addEventListener('click', () => {
       if (confirm('¿Borrar todos los datos cargados?')) {
-        localStorage.removeItem('finanzas_pwa_data_v3');
+        localStorage.removeItem('finanzas_pwa_data_v4');
         moveData = [];
-        selectedCategoryFilter = null;
         document.getElementById('dashboard').style.display = 'none';
         document.getElementById('exportBtn').style.display = 'none';
+        document.getElementById('exportJsonBtn').style.display = 'none';
         document.getElementById('clearBtn').style.display = 'none';
         document.getElementById('csvFile').value = '';
+        document.getElementById('jsonFile').value = '';
       }
     });
 
-    function updateCat1(id, newCat1) {
-      const item = moveData.find(m => m.id === id);
-      if (item) {
-        item.cat1 = newCat1;
-        const subCats = CATEGORIAS_ESTRUCTURA[newCat1] || ['General / Varios'];
-        item.cat2 = subCats[0];
-        saveData();
-        renderAll();
-      }
-    }
-
-    function updateCat2(id, newCat2) {
-      const item = moveData.find(m => m.id === id);
-      if (item) {
-        item.cat2 = newCat2;
-        saveData();
-        renderAll();
-      }
-    }
-
-    function updateFechaAplicable(id, val) {
-      const item = moveData.find(m => m.id === id);
-      if (item) {
-        item.fechaAplicable = val;
-        saveData();
-      }
-    }
-
-    function updateNotas(id, val) {
-      const item = moveData.find(m => m.id === id);
-      if (item) {
-        item.notas = val;
-        saveData();
-      }
-    }
-
-    function switchCategoryLevel(level) {
-      currentCatLevel = level;
-      document.getElementById('btnCat1').classList.toggle('active', level === 1);
-      document.getElementById('btnCat2').classList.toggle('active', level === 2);
-      selectedCategoryFilter = null;
+    function applyFilters() {
       renderAll();
     }
 
-    function resetFilter() {
-      selectedCategoryFilter = null;
-      renderAll();
+    // ── Calendar Picker Logic ──
+    let calCurrentYear = new Date().getFullYear();
+    let calCurrentMonth = new Date().getMonth(); // 0-indexed
+    let calSelectStart = null; // 'YYYY-MM-DD'
+    let calSelectEnd = null;
+    let calHover = null;
+    let calPickingEnd = false;
+
+    const MONTH_NAMES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                         'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    const DOW_NAMES = ['Lu','Ma','Mi','Ju','Vi','Sa','Do'];
+
+    function toggleCalPopover(e) {
+      e.stopPropagation();
+      const pop = document.getElementById('calPopover');
+      const btn = document.getElementById('dateRangeBtn');
+      const isOpen = pop.classList.contains('show');
+      if (isOpen) {
+        pop.classList.remove('show');
+        btn.classList.remove('open');
+      } else {
+        pop.classList.add('show');
+        btn.classList.add('open');
+        renderCalGrid();
+      }
+    }
+
+    document.addEventListener('click', (e) => {
+      const wrapper = document.getElementById('dateRangeWrapper');
+      if (wrapper && !wrapper.contains(e.target)) {
+        document.getElementById('calPopover').classList.remove('show');
+        document.getElementById('dateRangeBtn').classList.remove('open');
+      }
+    });
+
+    function calNav(dir) {
+      calCurrentMonth += dir;
+      if (calCurrentMonth < 0) { calCurrentMonth = 11; calCurrentYear--; }
+      if (calCurrentMonth > 11) { calCurrentMonth = 0; calCurrentYear++; }
+      renderCalGrid();
+    }
+
+    function calGoToday() {
+      const now = new Date();
+      calCurrentYear = now.getFullYear();
+      calCurrentMonth = now.getMonth();
+      renderCalGrid();
+    }
+
+    function dateToStr(y, m, d) {
+      return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    }
+
+    function renderCalGrid() {
+      const label = document.getElementById('calMonthLabel');
+      label.textContent = `${MONTH_NAMES[calCurrentMonth]} ${calCurrentYear}`;
+
+      const grid = document.getElementById('calGrid');
+      grid.innerHTML = '';
+
+      // Day of week headers
+      DOW_NAMES.forEach(d => {
+        const el = document.createElement('div');
+        el.className = 'cal-dow';
+        el.textContent = d;
+        grid.appendChild(el);
+      });
+
+      const firstDay = new Date(calCurrentYear, calCurrentMonth, 1).getDay();
+      // Convert Sunday=0 to Monday=0 week start
+      const startOffset = (firstDay + 6) % 7;
+      const daysInMonth = new Date(calCurrentYear, calCurrentMonth + 1, 0).getDate();
+      const today = new Date();
+      const todayStr = dateToStr(today.getFullYear(), today.getMonth(), today.getDate());
+
+      // Blank cells before month start
+      for (let i = 0; i < startOffset; i++) {
+        const el = document.createElement('button');
+        el.className = 'cal-day empty';
+        grid.appendChild(el);
+      }
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dayStr = dateToStr(calCurrentYear, calCurrentMonth, d);
+        const el = document.createElement('button');
+        el.className = 'cal-day';
+        el.textContent = d;
+        if (dayStr === todayStr) el.classList.add('today');
+
+        // Determine range state
+        const start = calSelectStart;
+        const end = calSelectEnd || calHover;
+        const lo = start && end ? (start <= end ? start : end) : start;
+        const hi = start && end ? (start <= end ? end : start) : start;
+
+        if (start && dayStr === start) el.classList.add('range-start');
+        if (end && dayStr === end) el.classList.add('range-end');
+        if (lo && hi && dayStr > lo && dayStr < hi) el.classList.add('in-range');
+
+        el.addEventListener('mouseenter', () => {
+          if (calPickingEnd && calSelectStart) {
+            calHover = dayStr;
+            renderCalGrid();
+          }
+        });
+        el.addEventListener('click', () => calDayClick(dayStr));
+        grid.appendChild(el);
+      }
+    }
+
+    function calDayClick(dayStr) {
+      if (!calPickingEnd || !calSelectStart) {
+        // First click: set start
+        calSelectStart = dayStr;
+        calSelectEnd = null;
+        calHover = null;
+        calPickingEnd = true;
+      } else {
+        // Second click: set end
+        calSelectEnd = dayStr;
+        calHover = null;
+        calPickingEnd = false;
+        // Ensure order
+        if (calSelectStart > calSelectEnd) {
+          [calSelectStart, calSelectEnd] = [calSelectEnd, calSelectStart];
+        }
+      }
+      renderCalGrid();
+    }
+
+    function calApply() {
+      document.getElementById('filterDesde').value = calSelectStart || '';
+      document.getElementById('filterHasta').value = calSelectEnd || calSelectStart || '';
+      updateDateRangeLabel();
+      document.getElementById('calPopover').classList.remove('show');
+      document.getElementById('dateRangeBtn').classList.remove('open');
+      applyFilters();
+    }
+
+    function calClear() {
+      calSelectStart = null;
+      calSelectEnd = null;
+      calHover = null;
+      calPickingEnd = false;
+      document.getElementById('filterDesde').value = '';
+      document.getElementById('filterHasta').value = '';
+      updateDateRangeLabel();
+      renderCalGrid();
+      applyFilters();
+    }
+
+    function updateDateRangeLabel() {
+      const desde = document.getElementById('filterDesde').value;
+      const hasta = document.getElementById('filterHasta').value;
+      const lbl = document.getElementById('dateRangeLabel');
+      if (!desde && !hasta) {
+        lbl.textContent = 'Todas las fechas';
+      } else if (desde && (!hasta || desde === hasta)) {
+        lbl.textContent = formatDisplayDate(desde);
+      } else {
+        lbl.textContent = `${formatDisplayDate(desde)} → ${formatDisplayDate(hasta)}`;
+      }
+    }
+
+    function formatDisplayDate(isoStr) {
+      if (!isoStr) return '';
+      const [y,m,d] = isoStr.split('-');
+      return `${d}/${m}/${y}`;
     }
 
     function renderAll() {
@@ -620,27 +1205,59 @@
 
       document.getElementById('dashboard').style.display = 'block';
       document.getElementById('exportBtn').style.display = 'inline-flex';
+      document.getElementById('exportJsonBtn').style.display = 'inline-flex';
       document.getElementById('clearBtn').style.display = 'inline-flex';
+
+      // Obtener Filtros
+      const fDesde = document.getElementById('filterDesde').value;
+      const fHasta = document.getElementById('filterHasta').value;
+      const fTipo = document.getElementById('filterTipo').value;
+      const fDueno = document.getElementById('filterDueno').value;
+
+      // Filtrar Datos
+      const filteredData = moveData.filter(m => {
+        // Filtro Fecha (usamos fechaAplicable si existe, sino fecha original formateada ISO)
+        const fechaEvaluar = m.fechaAplicable || formatFechaISO(m.fecha);
+        if (fDesde && fechaEvaluar < fDesde) return false;
+        if (fHasta && fechaEvaluar > fHasta) return false;
+        
+        // Filtro Tipo
+        const isTransfer = (m.cat1 === 'Transfer/Traspasos');
+        if (fTipo === 'ingresos' && (m.importe <= 0 || isTransfer)) return false;
+        if (fTipo === 'gastos' && (m.importe > 0 || isTransfer)) return false;
+        if (fTipo === 'entrecuentas' && !isTransfer) return false;
+
+        // Filtro Dueño
+        if (fDueno !== 'todos' && m.dueño !== fDueno) return false;
+
+        return true;
+      });
 
       // Totales
       let ingresos = 0, gastos = 0, entreCuentas = 0;
-      const catTotals = {};
+      
+      // Agrupaciones para gráficos
+      const cat1TotalsMap = {};
+      const cat2TotalsMap = {}; // Clave: "Cat1|Cat2"
 
-      moveData.forEach(m => {
-        const isEntreCuentas = (m.cat1 === 'Transfer/Traspasos' && m.cat2 === 'Entre cuentas');
+      filteredData.forEach(m => {
+        const isTransfer = (m.cat1 === 'Transfer/Traspasos');
         
-        if (isEntreCuentas) {
+        if (isTransfer) {
           entreCuentas += Math.abs(m.importe);
         } else if (m.importe > 0) {
           ingresos += m.importe;
         } else {
           const absVal = Math.abs(m.importe);
           gastos += absVal;
-          const key = currentCatLevel === 1 ? m.cat1 : `${m.cat1} > ${m.cat2}`;
-          catTotals[key] = (catTotals[key] || 0) + absVal;
+          
+          cat1TotalsMap[m.cat1] = (cat1TotalsMap[m.cat1] || 0) + absVal;
+          const cat2Key = `${m.cat1}|${m.cat2}`;
+          cat2TotalsMap[cat2Key] = (cat2TotalsMap[cat2Key] || 0) + absVal;
         }
       });
 
+      // Actualizar Badges de Totales
       document.getElementById('totalIngresos').innerText = ingresos.toFixed(2).replace('.', ',') + ' €';
       document.getElementById('totalGastos').innerText = gastos.toFixed(2).replace('.', ',') + ' €';
       document.getElementById('totalEntreCuentas').innerText = entreCuentas.toFixed(2).replace('.', ',') + ' €';
@@ -650,165 +1267,258 @@
       balanceEl.innerText = balance.toFixed(2).replace('.', ',') + ' €';
       balanceEl.className = balance >= 0 ? 'amount-pos' : 'amount-neg';
 
-      // Gráfico y tabla de totales
-      renderChart(catTotals);
-      renderCategorySummaryTable(catTotals);
+      // Gráficos
+      renderConcentricChart(cat1TotalsMap, cat2TotalsMap);
+      renderBarChart(cat1TotalsMap);
 
-      // Badge de Filtro
-      const activeFilterEl = document.getElementById('activeFilterBadge');
-      if (selectedCategoryFilter) {
-        activeFilterEl.style.display = 'inline-flex';
-        document.getElementById('filterCategoryName').innerText = selectedCategoryFilter;
-      } else {
-        activeFilterEl.style.display = 'none';
-      }
-
-      // Tabla de Movimientos
-      renderMovementsTable();
+      // Tabla
+      renderMovementsTable(filteredData);
     }
 
-    function renderChart(catTotals) {
-      const labels = Object.keys(catTotals);
-      const dataValues = Object.values(catTotals);
-
+    function renderConcentricChart(cat1Map, cat2Map) {
       const ctx = document.getElementById('chartCategorias').getContext('2d');
-      if (myChart) myChart.destroy();
+      if (doughnutChart) doughnutChart.destroy();
 
-      const palette = [
-        '#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6',
-        '#06b6d4', '#f97316', '#14b8a6', '#6366f1', '#64748b'
-      ];
+      // Procesar datos jerárquicamente para que Cat2 esté junto a su Cat1
+      const cat1Labels = [];
+      const cat1Data = [];
+      const cat1Bg = [];
 
-      myChart = new Chart(ctx, {
+      const cat2Labels = [];
+      const cat2Data = [];
+      const cat2Bg = [];
+
+      let colorIndex = 0;
+
+      // Ordenar Cat1 por importe
+      const sortedCat1 = Object.entries(cat1Map).sort((a,b) => b[1] - a[1]);
+
+      sortedCat1.forEach(([c1, val1]) => {
+        cat1Labels.push(c1);
+        cat1Data.push(val1);
+        const baseColor = PALETTE_BASE[colorIndex % PALETTE_BASE.length];
+        cat1Bg.push(baseColor);
+        colorIndex++;
+
+        // Buscar sus Cat2
+        const subcats = Object.entries(cat2Map)
+          .filter(([key, val]) => key.startsWith(c1 + '|'))
+          .sort((a,b) => b[1] - a[1]);
+        
+        subcats.forEach(([key, val2], idx) => {
+          cat2Labels.push(key.split('|')[1]);
+          cat2Data.push(val2);
+          cat2Bg.push(getSubcatColor(baseColor, idx, subcats.length));
+        });
+      });
+
+      doughnutChart = new Chart(ctx, {
         type: 'doughnut',
         data: {
-          labels: labels,
-          datasets: [{
-            data: dataValues,
-            backgroundColor: palette.slice(0, labels.length),
-            borderWidth: 2,
-            borderColor: '#1e293b'
-          }]
+          datasets: [
+            {
+              // Outer ring (Cat 2)
+              data: cat2Data,
+              backgroundColor: cat2Bg,
+              labels: cat2Labels, // Usado en tooltips personalizados
+              borderWidth: 1,
+              borderColor: '#1e293b'
+            },
+            {
+              // Inner ring (Cat 1)
+              data: cat1Data,
+              backgroundColor: cat1Bg,
+              labels: cat1Labels,
+              borderWidth: 2,
+              borderColor: '#1e293b'
+            }
+          ]
         },
         options: {
           responsive: true,
           maintainAspectRatio: true,
           plugins: {
-            legend: {
-              position: 'bottom',
-              labels: { boxWidth: 12, color: '#94a3b8', font: { family: 'Plus Jakarta Sans', size: 11 } }
-            }
-          },
-          onClick: (evt, activeElements) => {
-            if (activeElements.length > 0) {
-              const index = activeElements[0].index;
-              const clickedCat = labels[index];
-              selectedCategoryFilter = (selectedCategoryFilter === clickedCat) ? null : clickedCat;
-              renderAll();
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const label = context.dataset.labels[context.dataIndex] || '';
+                  const value = context.raw.toFixed(2) + ' €';
+                  return ` ${label}: ${value}`;
+                }
+              }
             }
           }
         }
       });
     }
 
-    function renderCategorySummaryTable(catTotals) {
-      const tbody = document.getElementById('catSummaryTable');
-      tbody.innerHTML = '';
+    function renderBarChart(cat1Map) {
+      const ctx = document.getElementById('chartTotalesBar').getContext('2d');
+      if (barChart) barChart.destroy();
 
-      const sorted = Object.entries(catTotals).sort((a, b) => b[1] - a[1]);
+      const sorted = Object.entries(cat1Map).sort((a, b) => b[1] - a[1]);
+      const labels = sorted.map(item => item[0]);
+      const data = sorted.map(item => item[1]);
 
-      sorted.forEach(([cat, val]) => {
-        const tr = document.createElement('tr');
-        tr.style.cursor = 'pointer';
-        tr.onclick = () => {
-          selectedCategoryFilter = selectedCategoryFilter === cat ? null : cat;
-          renderAll();
-        };
-        if (selectedCategoryFilter === cat) {
-          tr.style.background = 'rgba(59, 130, 246, 0.2)';
+      barChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Total Gastos (€)',
+            data: data,
+            backgroundColor: '#3b82f6',
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(context) { return context.raw.toFixed(2) + ' €'; }
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: { color: '#f8fafc', font: { family: 'Plus Jakarta Sans', size: 11 } }
+            },
+            y: {
+              grid: { color: 'rgba(255,255,255,0.05)' },
+              ticks: { color: '#94a3b8' }
+            }
+          }
         }
-        tr.innerHTML = `
-          <td style="font-weight: 500;">${cat}</td>
-          <td style="text-align: right; font-weight: 600;" class="amount-neg">${val.toFixed(2).replace('.', ',')} €</td>
-        `;
-        tbody.appendChild(tr);
       });
     }
 
-    function renderMovementsTable() {
+    function renderMovementsTable(data) {
       const tbody = document.getElementById('movementsTable');
       tbody.innerHTML = '';
+      document.getElementById('movCount').innerText = data.length;
 
-      const filteredData = moveData.filter(m => {
-        if (!selectedCategoryFilter) return true;
-        if (currentCatLevel === 1) return m.cat1 === selectedCategoryFilter;
-        return `${m.cat1} > ${m.cat2}` === selectedCategoryFilter;
-      });
-
-      document.getElementById('movCount').innerText = filteredData.length;
-
-      filteredData.forEach(m => {
+      data.forEach(m => {
         const tr = document.createElement('tr');
         
-        // Opciones Cat1
+        // Dueños
+        const duenoOptions = DUEÑOS.map(d => 
+          `<option value="${d}" ${m.dueño === d ? 'selected' : ''}>${d}</option>`
+        ).join('');
+
+        // Cat1
         const cat1Options = CAT1_LISTA.map(c1 => 
           `<option value="${c1}" ${m.cat1 === c1 ? 'selected' : ''}>${c1}</option>`
-        ).join('');
+        );
+        // Fallback si la cat1 no existe en la estructura (fue eliminada)
+        if (!CAT1_LISTA.includes(m.cat1)) {
+          cat1Options.unshift(`<option value="${m.cat1}" selected>${m.cat1} (Eliminada)</option>`);
+        }
 
-        // Opciones Cat2
-        const availableCat2 = CATEGORIAS_ESTRUCTURA[m.cat1] || ['General / Varios'];
+        // Cat2
+        const availableCat2 = CATEGORIAS_ESTRUCTURA[m.cat1] || [m.cat2];
         const cat2Options = availableCat2.map(c2 => 
           `<option value="${c2}" ${m.cat2 === c2 ? 'selected' : ''}>${c2}</option>`
-        ).join('');
+        );
+        if (!availableCat2.includes(m.cat2)) {
+          cat2Options.unshift(`<option value="${m.cat2}" selected>${m.cat2} (Eliminada)</option>`);
+        }
 
-        const isEntreCuentas = (m.cat1 === 'Transfer/Traspasos' && m.cat2 === 'Entre cuentas');
+        const isEntreCuentas = (m.cat1 === 'Transfer/Traspasos');
         const amountClass = isEntreCuentas ? 'amount-neutral' : (m.importe >= 0 ? 'amount-pos' : 'amount-neg');
         const formattedAmount = (m.importe > 0 ? '+' : '') + m.importe.toFixed(2).replace('.', ',') + ' €';
 
         tr.innerHTML = `
           <td style="white-space:nowrap; color: var(--text-muted);">${m.fecha}</td>
           <td>
-            <input type="date" class="input-table" value="${m.fechaAplicable || ''}" onchange="updateFechaAplicable('${m.id}', this.value)">
+            <input type="date" class="input-table" value="${m.fechaAplicable || ''}" onchange="updateField('${m.id}', 'fechaAplicable', this.value)">
           </td>
           <td style="font-weight:500;">${m.concepto}</td>
+          <td style="color: var(--text-muted); font-size: 0.85em;">${m.masDatos || ''}</td>
           <td>
-            <select class="cat-select" onchange="updateCat1('${m.id}', this.value)">
-              ${cat1Options}
+            <select class="cat-select" onchange="updateField('${m.id}', 'dueño', this.value)">
+              ${duenoOptions}
             </select>
           </td>
           <td>
-            <select class="cat-select" onchange="updateCat2('${m.id}', this.value)">
-              ${cat2Options}
+            <select class="cat-select" onchange="updateField('${m.id}', 'cat1', this.value)">
+              ${cat1Options.join('')}
+            </select>
+          </td>
+          <td>
+            <select class="cat-select" onchange="updateField('${m.id}', 'cat2', this.value)">
+              ${cat2Options.join('')}
             </select>
           </td>
           <td class="${amountClass}" style="text-align:right; white-space:nowrap;">${formattedAmount}</td>
           <td>
-            <input type="text" class="input-table" placeholder="Añadir nota..." value="${m.notas || ''}" onchange="updateNotas('${m.id}', this.value)">
+            <input type="text" class="input-table" placeholder="Añadir nota..." value="${m.notas || ''}" onchange="updateField('${m.id}', 'notas', this.value)">
           </td>
         `;
         tbody.appendChild(tr);
       });
     }
 
-    // Exportar a Excel (Concepto, Fecha Original, Fecha Aplicable, Importe, Cat 1, Cat 2, Notas)
+    // Exportar Excel
     document.getElementById('exportBtn').addEventListener('click', () => {
       if (moveData.length === 0) return;
-
       const dataToExport = moveData.map(m => ({
         'Fecha Original': m.fecha,
         'Fecha Aplicable': m.fechaAplicable || '',
         'Concepto': m.concepto,
+        'Más datos': m.masDatos || '',
+        'Dueño': m.dueño,
         'Categoría 1 (Principal)': m.cat1,
         'Categoría 2 (Detalle)': m.cat2,
         'Cantidad (€)': m.importe,
         'Notas': m.notas || ''
       }));
-
       const worksheet = XLSX.utils.json_to_sheet(dataToExport);
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Movimientos");
+      XLSX.writeFile(workbook, `Movimientos_Clasificados_${timestampSuffix()}.xlsx`);
+    });
 
-      XLSX.writeFile(workbook, "Movimientos_Clasificados.xlsx");
+    // Exportar JSON
+    document.getElementById('exportJsonBtn').addEventListener('click', () => {
+      if (moveData.length === 0) return;
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(moveData, null, 2));
+      const downloadAnchorNode = document.createElement('a');
+      downloadAnchorNode.setAttribute("href", dataStr);
+      downloadAnchorNode.setAttribute("download", `finanzas_db_${timestampSuffix()}.json`);
+      document.body.appendChild(downloadAnchorNode);
+      downloadAnchorNode.click();
+      downloadAnchorNode.remove();
+    });
+
+    // Importar JSON
+    document.getElementById('jsonFile').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        try {
+          const importedData = JSON.parse(event.target.result);
+          if (Array.isArray(importedData)) {
+            moveData = importedData;
+            // Migración por si el JSON antiguo no tiene dueño
+            moveData.forEach(m => { if (!m.dueño) m.dueño = 'Familia'; });
+            saveData();
+            renderAll();
+            alert("Base de datos importada correctamente.");
+          } else {
+            alert("Formato de JSON inválido.");
+          }
+        } catch (err) {
+          alert("Error al leer el archivo JSON.");
+        }
+        document.getElementById('jsonFile').value = ''; 
+      };
+      reader.readAsText(file);
     });
 
     // Service Worker para PWA

@@ -1,0 +1,56 @@
+{
+  "Alimentación": [
+    "Supermercado",
+    "Restaurante",
+    "Cafetería / Bar",
+    "Comida a domicilio"
+  ],
+  "Compras": [
+    "Ropa",
+    "Electrónica",
+    "Otros"
+  ],
+  "Transfer/Traspasos": [
+    "Gastos",
+    "Ingresos",
+    "Entre cuentas"
+  ],
+  "Vivienda": [
+    "Alquiler / Hipoteca",
+    "Comunidad",
+    "Electricidad / Gas",
+    "Agua / Internet"
+  ],
+  "Seguros y Servicios": [
+    "Seguro Hogar",
+    "Seguro Vida / Salud",
+    "Comisiones / Servicios"
+  ],
+  "Transporte": [
+    "Gasolina / Combustible",
+    "Transporte Público / Taxi",
+    "Parking / Peaje"
+  ],
+  "Inversiones y Ahorro": [
+    "Fondos / Acciones",
+    "Planes de Pensiones"
+  ],
+  "Actividades y Ocio": [
+    "Deportes / Club",
+    "Hotel / Apartamento",
+    "Viajes / Turismo",
+    "Entretenimiento"
+  ],
+  "Suscripciones": [
+    "Plataformas TV / Música",
+    "Software / Apps"
+  ],
+  "Ingresos": [
+    "Nómina / Sueldo",
+    "Dividendo / Intereses",
+    "Otros Ingresos"
+  ],
+  "Otros": [
+    "General / Varios"
+  ]
+}
