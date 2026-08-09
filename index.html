@@ -634,6 +634,7 @@
             <option value="todos">Todos</option>
             <option value="ingresos">Ingresos</option>
             <option value="gastos">Gastos</option>
+            <option value="inversiones">Inversiones</option>
             <option value="entrecuentas">No computables</option>
           </select>
         </div>
@@ -682,6 +683,7 @@
               <button type="button" class="tab-btn active" data-view="todos">Todos</button>
               <button type="button" class="tab-btn" data-view="ingresos">Ingresos</button>
               <button type="button" class="tab-btn" data-view="gastos">Gastos</button>
+              <button type="button" class="tab-btn" data-view="inversiones">Inversiones</button>
               <button type="button" class="tab-btn" data-view="no-computables">No computables</button>
             </div>
           </div>
@@ -735,26 +737,26 @@
       </div>
 
       <div class="dashboard-grid">
-        <!-- Gráficos Concéntricos por Categorías -->
         <div class="card">
           <div class="chart-header">
-            <h2>📈 Distribución de Gastos</h2>
+            <h2>🏷️ Totales por Categoría (Cat1)</h2>
           </div>
-          <div style="position: relative; max-width: 450px; margin: 0 auto;">
-            <canvas id="chartCategorias"></canvas>
+          <div style="position: relative; width: 100%; min-height: 350px;">
+            <canvas id="chartCat1Bar"></canvas>
           </div>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.75rem;">
+            Haz clic en una barra para ver el desglose de Cat2 dentro de esa categoría.
+          </p>
         </div>
 
-        <!-- Gráfico de Barras de Totales por Categoría -->
         <div class="card">
           <div class="chart-header">
-            <h2>🏷️ Totales por Categoría</h2>
+            <h2 id="cat2ChartTitle">🏷️ Totales por Subcategoría (Cat2)</h2>
           </div>
-          <div style="position: relative; max-width: 450px; margin: 0 auto; height: 350px;">
-            <canvas id="chartTotalesBar"></canvas>
+          <div style="position: relative; width: 100%; min-height: 350px;">
+            <canvas id="chartCat2Bar"></canvas>
           </div>
         </div>
-
       </div>
     </div>
   </div>
@@ -914,8 +916,10 @@
 
     // --- LÓGICA PRINCIPAL DE LA APP ---
     let moveData = [];
-    let doughnutChart = null;
-    let barChart = null;
+    let barChartCat1 = null;
+    let barChartCat2 = null;
+    let currentFilteredData = [];
+    let selectedCat1ForCat2 = null;
     const DUEÑOS = ['Familia', 'Belén', 'Jorge'];
 
     // Colores base para Cat1 (en formato HSL para facilitar variaciones)
@@ -985,7 +989,8 @@
     function getTipoGeneralMovimiento(mov) {
       const cat1 = normalizarCat1(mov.cat1);
       if (cat1 === 'Ingresos') return 'ingresos';
-      if (cat1 === 'Transfer' || cat1 === 'Inversiones y Ahorro') return 'no-computables';
+      if (cat1 === 'Inversiones y Ahorro') return 'inversiones';
+      if (cat1 === 'Transfer') return 'no-computables';
       return 'gastos';
     }
 
@@ -1520,6 +1525,7 @@
         const tipoGeneral = getTipoGeneralMovimiento(m);
         if (fTipo === 'ingresos' && tipoGeneral !== 'ingresos') return false;
         if (fTipo === 'gastos' && tipoGeneral !== 'gastos') return false;
+        if (fTipo === 'inversiones' && tipoGeneral !== 'inversiones') return false;
         if (fTipo === 'entrecuentas' && tipoGeneral !== 'no-computables') return false;
 
         if (fDueno !== 'todos' && m.dueño !== fDueno) return false;
@@ -1552,10 +1558,10 @@
 
       currentVisibleData = filteredData;
 
-      const viewType = currentView === 'ingresos' ? 'ingresos' : (currentView === 'gastos' ? 'gastos' : (currentView === 'no-computables' ? 'no-computables' : 'todos'));
+      const viewType = currentView === 'ingresos' ? 'ingresos' : (currentView === 'gastos' ? 'gastos' : (currentView === 'inversiones' ? 'inversiones' : (currentView === 'no-computables' ? 'no-computables' : 'todos')));
 
       // Totales
-      let ingresos = 0, gastos = 0, entreCuentas = 0;
+      let ingresos = 0, gastos = 0, entreCuentas = 0, inversiones = 0;
       
       // Agrupaciones para gráficos
       const cat1TotalsMap = {};
@@ -1564,36 +1570,19 @@
       filteredData.forEach(m => {
         const cat1Normalizada = normalizarCat1(m.cat1);
         const tipoGeneral = getTipoGeneralMovimiento(m);
-        const isTransfer = (cat1Normalizada === 'Transfer');
         const absVal = Math.abs(m.importe);
 
-        if (viewType === 'ingresos' && tipoGeneral !== 'ingresos') return;
-        if (viewType === 'gastos' && tipoGeneral !== 'gastos') return;
-        if (viewType === 'no-computables' && tipoGeneral !== 'no-computables') return;
+        cat1TotalsMap[cat1Normalizada] = (cat1TotalsMap[cat1Normalizada] || 0) + absVal;
+        const cat2Key = `${cat1Normalizada}|${m.cat2 || 'Otros'}`;
+        cat2TotalsMap[cat2Key] = (cat2TotalsMap[cat2Key] || 0) + absVal;
 
-        if (isTransfer) {
-          entreCuentas += absVal;
-          if (viewType === 'todos' || viewType === 'no-computables') {
-            cat1TotalsMap[m.cat1] = (cat1TotalsMap[m.cat1] || 0) + absVal;
-            const cat2Key = `${m.cat1}|${m.cat2}`;
-            cat2TotalsMap[cat2Key] = (cat2TotalsMap[cat2Key] || 0) + absVal;
-          }
-        } else if (m.importe > 0) {
-          ingresos += m.importe;
-          if (viewType === 'todos' || viewType === 'ingresos') {
-            cat1TotalsMap[m.cat1] = (cat1TotalsMap[m.cat1] || 0) + m.importe;
-            const cat2Key = `${m.cat1}|${m.cat2}`;
-            cat2TotalsMap[cat2Key] = (cat2TotalsMap[cat2Key] || 0) + m.importe;
-          }
-        } else {
-          gastos += absVal;
-          if (viewType === 'todos' || viewType === 'gastos') {
-            cat1TotalsMap[m.cat1] = (cat1TotalsMap[m.cat1] || 0) + absVal;
-            const cat2Key = `${m.cat1}|${m.cat2}`;
-            cat2TotalsMap[cat2Key] = (cat2TotalsMap[cat2Key] || 0) + absVal;
-          }
-        }
+        if (tipoGeneral === 'ingresos') ingresos += m.importe;
+        else if (tipoGeneral === 'gastos') gastos += absVal;
+        else if (tipoGeneral === 'no-computables') entreCuentas += absVal;
+        else if (tipoGeneral === 'inversiones') inversiones += absVal;
       });
+
+      currentFilteredData = filteredData;
 
       // Actualizar Badges de Totales
       document.getElementById('totalIngresos').innerText = ingresos.toFixed(2).replace('.', ',') + ' €';
@@ -1606,8 +1595,8 @@
       balanceEl.className = balance >= 0 ? 'amount-pos' : 'amount-neg';
 
       // Gráficos
-      renderConcentricChart(cat1TotalsMap, cat2TotalsMap, viewType);
-      renderBarChart(cat1TotalsMap, viewType);
+      renderCat1BarChart(cat1TotalsMap);
+      renderCat2BarChartFromData(filteredData);
 
       // Tabla
       renderMovementsTable(filteredData);
@@ -1626,6 +1615,58 @@
       cat2Select.innerHTML = '<option value="">Todos</option>' + uniqueOptions.map(v => `<option value="${v}" ${selectedCat2 === v ? 'selected' : ''}>${v}</option>`).join('');
     }
 
+    function getTipoGeneralFromCat1(cat1) {
+      const normalized = normalizarCat1(cat1);
+      if (normalized === 'Ingresos') return 'ingresos';
+      if (normalized === 'Inversiones y Ahorro') return 'inversiones';
+      if (normalized === 'Transfer') return 'no-computables';
+      return 'gastos';
+    }
+
+    function getTypeBaseColor(tipo) {
+      if (tipo === 'ingresos') return '#34d399';
+      if (tipo === 'gastos') return '#f97316';
+      if (tipo === 'no-computables') return '#94a3b8';
+      if (tipo === 'inversiones') return '#60a5fa';
+      return '#8b5cf6';
+    }
+
+    function getBarColorForCat1(cat1) {
+      return getTypeBaseColor(getTipoGeneralFromCat1(cat1));
+    }
+
+    function getBarColorForCat2(cat1, index, total) {
+      const type = getTipoGeneralFromCat1(cat1);
+      const base = getTypeBaseColor(type);
+      if (type === 'gastos') {
+        const [h,s,l] = hexToHsl(base);
+        const newL = Math.min(80, Math.max(40, 70 - (index / Math.max(total - 1, 1)) * 25));
+        return `hsl(${h.toFixed(1)},${s.toFixed(1)}%,${newL.toFixed(1)}%)`;
+      }
+      if (type === 'ingresos' || type === 'inversiones') {
+        const [h,s,l] = hexToHsl(base);
+        const newL = Math.min(75, Math.max(45, 60 - (index / Math.max(total - 1, 1)) * 15));
+        return `hsl(${h.toFixed(1)},${s.toFixed(1)}%,${newL.toFixed(1)}%)`;
+      }
+      return base;
+    }
+
+    function updateSelectedCat1ForCat2(cat1) {
+      selectedCat1ForCat2 = selectedCat1ForCat2 === cat1 ? null : cat1;
+      renderCat2BarChartFromData(currentFilteredData);
+    }
+
+    function renderCat2BarChartFromData(filteredData) {
+      const totals = {};
+      filteredData.forEach(m => {
+        const cat1 = normalizarCat1(m.cat1);
+        if (selectedCat1ForCat2 && cat1 !== selectedCat1ForCat2) return;
+        const cat2 = m.cat2 || 'Otros';
+        totals[`${cat1}|${cat2}`] = (totals[`${cat1}|${cat2}`] || 0) + Math.abs(m.importe);
+      });
+      renderCat2BarChart(totals, selectedCat1ForCat2);
+    }
+
     function setChartView(view) {
       currentView = view;
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.view === view));
@@ -1638,100 +1679,83 @@
       });
     });
 
-    function renderConcentricChart(cat1Map, cat2Map, viewType = 'todos') {
-      const ctx = document.getElementById('chartCategorias').getContext('2d');
-      if (doughnutChart) doughnutChart.destroy();
+    function renderCat1BarChart(cat1Map) {
+      const ctx = document.getElementById('chartCat1Bar').getContext('2d');
+      if (barChartCat1) barChartCat1.destroy();
 
-      // Procesar datos jerárquicamente para que Cat2 esté junto a su Cat1
-      const cat1Labels = [];
-      const cat1Data = [];
-      const cat1Bg = [];
+      const sorted = Object.entries(cat1Map).sort((a,b) => b[1] - a[1]);
+      const labels = sorted.map(item => item[0]);
+      const data = sorted.map(item => item[1]);
+      const colors = sorted.map(([cat]) => getBarColorForCat1(cat));
 
-      const cat2Labels = [];
-      const cat2Data = [];
-      const cat2Bg = [];
-
-      let colorIndex = 0;
-
-      // Ordenar Cat1 por importe
-      const sortedCat1 = Object.entries(cat1Map).sort((a,b) => b[1] - a[1]);
-
-      sortedCat1.forEach(([c1, val1]) => {
-        cat1Labels.push(c1);
-        cat1Data.push(val1);
-        const baseColor = PALETTE_BASE[colorIndex % PALETTE_BASE.length];
-        cat1Bg.push(baseColor);
-        colorIndex++;
-
-        // Buscar sus Cat2
-        const subcats = Object.entries(cat2Map)
-          .filter(([key, val]) => key.startsWith(c1 + '|'))
-          .sort((a,b) => b[1] - a[1]);
-        
-        subcats.forEach(([key, val2], idx) => {
-          cat2Labels.push(key.split('|')[1]);
-          cat2Data.push(val2);
-          cat2Bg.push(getSubcatColor(baseColor, idx, subcats.length));
-        });
-      });
-
-      doughnutChart = new Chart(ctx, {
-        type: 'doughnut',
+      barChartCat1 = new Chart(ctx, {
+        type: 'bar',
         data: {
-          datasets: [
-            {
-              // Outer ring (Cat 2)
-              data: cat2Data,
-              backgroundColor: cat2Bg,
-              labels: cat2Labels, // Usado en tooltips personalizados
-              borderWidth: 1,
-              borderColor: '#1e293b'
-            },
-            {
-              // Inner ring (Cat 1)
-              data: cat1Data,
-              backgroundColor: cat1Bg,
-              labels: cat1Labels,
-              borderWidth: 2,
-              borderColor: '#1e293b'
-            }
-          ]
+          labels,
+          datasets: [{
+            label: 'Total Cat1 (€)',
+            data,
+            backgroundColor: colors,
+            borderRadius: 6
+          }]
         },
         options: {
           responsive: true,
-          maintainAspectRatio: true,
+          maintainAspectRatio: false,
+          onClick: (evt, elements) => {
+            if (!elements.length) return;
+            const index = elements[0].index;
+            updateSelectedCat1ForCat2(labels[index]);
+          },
           plugins: {
             legend: { display: false },
             tooltip: {
               callbacks: {
-                label: function(context) {
-                  const label = context.dataset.labels[context.dataIndex] || '';
-                  const value = context.raw.toFixed(2) + ' €';
-                  return ` ${label}: ${value}`;
-                }
+                label: function(context) { return context.raw.toFixed(2) + ' €'; }
               }
+            }
+          },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: { color: '#f8fafc', font: { family: 'Plus Jakarta Sans', size: 11 } }
+            },
+            y: {
+              grid: { color: 'rgba(255,255,255,0.05)' },
+              ticks: { color: '#94a3b8' }
             }
           }
         }
       });
     }
 
-    function renderBarChart(cat1Map, viewType = 'todos') {
-      const ctx = document.getElementById('chartTotalesBar').getContext('2d');
-      if (barChart) barChart.destroy();
+    function renderCat2BarChart(cat2Map, selectedCat1 = null) {
+      const ctx = document.getElementById('chartCat2Bar').getContext('2d');
+      if (barChartCat2) barChartCat2.destroy();
 
-      const sorted = Object.entries(cat1Map).sort((a, b) => b[1] - a[1]);
-      const labels = sorted.map(item => item[0]);
-      const data = sorted.map(item => item[1]);
+      const filtered = Object.entries(cat2Map)
+        .filter(([key]) => !selectedCat1 || key.startsWith(selectedCat1 + '|'))
+        .map(([key, value]) => {
+          const [cat1, cat2] = key.split('|');
+          return { cat1, cat2, value };
+        })
+        .sort((a,b) => b.value - a.value);
 
-      barChart = new Chart(ctx, {
+      const labels = filtered.map(item => item.cat2);
+      const data = filtered.map(item => item.value);
+      const colors = filtered.map((item, idx) => getBarColorForCat2(item.cat1, idx, filtered.length));
+
+      const title = selectedCat1 ? `🏷️ Totales Cat2 de ${selectedCat1}` : '🏷️ Totales por Subcategoría (Cat2)';
+      document.getElementById('cat2ChartTitle').innerText = title;
+
+      barChartCat2 = new Chart(ctx, {
         type: 'bar',
         data: {
-          labels: labels,
+          labels,
           datasets: [{
-            label: viewType === 'ingresos' ? 'Total Ingresos (€)' : (viewType === 'no-computables' ? 'Total No computables (€)' : 'Total Gastos (€)'),
-            data: data,
-            backgroundColor: '#3b82f6',
+            label: selectedCat1 ? `Cat2 dentro de ${selectedCat1}` : 'Total Cat2 (€)',
+            data,
+            backgroundColor: colors,
             borderRadius: 6
           }]
         },
