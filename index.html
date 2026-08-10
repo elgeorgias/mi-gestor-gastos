@@ -553,9 +553,11 @@
 
     <div class="card">
       <div class="btn-group">
-        <label class="btn" for="csvFile">📁 Cargar CSV</label>
+        <label class="btn" for="csvFile">📁 CaixaBank (CSV)</label>
         <input type="file" id="csvFile" accept=".csv">
-        <label class="btn btn-info" for="appendCsvFile">➕ Añadir (CSV)</label>
+        <label class="btn btn-info" for="pluxeeFile">🍕 Pluxee (CSV/XLSX)</label>
+        <input type="file" id="pluxeeFile" accept=".csv, .xlsx, .xls">
+        <label class="btn btn-secondary" for="appendCsvFile">➕ Añadir (CSV)</label>
         <input type="file" id="appendCsvFile" accept=".csv" style="display:none;">
         <label class="btn" for="jsonFile">📁 Importar BD (JSON)</label>
         <input type="file" id="jsonFile" accept=".json">
@@ -680,11 +682,12 @@
                 <th style="min-width:85px; cursor:pointer;" onclick="setSort('fecha')">Fecha Orig.</th>
                 <th style="min-width:110px; cursor:pointer;" onclick="setSort('fechaAplicable')">Fecha Aplicable</th>
                 <th style="min-width:150px; cursor:pointer;" onclick="setSort('concepto')">Concepto</th>
-                <th style="min-width:150px; cursor:pointer;" onclick="setSort('masDatos')">Más datos</th>
                 <th style="min-width:140px; cursor:pointer;" onclick="setSort('cat1')">Cat 1 (Principal)</th>
                 <th style="min-width:140px; cursor:pointer;" onclick="setSort('cat2')">Cat 2 (Detalle)</th>
                 <th style="min-width:90px; text-align: right; cursor:pointer;" onclick="setSort('importe')">Importe</th>
                 <th style="min-width:140px; cursor:pointer;" onclick="setSort('notas')">Notas</th>
+                <th style="min-width:150px; cursor:pointer;" onclick="setSort('masDatos')">Más datos</th>
+                <th style="min-width:100px; cursor:pointer;" onclick="setSort('origen')">Origen</th>
                 <th style="min-width:130px; cursor:pointer;" onclick="setSort('dueno')">Dueño</th>
               </tr>
               <tr>
@@ -692,7 +695,6 @@
                 <th><label for="tableFilterFechaOrig" class="sr-only">Filtrar Fecha Orig.</label><input type="text" class="table-filter-input" id="tableFilterFechaOrig" oninput="applyFilters()" placeholder="Filtrar"></th>
                 <th><label for="tableFilterFechaAplicable" class="sr-only">Filtrar Fecha Aplicable</label><input type="text" class="table-filter-input" id="tableFilterFechaAplicable" oninput="applyFilters()" placeholder="Filtrar"></th>
                 <th><label for="tableFilterConcepto" class="sr-only">Filtrar Concepto</label><input type="text" class="table-filter-input" id="tableFilterConcepto" oninput="applyFilters()" placeholder="Filtrar"></th>
-                <th><label for="tableFilterMasDatos" class="sr-only">Filtrar Más datos</label><input type="text" class="table-filter-input" id="tableFilterMasDatos" oninput="applyFilters()" placeholder="Filtrar"></th>
                 <th>
                   <label for="tableFilterCat1" class="sr-only">Filtrar Cat 1</label>
                   <select class="table-filter-input" id="tableFilterCat1" onchange="applyFilters()">
@@ -707,6 +709,8 @@
                 </th>
                 <th><label for="tableFilterImporte" class="sr-only">Filtrar Importe</label><input type="text" class="table-filter-input" id="tableFilterImporte" oninput="applyFilters()" placeholder="Filtrar"></th>
                 <th><label for="tableFilterNotas" class="sr-only">Filtrar Notas</label><input type="text" class="table-filter-input" id="tableFilterNotas" oninput="applyFilters()" placeholder="Filtrar"></th>
+                <th><label for="tableFilterMasDatos" class="sr-only">Filtrar Más datos</label><input type="text" class="table-filter-input" id="tableFilterMasDatos" oninput="applyFilters()" placeholder="Filtrar"></th>
+                <th><label for="tableFilterOrigen" class="sr-only">Filtrar Origen</label><input type="text" class="table-filter-input" id="tableFilterOrigen" oninput="applyFilters()" placeholder="Filtrar"></th>
                 <th>
                   <label for="tableFilterDueno" class="sr-only">Filtrar Dueño</label>
                   <select class="table-filter-input" id="tableFilterDueno" onchange="applyFilters()">
@@ -714,6 +718,7 @@
                     <option value="Familia">Familia</option>
                     <option value="Belén">Belén</option>
                     <option value="Jorge">Jorge</option>
+                    <option value="Pluxee">Pluxee</option>
                   </select>
                 </th>
               </tr>
@@ -1062,6 +1067,42 @@
       return Number(texto);
     }
 
+    // Cargar CSV Pluxee
+    document.getElementById('pluxeeFile').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const bankConfig = {
+        dueno: 'Pluxee',
+        origen: 'Pluxee'
+      };
+
+      if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
+          const results = {
+            data: XLSX.utils.sheet_to_json(worksheet, { header: 1 })
+          };
+          processCsvResults(results, false, bankConfig);
+          document.getElementById('pluxeeFile').value = '';
+        };
+        reader.readAsArrayBuffer(file);
+      } else {
+        Papa.parse(file, {
+          encoding: "UTF-8",
+          skipEmptyLines: 'greedy',
+          complete: (results) => {
+            processCsvResults(results, false, bankConfig);
+            document.getElementById('pluxeeFile').value = '';
+          }
+        });
+      }
+    });
+
     function encontrarCabecera(filas) {
       return filas.findIndex(fila => {
         const cabeceras = fila.map(normalizarBusqueda);
@@ -1078,8 +1119,12 @@
       });
     }
 
-    function clasificarAuto(concepto, importe) {
+    function clasificarAuto(concepto, importe, dueno = 'Familia') {
       const c = concepto.toUpperCase();
+      if (dueno === 'Pluxee') {
+        if (c.includes('CARGA')) return { cat1: 'Ingresos', cat2: 'Otros Ingresos' };
+        return { cat1: 'Alimentación', cat2: 'Restaurante' };
+      }
       if (c.includes('TRANSFER') || c.includes('TRASPASO') || c.includes('PAGO TRANSFERENCIAS')) {
         if (c.includes('ENTRE CUENTAS') || c.includes('PROPIA') || c.includes('MISMO TITULAR')) return { cat1: 'Transfer', cat2: 'Entre cuentas' };
         const defaultCat2 = getDefaultCat2('Transfer');
@@ -1325,7 +1370,8 @@
             cat2: m.cat1 === 'Transfer' || m.cat1 === 'Transfer/Traspasos'
               ? getDefaultCat2('Transfer')
               : (m.cat2 || ''),
-            revisado: typeof m.revisado === 'boolean' ? m.revisado : false
+            revisado: typeof m.revisado === 'boolean' ? m.revisado : false,
+            origen: m.origen || 'CaixaBank'
           }));
           if (moveData.length > 0) renderAll(getTableFilterValues());
         } catch(e) { console.error(e); }
@@ -1341,6 +1387,7 @@
                 delete m.dueño;
               }
               if (!m.dueno) m.dueno = 'Familia'; // Migración
+              if (!m.origen) m.origen = 'CaixaBank';
             });
             saveData();
             if (moveData.length > 0) renderAll(getTableFilterValues());
@@ -1377,7 +1424,7 @@
       });
     });
 
-    function processCsvResults(results, isAppend = false) {
+    function processCsvResults(results, isAppend = false, bankConfig = {}) {
       const filaCabecera = encontrarCabecera(results.data);
       if (filaCabecera === -1) {
         alert('CSV no compatible.');
@@ -1397,10 +1444,10 @@
           );
         });
       };
-      const indiceFecha = indice('fecha');
-      const indiceConcepto = indice('concepto', 'movimiento', 'descripcion');
-      const indiceMasDatos = indice('mas datos', 'masdatos', 'm s datos');
-      const indiceImporte = indice('importe', 'cantidad');
+      const indiceFecha = indice(...(bankConfig.fecha || ['fecha', 'Fecha Original', 'FechaOriginal']));
+      const indiceConcepto = indice(...(bankConfig.concepto || ['concepto', 'movimiento', 'descripcion']));
+      const indiceMasDatos = indice(...(bankConfig.masDatos || ['mas datos', 'masdatos', 'm s datos']));
+      const indiceImporte = indice(...(bankConfig.importe || ['importe', 'cantidad']));
       
       // Índices para campos del CSV exportado
       const indiceFechaAplicable = indice('fecha aplicable');
@@ -1409,10 +1456,14 @@
       const indiceCat2 = indice('categoria 2');
       const indiceNotas = indice('notas');
       const indiceRevisado = indice('revisado');
+      const indiceOrigen = indice('origen');
 
       const newItems = [];
       let skippedCount = 0;
       
+      const defaultDueno = bankConfig.dueno || 'Familia';
+      const defaultOrigen = bankConfig.origen || 'CaixaBank';
+
       // Crear un set de "firmas" de movimientos existentes para búsqueda rápida
       const existingSignatures = new Set(moveData.map(m => 
         `${(m.fecha || '').trim()}|${(m.concepto || '').trim()}|${Number(m.importe).toFixed(2)}`
@@ -1437,11 +1488,11 @@
         }
 
         // Si es un CSV exportado, priorizamos los valores existentes
-        let cat1 = indiceCat1 !== -1 ? (row[indiceCat1] || '').trim() : null;
-        let cat2 = indiceCat2 !== -1 ? (row[indiceCat2] || '').trim() : null;
+        let cat1 = (indiceCat1 !== -1 && row[indiceCat1]) ? String(row[indiceCat1]).trim() : null;
+        let cat2 = (indiceCat2 !== -1 && row[indiceCat2]) ? String(row[indiceCat2]).trim() : null;
         
         if (!cat1) {
-            const autoCat = clasificarAuto(concepto, val);
+            const autoCat = clasificarAuto(concepto, val, defaultDueno);
             cat1 = autoCat.cat1;
             cat2 = autoCat.cat2;
         }
@@ -1457,7 +1508,8 @@
           concepto: concepto,
           masDatos: masDatos,
           importe: val,
-          dueno: (indiceDueno !== -1 ? (row[indiceDueno] || '').trim() : 'Familia') || 'Familia',
+          dueno: (indiceDueno !== -1 ? (row[indiceDueno] || '').trim() : defaultDueno) || defaultDueno,
+          origen: (indiceOrigen !== -1 ? (row[indiceOrigen] || '').trim() : defaultOrigen) || defaultOrigen,
           cat1: cat1,
           cat2: cat2,
           notas: (indiceNotas !== -1 ? (row[indiceNotas] || '').trim() : '') || '',
@@ -1558,7 +1610,7 @@
     }
 
     function clearTableColumnFilters() {
-      ['tableFilterFechaOrig','tableFilterFechaAplicable','tableFilterConcepto','tableFilterMasDatos','tableFilterDueno','tableFilterCat1','tableFilterCat2','tableFilterImporte','tableFilterNotas'].forEach(id => {
+      ['tableFilterFechaOrig','tableFilterFechaAplicable','tableFilterConcepto','tableFilterMasDatos','tableFilterOrigen','tableFilterDueno','tableFilterCat1','tableFilterCat2','tableFilterImporte','tableFilterNotas'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = '';
       });
@@ -1571,6 +1623,7 @@
         fechaAplicable: document.getElementById('tableFilterFechaAplicable').value.trim().toLowerCase(),
         concepto: document.getElementById('tableFilterConcepto').value.trim().toLowerCase(),
         masDatos: document.getElementById('tableFilterMasDatos').value.trim().toLowerCase(),
+        origen: document.getElementById('tableFilterOrigen').value.trim().toLowerCase(),
         dueno: document.getElementById('tableFilterDueno').value,
         cat1: document.getElementById('tableFilterCat1').value,
         cat2: document.getElementById('tableFilterCat2').value,
@@ -1643,6 +1696,7 @@
         if (tableFilters.fechaAplicable && !String(m.fechaAplicable || '').toLowerCase().includes(tableFilters.fechaAplicable)) return false;
         if (tableFilters.concepto && !String(m.concepto || '').toLowerCase().includes(tableFilters.concepto)) return false;
         if (tableFilters.masDatos && !String(m.masDatos || '').toLowerCase().includes(tableFilters.masDatos)) return false;
+        if (tableFilters.origen && !String(m.origen || '').toLowerCase().includes(tableFilters.origen)) return false;
         if (tableFilters.dueno && m.dueno !== tableFilters.dueno) return false;
         if (tableFilters.cat1 && normalizarCat1(m.cat1) !== tableFilters.cat1) return false;
         if (tableFilters.cat2 && m.cat2 !== tableFilters.cat2) return false;
@@ -1697,9 +1751,12 @@
         const tipoGeneral = getTipoGeneralMovimiento(m);
         const absVal = Math.abs(m.importe);
 
-        cat1TotalsMap[cat1Normalizada] = (cat1TotalsMap[cat1Normalizada] || 0) + absVal;
-        const cat2Key = `${cat1Normalizada}|${m.cat2 || 'Otros'}`;
-        cat2TotalsMap[cat2Key] = (cat2TotalsMap[cat2Key] || 0) + absVal;
+        // En los gráficos no queremos mostrar no-computables si estamos en la vista 'todos'
+        if (!(currentView === 'todos' && tipoGeneral === 'no-computables')) {
+          cat1TotalsMap[cat1Normalizada] = (cat1TotalsMap[cat1Normalizada] || 0) + absVal;
+          const cat2Key = `${cat1Normalizada}|${m.cat2 || 'Otros'}`;
+          cat2TotalsMap[cat2Key] = (cat2TotalsMap[cat2Key] || 0) + absVal;
+        }
 
         if (tipoGeneral === 'ingresos') ingresos += m.importe;
         else if (tipoGeneral === 'gastos') gastos += absVal;
@@ -1795,6 +1852,10 @@
     function renderCat2BarChartFromData(filteredData) {
       const totals = {};
       filteredData.forEach(m => {
+        const tipoGeneral = getTipoGeneralMovimiento(m);
+        // Excluir no-computables en gráficos si estamos en vista 'todos'
+        if (currentView === 'todos' && tipoGeneral === 'no-computables') return;
+
         const cat1 = normalizarCat1(m.cat1);
         const cat2 = m.cat2 || 'Otros';
         totals[`${cat1}|${cat2}`] = (totals[`${cat1}|${cat2}`] || 0) + Math.abs(m.importe);
@@ -1967,7 +2028,6 @@
             <input type="date" class="input-table" value="${m.fechaAplicable || ''}" onchange="updateField('${m.id}', 'fechaAplicable', this.value)">
           </td>
           <td style="font-weight:500;">${m.concepto}</td>
-          <td style="color: var(--text-muted); font-size: 0.85em;">${m.masDatos || ''}</td>
           <td>
             <select class="cat-select" onchange="updateField('${m.id}', 'cat1', this.value)">
               ${cat1Options.join('')}
@@ -1982,6 +2042,8 @@
           <td>
             <input type="text" class="input-table" placeholder="Añadir nota..." value="${m.notas || ''}" onchange="updateField('${m.id}', 'notas', this.value)">
           </td>
+          <td style="color: var(--text-muted); font-size: 0.85em;">${m.masDatos || ''}</td>
+          <td style="color: var(--text-muted); font-size: 0.85em;">${m.origen || ''}</td>
           <td>
             <select class="cat-select" onchange="updateField('${m.id}', 'dueno', this.value)">
               ${duenoOptions}
@@ -2000,6 +2062,7 @@
         'Fecha Aplicable': m.fechaAplicable || '',
         'Concepto': m.concepto,
         'Mas datos': m.masDatos || '',
+        'Origen': m.origen || '',
         'Dueno': m.dueno,
         'Categoria 1': m.cat1,
         'Categoria 2': m.cat2,
