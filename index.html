@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gestor de Gastos y Finanzas</title>
   <meta name="theme-color" content="#0f172a">
-  <link rel="manifest" href="data:application/manifest+json;utf8,{'name':'Gestor de Gastos','short_name':'Gastos','start_url':'.','display':'standalone','background_color':'#0f172a','theme_color':'#0f172a'}">
+  <link rel="manifest" href='data:application/manifest+json;utf8,{"name":"Gestor de Gastos","short_name":"Gastos","start_url":".","display":"standalone","background_color":"#0f172a","theme_color":"#0f172a"}'>
   
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -301,6 +301,29 @@
       box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
     }
 
+    .main-tab {
+      padding: 0.65rem 1.4rem;
+      font-size: 0.95rem;
+      border-radius: 12px;
+      transition: all 0.2s ease;
+      background: rgba(30, 41, 59, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+    }
+    .main-tab:hover {
+      background: rgba(59, 130, 246, 0.2);
+      color: var(--text);
+      border-color: rgba(59, 130, 246, 0.4);
+    }
+    .main-tab.active {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+      box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35);
+    }
+
     .table-filter-input {
       width: 100%;
       padding: 0.35rem 0.4rem;
@@ -551,19 +574,38 @@
       <p>Control visual de tus movimientos bancarios</p>
     </div>
 
+    <div class="main-tabs-bar" style="display: flex; gap: 0.75rem; margin-bottom: 1.25rem; justify-content: center; flex-wrap: wrap;">
+      <button type="button" class="tab-btn main-tab active" data-tab="todas" onclick="switchMainTab('todas')">🌐 Todas</button>
+      <button type="button" class="tab-btn main-tab" data-tab="caixabank" onclick="switchMainTab('caixabank')">🏦 CaixaBank (CB)</button>
+      <button type="button" class="tab-btn main-tab" data-tab="pluxee" onclick="switchMainTab('pluxee')">🍕 Pluxee</button>
+    </div>
+
     <div class="card">
       <div class="btn-group">
-        <label class="btn" for="csvFile">📁 CaixaBank (CSV)</label>
-        <input type="file" id="csvFile" accept=".csv">
-        <label class="btn btn-info" for="pluxeeFile">🍕 Pluxee (CSV/XLSX)</label>
-        <input type="file" id="pluxeeFile" accept=".csv, .xlsx, .xls">
-        <label class="btn btn-secondary" for="appendCsvFile">➕ Añadir (CSV)</label>
-        <input type="file" id="appendCsvFile" accept=".csv" style="display:none;">
-        <label class="btn" for="jsonFile">📁 Importar BD (JSON)</label>
-        <input type="file" id="jsonFile" accept=".json">
-        <button class="btn btn-success" id="exportBtn" style="display:none;">📥 Exportar CSV + JSON</button>
-        <button class="btn btn-warning" onclick="openCatModal()">🗂️ Categorías</button>
-        <button class="btn btn-danger" id="clearBtn" style="display:none;">🧹 Limpiar</button>
+        <!-- Botones CaixaBank -->
+        <div id="groupCbButtons" style="display: flex; gap: 0.75rem; flex-wrap: wrap; justify-content: center;">
+          <label class="btn" for="csvFile">📁 CaixaBank (CSV)</label>
+          <input type="file" id="csvFile" accept=".csv">
+          <label class="btn btn-secondary" for="appendCsvFile">➕ Añadir (CSV)</label>
+          <input type="file" id="appendCsvFile" accept=".csv" style="display:none;">
+        </div>
+
+        <!-- Botones Pluxee -->
+        <div id="groupPluxeeButtons" style="display: flex; gap: 0.75rem; flex-wrap: wrap; justify-content: center;">
+          <label class="btn btn-info" for="pluxeeFile">🍕 Pluxee (CSV/XLSX)</label>
+          <input type="file" id="pluxeeFile" accept=".csv, .xlsx, .xls">
+          <label class="btn btn-secondary" for="appendPluxeeFile">➕ Añadir Pluxee</label>
+          <input type="file" id="appendPluxeeFile" accept=".csv, .xlsx, .xls" style="display:none;">
+        </div>
+
+        <!-- Botones Comunes -->
+        <div id="groupCommonButtons" style="display: flex; gap: 0.75rem; flex-wrap: wrap; justify-content: center;">
+          <label class="btn" for="jsonFile">📁 Importar BD (JSON)</label>
+          <input type="file" id="jsonFile" accept=".json">
+          <button class="btn btn-success" id="exportBtn" style="display:none;">📥 Exportar CSV + JSON</button>
+          <button class="btn btn-warning" onclick="openCatModal()">🗂️ Categorías</button>
+          <button class="btn btn-danger" id="clearBtn" style="display:none;">🧹 Limpiar</button>
+        </div>
       </div>
     </div>
 
@@ -718,7 +760,6 @@
                     <option value="Familia">Familia</option>
                     <option value="Belén">Belén</option>
                     <option value="Jorge">Jorge</option>
-                    <option value="Pluxee">Pluxee</option>
                   </select>
                 </th>
               </tr>
@@ -783,6 +824,20 @@
       </div>
 
       <div id="catEditorList"></div>
+    </div>
+  </div>
+
+  <!-- Modal Resultado Importación -->
+  <div class="modal-overlay" id="importResultModal">
+    <div class="modal-content" style="max-width: 650px;">
+      <div class="modal-header">
+        <h2>📥 Resultado de la Importación</h2>
+        <button class="modal-close" onclick="closeImportResultModal()">✕</button>
+      </div>
+      <div id="importResultBody"></div>
+      <div style="margin-top: 1.5rem; text-align: right;">
+        <button class="btn" onclick="closeImportResultModal()">Aceptar</button>
+      </div>
     </div>
   </div>
 
@@ -1067,28 +1122,24 @@
       return Number(texto);
     }
 
-    // Cargar CSV Pluxee
-    document.getElementById('pluxeeFile').addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-
+    // Procesar archivo Pluxee (CSV/XLSX)
+    function processPluxeeFile(file, isAppend = false) {
       const bankConfig = {
-        dueno: 'Pluxee',
+        dueno: 'Familia',
         origen: 'Pluxee'
       };
 
       if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
         const reader = new FileReader();
-        reader.onload = (e) => {
-          const data = new Uint8Array(e.target.result);
+        reader.onload = (evt) => {
+          const data = new Uint8Array(evt.target.result);
           const workbook = XLSX.read(data, { type: 'array' });
           const firstSheetName = workbook.SheetNames[0];
           const worksheet = workbook.Sheets[firstSheetName];
           const results = {
             data: XLSX.utils.sheet_to_json(worksheet, { header: 1 })
           };
-          processCsvResults(results, false, bankConfig);
-          document.getElementById('pluxeeFile').value = '';
+          processCsvResults(results, isAppend, bankConfig);
         };
         reader.readAsArrayBuffer(file);
       } else {
@@ -1096,11 +1147,26 @@
           encoding: "UTF-8",
           skipEmptyLines: 'greedy',
           complete: (results) => {
-            processCsvResults(results, false, bankConfig);
-            document.getElementById('pluxeeFile').value = '';
+            processCsvResults(results, isAppend, bankConfig);
           }
         });
       }
+    }
+
+    // Cargar Pluxee (reemplaza datos)
+    document.getElementById('pluxeeFile').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      processPluxeeFile(file, false);
+      document.getElementById('pluxeeFile').value = '';
+    });
+
+    // Añadir Pluxee (merge sin duplicados)
+    document.getElementById('appendPluxeeFile').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      processPluxeeFile(file, true);
+      document.getElementById('appendPluxeeFile').value = '';
     });
 
     function encontrarCabecera(filas) {
@@ -1119,9 +1185,9 @@
       });
     }
 
-    function clasificarAuto(concepto, importe, dueno = 'Familia') {
+    function clasificarAuto(concepto, importe, dueno = 'Familia', origen = 'CaixaBank') {
       const c = concepto.toUpperCase();
-      if (dueno === 'Pluxee') {
+      if (origen === 'Pluxee' || dueno === 'Pluxee') {
         if (c.includes('CARGA')) return { cat1: 'Ingresos', cat2: 'Otros Ingresos' };
         return { cat1: 'Alimentación', cat2: 'Restaurante' };
       }
@@ -1366,6 +1432,7 @@
         try {
           moveData = JSON.parse(saved).map(m => ({
             ...m,
+            dueno: (!m.dueno || m.dueno === 'Pluxee') ? 'Familia' : m.dueno,
             cat1: normalizarCat1(m.cat1),
             cat2: m.cat1 === 'Transfer' || m.cat1 === 'Transfer/Traspasos'
               ? getDefaultCat2('Transfer')
@@ -1459,7 +1526,7 @@
       const indiceOrigen = indice('origen');
 
       const newItems = [];
-      let skippedCount = 0;
+      const skippedItems = [];
       
       const defaultDueno = bankConfig.dueno || 'Familia';
       const defaultOrigen = bankConfig.origen || 'CaixaBank';
@@ -1475,14 +1542,18 @@
         const fecha = (row[indiceFecha] || '').trim();
         const rawImporte = row[indiceImporte] || '';
 
-        if (!concepto || !rawImporte) return;
+        if (!fecha || !concepto || !rawImporte) return;
         const val = obtenerImporte(rawImporte);
         if (isNaN(val)) return;
 
         if (isAppend) {
           const signature = `${fecha}|${concepto}|${val.toFixed(2)}`;
           if (existingSignatures.has(signature)) {
-            skippedCount++;
+            skippedItems.push({
+              fecha: fecha,
+              concepto: concepto,
+              importe: val
+            });
             return;
           }
         }
@@ -1492,7 +1563,7 @@
         let cat2 = (indiceCat2 !== -1 && row[indiceCat2]) ? String(row[indiceCat2]).trim() : null;
         
         if (!cat1) {
-            const autoCat = clasificarAuto(concepto, val, defaultDueno);
+            const autoCat = clasificarAuto(concepto, val, defaultDueno, defaultOrigen);
             cat1 = autoCat.cat1;
             cat2 = autoCat.cat2;
         }
@@ -1501,6 +1572,9 @@
             ? formatFechaISO(row[indiceFechaAplicable].trim()) 
             : formatFechaISO(fecha);
 
+        let itemDueno = (indiceDueno !== -1 ? (row[indiceDueno] || '').trim() : defaultDueno) || defaultDueno;
+        if (itemDueno === 'Pluxee') itemDueno = 'Familia';
+
         newItems.push({
           id: idx + '_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
           fecha: fecha,
@@ -1508,7 +1582,7 @@
           concepto: concepto,
           masDatos: masDatos,
           importe: val,
-          dueno: (indiceDueno !== -1 ? (row[indiceDueno] || '').trim() : defaultDueno) || defaultDueno,
+          dueno: itemDueno,
           origen: (indiceOrigen !== -1 ? (row[indiceOrigen] || '').trim() : defaultOrigen) || defaultOrigen,
           cat1: cat1,
           cat2: cat2,
@@ -1519,19 +1593,81 @@
 
       if (isAppend) {
         moveData = moveData.concat(newItems);
-        const msg = `Se han añadido ${newItems.length} movimientos nuevos. Se ignoraron ${skippedCount} duplicados.`;
-        if (newItems.length > 0) {
-          const lista = newItems.map(m => `- ${m.fecha}: ${m.concepto} (${m.importe}€)`).join('\n');
-          alert(msg + '\n\nMovimientos añadidos:\n' + lista);
-        } else {
-          alert(msg);
-        }
+        openImportResultModal(newItems, skippedItems);
       } else {
-        moveData = newItems;
+        const targetOrigen = defaultOrigen;
+        if (targetOrigen === 'Pluxee') {
+          // Reemplaza solo la BD de Pluxee (mantiene CaixaBank)
+          moveData = moveData.filter(m => m.origen !== 'Pluxee').concat(newItems);
+        } else {
+          // Reemplaza solo la BD de CaixaBank (mantiene Pluxee)
+          moveData = moveData.filter(m => m.origen === 'Pluxee').concat(newItems);
+        }
+        openImportResultModal(newItems, []);
       }
 
       saveData();
       renderAll();
+    }
+
+    function openImportResultModal(newItems, skippedItems) {
+      const container = document.getElementById('importResultBody');
+      const modal = document.getElementById('importResultModal');
+      
+      let html = `<p style="font-size:0.9rem; color: var(--text-muted); margin-bottom:1.2rem;">
+        Resumen de la importación: <strong>${newItems.length}</strong> movimiento(s) añadido(s) ${skippedItems.length > 0 ? `, <strong>${skippedItems.length}</strong> ignorado(s) por estar duplicados.` : '.'}
+      </p>`;
+
+      if (newItems.length > 0) {
+        html += `
+        <div style="margin-bottom: 1.2rem;">
+          <h3 style="color: var(--success); font-size:0.95rem; margin:0 0 0.5rem 0; display:flex; align-items:center; gap:0.4rem;">
+            ✅ Movimientos añadidos (${newItems.length})
+          </h3>
+          <div style="max-height: 180px; overflow-y: auto; background: rgba(15,23,42,0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 0.5rem;">
+            <table style="width:100%; font-size:0.82rem; border-collapse: collapse;">
+              <tbody>
+                ${newItems.map(m => `
+                  <tr>
+                    <td style="white-space:nowrap; color: var(--text-muted); padding: 0.3rem; width: 90px;">${m.fecha}</td>
+                    <td style="padding: 0.3rem;">${m.concepto}</td>
+                    <td style="text-align:right; font-weight:600; padding: 0.3rem; white-space:nowrap;" class="${m.importe >= 0 ? 'amount-pos' : 'amount-neg'}">${m.importe > 0 ? '+' : ''}${m.importe.toFixed(2).replace('.', ',')} €</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>`;
+      }
+
+      if (skippedItems.length > 0) {
+        html += `
+        <div style="margin-bottom: 0.5rem;">
+          <h3 style="color: var(--warning); font-size:0.95rem; margin:0 0 0.5rem 0; display:flex; align-items:center; gap:0.4rem;">
+            ⚠️ Movimientos no importados (ya existían) (${skippedItems.length})
+          </h3>
+          <div style="max-height: 180px; overflow-y: auto; background: rgba(15,23,42,0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 0.5rem;">
+            <table style="width:100%; font-size:0.82rem; border-collapse: collapse;">
+              <tbody>
+                ${skippedItems.map(m => `
+                  <tr>
+                    <td style="white-space:nowrap; color: var(--text-muted); padding: 0.3rem; width: 90px;">${m.fecha}</td>
+                    <td style="padding: 0.3rem; color: var(--text-muted);">${m.concepto}</td>
+                    <td style="text-align:right; font-weight:600; padding: 0.3rem; white-space:nowrap; color: var(--text-muted);">${m.importe > 0 ? '+' : ''}${m.importe.toFixed(2).replace('.', ',')} €</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>`;
+      }
+
+      container.innerHTML = html;
+      modal.style.display = 'flex';
+    }
+
+    function closeImportResultModal() {
+      document.getElementById('importResultModal').style.display = 'none';
     }
 
     function saveData() {
@@ -1580,10 +1716,36 @@
       tipo: 'todos',
       dueno: 'todos'
     };
+    let currentMainTab = 'todas';
     let currentVisibleData = [];
     let currentView = 'todos';
     let sortColumn = 'fechaAplicable';
     let sortOrder = 'desc';
+
+    function switchMainTab(tabName) {
+      currentMainTab = tabName;
+      document.querySelectorAll('.main-tab').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tabName);
+      });
+      
+      const cbGroup = document.getElementById('groupCbButtons');
+      const pluxeeGroup = document.getElementById('groupPluxeeButtons');
+
+      if (tabName === 'caixabank') {
+        cbGroup.style.display = 'flex';
+        pluxeeGroup.style.display = 'none';
+      } else if (tabName === 'pluxee') {
+        cbGroup.style.display = 'none';
+        pluxeeGroup.style.display = 'flex';
+      } else {
+        cbGroup.style.display = 'flex';
+        pluxeeGroup.style.display = 'flex';
+      }
+
+      if (moveData.length > 0) {
+        renderAll(getTableFilterValues());
+      }
+    }
 
     function getCurrentFilterValues() {
       return {
@@ -1664,6 +1826,10 @@
       const fTipo = appliedFilters.tipo;
 
       let filteredData = moveData.filter(m => {
+        // Filtrado por pestaña principal (CaixaBank / Pluxee / Todas)
+        if (currentMainTab === 'caixabank' && m.origen === 'Pluxee') return false;
+        if (currentMainTab === 'pluxee' && m.origen !== 'Pluxee') return false;
+
         const fechaEvaluar = m.fechaAplicable || formatFechaISO(m.fecha);
         if (fDesde && fechaEvaluar < fDesde) return false;
         if (fHasta && fechaEvaluar > fHasta) return false;
@@ -2108,7 +2274,8 @@
                 if (!m.dueno) m.dueno = m.dueño;
                 delete m.dueño;
               }
-              if (!m.dueno) m.dueno = 'Familia'; 
+              if (!m.dueno || m.dueno === 'Pluxee') m.dueno = 'Familia'; 
+              if (!m.origen) m.origen = 'CaixaBank';
               if (typeof m.revisado === 'undefined') m.revisado = false; 
             });
             saveData();
