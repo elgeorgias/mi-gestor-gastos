@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gestor de Gastos y Finanzas</title>
   <meta name="theme-color" content="#0f172a">
-  <link rel="manifest" href='data:application/manifest+json;utf8,{"name":"Gestor de Gastos","short_name":"Gastos","start_url":".","display":"standalone","background_color":"#0f172a","theme_color":"#0f172a"}'>
+  <link rel="manifest" href='data:application/manifest+json,{"name":"Gestor de Gastos","short_name":"Gastos","start_url":".","display":"standalone","background_color":"%230f172a","theme_color":"%230f172a"}'>
   
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -226,7 +226,7 @@
       gap: 1rem;
       flex-wrap: wrap;
       background: rgba(15, 23, 42, 0.6);
-      padding: 1rem;
+      padding: 1.25rem;
       border-radius: 12px;
       margin-bottom: 1.25rem;
       border: 1px solid rgba(255, 255, 255, 0.05);
@@ -236,37 +236,25 @@
     .filter-item {
       display: flex;
       flex-direction: column;
-      flex: 1;
-      min-width: 150px;
+      flex: 0 1 auto;
+      min-width: 140px;
     }
 
-    .filter-range-actions {
-      min-width: 220px;
-    }
-
-    .quick-range-buttons {
+    .date-filters-group {
       display: flex;
+      gap: 1rem;
+      flex: 0 1 auto;
       flex-wrap: wrap;
-      gap: 0.5rem;
     }
 
-    .filters-actions-row {
-      display: flex;
-      gap: 0.75rem;
-      flex-wrap: wrap;
-      background: rgba(15, 23, 42, 0.6);
-      padding: 0.9rem 1rem 0.8rem;
-      border-radius: 12px;
-      margin-top: 0.75rem;
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .filters-actions-row .filter-item {
-      flex: 1 1 50%;
-      min-width: 150px;
-      margin-bottom: 0;
+    .date-filters-group .filter-item { min-width: 160px; }
+    .filter-range-actions { min-width: 280px; }
+    .quick-range-buttons { display: flex; gap: 0.5rem; }
+    .filter-actions { 
+      display: flex; 
+      gap: 0.7rem; 
+      margin-left: auto;
+      flex: 0 0 auto;
     }
 
     .filter-item label {
@@ -439,13 +427,18 @@
       border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     }
 
-    th {
-      background: #1e293b;
+    thead tr:nth-child(1) th {
       position: sticky;
       top: 0;
-      color: var(--text-muted);
-      font-weight: 600;
-      z-index: 10;
+      z-index: 12;
+      background: #1e293b;
+    }
+    thead tr:nth-child(2) th {
+      position: sticky;
+      top: 36px;
+      z-index: 11;
+      background: #1e293b;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.4);
     }
 
     select.cat-select, input.input-table, .filter-select {
@@ -488,6 +481,8 @@
     }
     .revisado { background: #22c55e; }
     .pendiente { background: #ef4444; }
+    .modificado { background: #facc15; }
+    .sin-modificar { background: #3b82f6; }
 
     .amount-neg { color: #f87171; font-weight: 600; }
     .amount-pos { color: #34d399; font-weight: 600; }
@@ -582,23 +577,14 @@
 
     <div class="card">
       <div class="btn-group">
-        <!-- Botones CaixaBank -->
         <div id="groupCbButtons" style="display: flex; gap: 0.75rem; flex-wrap: wrap; justify-content: center;">
-          <label class="btn" for="csvFile">📁 CaixaBank (CSV)</label>
-          <input type="file" id="csvFile" accept=".csv">
           <label class="btn btn-secondary" for="appendCsvFile">➕ Añadir (CSV)</label>
           <input type="file" id="appendCsvFile" accept=".csv" style="display:none;">
         </div>
-
-        <!-- Botones Pluxee -->
         <div id="groupPluxeeButtons" style="display: flex; gap: 0.75rem; flex-wrap: wrap; justify-content: center;">
-          <label class="btn btn-info" for="pluxeeFile">🍕 Pluxee (CSV/XLSX)</label>
-          <input type="file" id="pluxeeFile" accept=".csv, .xlsx, .xls">
           <label class="btn btn-secondary" for="appendPluxeeFile">➕ Añadir Pluxee</label>
           <input type="file" id="appendPluxeeFile" accept=".csv, .xlsx, .xls" style="display:none;">
         </div>
-
-        <!-- Botones Comunes -->
         <div id="groupCommonButtons" style="display: flex; gap: 0.75rem; flex-wrap: wrap; justify-content: center;">
           <label class="btn" for="jsonFile">📁 Importar BD (JSON)</label>
           <input type="file" id="jsonFile" accept=".json">
@@ -612,92 +598,57 @@
     <div id="dashboard" style="display:none;">
       <!-- Filtros Globales -->
       <div class="filters-bar">
-        <div class="filter-item" style="position:relative;">
-          <label for="filterDesdeDisplay">Fecha inicio</label>
-          <div class="date-input-wrapper">
-            <input type="text" class="filter-select" id="filterDesdeDisplay" placeholder="dd/mm/aaaa" oninput="handleDateInput('desde', this.value)">
-            <input type="hidden" id="filterDesde">
-            <button type="button" class="date-picker-btn" onclick="toggleDatePicker('desde', event)">📅</button>
-            <button type="button" class="date-picker-btn" style="right: 2rem;" onclick="clearDateFilter('desde')" title="Borrar fecha">✕</button>
-            <div class="date-picker-popover" id="datePickerDesde">
-              <div class="cal-nav">
-                <button type="button" onclick="changeDatePickerMonth('desde', -1)">&#8249;</button>
-                <span id="datePickerDesdeMonth"></span>
-                <button type="button" onclick="changeDatePickerMonth('desde', 1)">&#8250;</button>
-              </div>
-              <div class="cal-grid" id="datePickerDesdeGrid"></div>
-              <div class="cal-footer" style="padding: 0.5rem; border-top: 1px solid var(--card-border); text-align: center;">
-                <button type="button" class="btn btn-small" style="width: 100%;" onclick="setDatePickerToToday('desde'); selectDatePicker('desde', dateToStr(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()))">Hoy</button>
+        <!-- Bloque de Fechas -->
+        <div class="date-filters-group">
+          <div class="filter-item" style="position:relative;">
+            <label for="filterDesdeDisplay">Fecha inicio</label>
+            <div class="date-input-wrapper">
+              <input type="text" class="filter-select" id="filterDesdeDisplay" placeholder="dd/mm/aaaa" oninput="handleDateInput('desde', this.value)">
+              <input type="hidden" id="filterDesde">
+              <button type="button" class="date-picker-btn" onclick="toggleDatePicker('desde', event)">📅</button>
+              <button type="button" class="date-picker-btn" style="right: 2rem;" onclick="clearDateFilter('desde')" title="Borrar fecha">✕</button>
+              <div class="date-picker-popover" id="datePickerDesde">
+                <div class="cal-nav"><button type="button" onclick="changeDatePickerMonth('desde', -1)">&#8249;</button><span id="datePickerDesdeMonth"></span><button type="button" onclick="changeDatePickerMonth('desde', 1)">&#8250;</button></div>
+                <div class="cal-grid" id="datePickerDesdeGrid"></div>
+                <div class="cal-footer" style="padding: 0.5rem; border-top: 1px solid var(--card-border); text-align: center;"><button type="button" class="btn btn-small" style="width: 100%;" onclick="setDatePickerToToday('desde'); selectDatePicker('desde', dateToStr(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()))">Hoy</button></div>
               </div>
             </div>
           </div>
-        </div>
-        <div class="filter-item" style="position:relative;">
-          <label for="filterHastaDisplay">Fecha fin</label>
-          <div class="date-input-wrapper">
-            <input type="text" class="filter-select" id="filterHastaDisplay" placeholder="dd/mm/aaaa" oninput="handleDateInput('hasta', this.value)">
-            <input type="hidden" id="filterHasta">
-            <button type="button" class="date-picker-btn" onclick="toggleDatePicker('hasta', event)">📅</button>
-            <button type="button" class="date-picker-btn" style="right: 2rem;" onclick="clearDateFilter('hasta')" title="Borrar fecha">✕</button>
-            <div class="date-picker-popover" id="datePickerHasta">
-              <div class="cal-nav">
-                <button type="button" onclick="changeDatePickerMonth('hasta', -1)">&#8249;</button>
-                <span id="datePickerHastaMonth"></span>
-                <button type="button" onclick="changeDatePickerMonth('hasta', 1)">&#8250;</button>
+          <div class="filter-item" style="position:relative;">
+            <label for="filterHastaDisplay">Fecha fin</label>
+            <div class="date-input-wrapper">
+              <input type="text" class="filter-select" id="filterHastaDisplay" placeholder="dd/mm/aaaa" oninput="handleDateInput('hasta', this.value)">
+              <input type="hidden" id="filterHasta">
+              <button type="button" class="date-picker-btn" onclick="toggleDatePicker('hasta', event)">📅</button>
+              <button type="button" class="date-picker-btn" style="right: 2rem;" onclick="clearDateFilter('hasta')" title="Borrar fecha">✕</button>
+              <div class="date-picker-popover" id="datePickerHasta">
+                <div class="cal-nav"><button type="button" onclick="changeDatePickerMonth('hasta', -1)">&#8249;</button><span id="datePickerHastaMonth"></span><button type="button" onclick="changeDatePickerMonth('hasta', 1)">&#8250;</button></div>
+                <div class="cal-grid" id="datePickerHastaGrid"></div>
+                <div class="cal-footer" style="padding: 0.5rem; border-top: 1px solid var(--card-border); text-align: center;"><button type="button" class="btn btn-small" style="width: 100%;" onclick="setDatePickerToToday('hasta'); selectDatePicker('hasta', dateToStr(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()))">Hoy</button></div>
               </div>
-              <div class="cal-grid" id="datePickerHastaGrid"></div>
-              <div class="cal-footer" style="padding: 0.5rem; border-top: 1px solid var(--card-border); text-align: center;">
-                <button type="button" class="btn btn-small" style="width: 100%;" onclick="setDatePickerToToday('hasta'); selectDatePicker('hasta', dateToStr(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()))">Hoy</button>
-              </div>
+            </div>
+          </div>
+          <div class="filter-item filter-range-actions">
+            <label>Rango rápido</label>
+            <div class="quick-range-buttons">
+              <button type="button" class="btn btn-small" style="flex: 1;" onclick="setDateRangeQuick('currentMonth')">Mes actual</button>
+              <button type="button" class="btn btn-small" style="flex: 1;" onclick="setDateRangeQuick('previousMonth')">Mes anterior</button>
+              <button type="button" class="btn btn-small" style="flex: 1;" onclick="setDateRangeQuick('yearToDate')">Todo el año</button>
             </div>
           </div>
         </div>
 
-        <div class="filter-item">
-          <label for="filterCat1">Cat. 1</label>
-          <select class="filter-select" id="filterCat1" onchange="updateCat2FilterOptions()">
-            <option value="todos">Todas</option>
-          </select>
-        </div>
-        <div class="filter-item">
-          <label for="filterCat2">Cat. 2</label>
-          <select class="filter-select" id="filterCat2">
-            <option value="todos">Todas</option>
-          </select>
-        </div>
-        <div class="filter-item">
-          <label for="filterTipo">Tipo de Mov.</label>
-          <select class="filter-select" id="filterTipo">
-            <option value="todos">Todos</option>
-            <option value="ingresos">Ingresos</option>
-            <option value="gastos">Gastos</option>
-            <option value="inversiones">Inversiones</option>
-            <option value="entrecuentas">No computables</option>
-          </select>
-        </div>
-        <div class="filter-item">
-          <label for="filterDueno">Dueño</label>
-          <select class="filter-select" id="filterDueno">
-            <option value="todos">Todos</option>
-            <option value="Familia">Familia</option>
-            <option value="Belén">Belén</option>
-            <option value="Jorge">Jorge</option>
-          </select>
-        </div>
-      </div>
+        <!-- Resto de filtros -->
+        <div class="filter-item"><label for="filterCat1">Cat. 1</label><select class="filter-select" id="filterCat1" onchange="updateCat2FilterOptions()"><option value="todos">Todas</option></select></div>
+        <div class="filter-item"><label for="filterCat2">Cat. 2</label><select class="filter-select" id="filterCat2"><option value="todos">Todas</option></select></div>
+        <div class="filter-item"><label for="filterTipo">Tipo</label><select class="filter-select" id="filterTipo"><option value="todos">Todos</option><option value="ingresos">Ingresos</option><option value="gastos">Gastos</option><option value="inversiones">Inversiones</option><option value="entrecuentas">No computables</option></select></div>
+        <div class="filter-item"><label for="filterDueno">Dueño</label><select class="filter-select" id="filterDueno"><option value="todos">Todos</option><option value="Familia">Familia</option><option value="Belén">Belén</option><option value="Jorge">Jorge</option></select></div>
+        <div class="filter-item"><label for="filterEstado">Estado</label><select class="filter-select" id="filterEstado"><option value="todos">Todos</option><option value="revisado">Revisados</option><option value="pendiente">Pendientes</option></select></div>
 
-      <div class="filters-bar filters-actions-row" style="display: flex; flex-wrap: wrap; align-items: stretch; gap: 1rem;">
-        <div class="filter-item filter-range-actions" style="flex: 1 1 300px;">
-          <label>Rango rápido</label>
-          <div class="quick-range-buttons" style="display: flex; gap: 0.5rem; flex-wrap: wrap; height: 100%; align-items: flex-end;">
-            <button type="button" class="btn btn-small" style="flex: 1;" onclick="setDateRangeQuick('currentMonth')">Mes actual</button>
-            <button type="button" class="btn btn-small" style="flex: 1;" onclick="setDateRangeQuick('previousMonth')">Mes anterior</button>
-            <button type="button" class="btn btn-small" style="flex: 1;" onclick="setDateRangeQuick('yearToDate')">Todo el año</button>
-          </div>
-        </div>
-        <div class="filter-item" style="flex: 1 1 300px; display:flex; justify-content:flex-end; align-items:flex-end; gap:0.7rem;">
-          <button type="button" class="btn" style="flex: 1;" onclick="applyFilters()">Aplicar filtros</button>
-          <button type="button" class="btn btn-warning" style="flex: 1;" onclick="clearGeneralFilters()">Limpiar filtros</button>
+        <!-- Botones de acción -->
+        <div class="filter-actions">
+          <button type="button" class="btn" onclick="applyFilters()">Aplicar</button>
+          <button type="button" class="btn btn-warning" onclick="clearGeneralFilters()">Limpiar</button>
         </div>
       </div>
 
@@ -720,7 +671,8 @@
           <table>
             <thead>
               <tr>
-                <th style="min-width:90px; cursor:pointer;" onclick="setSort('revisado')">Revisado</th>
+                <th style="min-width:64px; cursor:pointer;" onclick="setSort('revisado')">Rev</th>
+                <th style="min-width:64px; cursor:pointer;" onclick="setSort('modificado')">Mod</th>
                 <th style="min-width:85px; cursor:pointer;" onclick="setSort('fecha')">Fecha Orig.</th>
                 <th style="min-width:110px; cursor:pointer;" onclick="setSort('fechaAplicable')">Fecha Aplicable</th>
                 <th style="min-width:150px; cursor:pointer;" onclick="setSort('concepto')">Concepto</th>
@@ -728,12 +680,27 @@
                 <th style="min-width:140px; cursor:pointer;" onclick="setSort('cat2')">Cat 2 (Detalle)</th>
                 <th style="min-width:90px; text-align: right; cursor:pointer;" onclick="setSort('importe')">Importe</th>
                 <th style="min-width:140px; cursor:pointer;" onclick="setSort('notas')">Notas</th>
-                <th style="min-width:150px; cursor:pointer;" onclick="setSort('masDatos')">Más datos</th>
                 <th style="min-width:100px; cursor:pointer;" onclick="setSort('origen')">Origen</th>
                 <th style="min-width:130px; cursor:pointer;" onclick="setSort('dueno')">Dueño</th>
+                <th style="min-width:150px; cursor:pointer;" onclick="setSort('masDatos')">Más datos</th>
               </tr>
               <tr>
-                <th class="review-cell">Estado</th>
+                <th class="review-cell">
+                  <label for="tableFilterEstado" class="sr-only">Filtrar Estado</label>
+                  <select class="table-filter-input" id="tableFilterEstado" onchange="applyFilters()" style="padding: 0.2rem; font-size: 0.75rem;">
+                    <option value="">Todos</option>
+                    <option value="revisado">✓</option>
+                    <option value="pendiente">✕</option>
+                  </select>
+                </th>
+                <th class="review-cell">
+                  <label for="tableFilterModificado" class="sr-only">Filtrar Modificado</label>
+                  <select class="table-filter-input" id="tableFilterModificado" onchange="applyFilters()" style="padding: 0.2rem; font-size: 0.75rem;">
+                    <option value="">Todos</option>
+                    <option value="modificado">Amarillo</option>
+                    <option value="sin-modificar">Azul</option>
+                  </select>
+                </th>
                 <th><label for="tableFilterFechaOrig" class="sr-only">Filtrar Fecha Orig.</label><input type="text" class="table-filter-input" id="tableFilterFechaOrig" oninput="applyFilters()" placeholder="Filtrar"></th>
                 <th><label for="tableFilterFechaAplicable" class="sr-only">Filtrar Fecha Aplicable</label><input type="text" class="table-filter-input" id="tableFilterFechaAplicable" oninput="applyFilters()" placeholder="Filtrar"></th>
                 <th><label for="tableFilterConcepto" class="sr-only">Filtrar Concepto</label><input type="text" class="table-filter-input" id="tableFilterConcepto" oninput="applyFilters()" placeholder="Filtrar"></th>
@@ -751,7 +718,6 @@
                 </th>
                 <th><label for="tableFilterImporte" class="sr-only">Filtrar Importe</label><input type="text" class="table-filter-input" id="tableFilterImporte" oninput="applyFilters()" placeholder="Filtrar"></th>
                 <th><label for="tableFilterNotas" class="sr-only">Filtrar Notas</label><input type="text" class="table-filter-input" id="tableFilterNotas" oninput="applyFilters()" placeholder="Filtrar"></th>
-                <th><label for="tableFilterMasDatos" class="sr-only">Filtrar Más datos</label><input type="text" class="table-filter-input" id="tableFilterMasDatos" oninput="applyFilters()" placeholder="Filtrar"></th>
                 <th><label for="tableFilterOrigen" class="sr-only">Filtrar Origen</label><input type="text" class="table-filter-input" id="tableFilterOrigen" oninput="applyFilters()" placeholder="Filtrar"></th>
                 <th>
                   <label for="tableFilterDueno" class="sr-only">Filtrar Dueño</label>
@@ -762,6 +728,7 @@
                     <option value="Jorge">Jorge</option>
                   </select>
                 </th>
+                <th><label for="tableFilterMasDatos" class="sr-only">Filtrar Más datos</label><input type="text" class="table-filter-input" id="tableFilterMasDatos" oninput="applyFilters()" placeholder="Filtrar"></th>
               </tr>
             </thead>
             <tbody id="movementsTable"></tbody>
@@ -784,8 +751,8 @@
           <div class="chart-header">
             <h2>🏷️ Totales por Categoría (Cat1)</h2>
           </div>
-          <div style="position: relative; width: 100%; min-height: 350px;">
-            <canvas id="chartCat1Bar"></canvas>
+          <div id="chartCat1Container">
+            <!-- Los bloques de canvas se generan dinámicamente -->
           </div>
           <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.75rem;">
             Haz clic en una barra para ver el desglose de Cat2 dentro de esa categoría.
@@ -795,10 +762,13 @@
         <div class="card">
           <div class="chart-header">
             <h2 id="cat2ChartTitle">🏷️ Totales por Subcategoría (Cat2)</h2>
-            <button type="button" class="btn btn-small btn-warning" id="btnLimpiarCat2" style="display:none;" onclick="resetCat2Filter()">Limpiar</button>
+            <div style="display:flex; gap:0.5rem;">
+              <button type="button" class="btn btn-small btn-warning" id="btnLimpiarCat2" style="display:none;" onclick="resetCat2Filter()">Limpiar Cat1</button>
+              <button type="button" class="btn btn-small btn-warning" id="btnLimpiarCat2Sel" style="display:none;" onclick="clearCat2Selection()">Limpiar Cat2</button>
+            </div>
           </div>
-          <div style="position: relative; width: 100%; min-height: 350px;">
-            <canvas id="chartCat2Bar"></canvas>
+          <div id="chartCat2Container">
+            <!-- Los bloques de canvas se generan dinámicamente -->
           </div>
         </div>
       </div>
@@ -844,17 +814,64 @@
   <script>
     // --- LÓGICA DE CATEGORÍAS ---
     const DEFAULT_CATEGORIAS = {
-      'Alimentación': ['Supermercado', 'Restaurante', 'Cafetería / Bar', 'Comida preparada'],
-      'Compras': ['Ropa', 'Electrónica', 'Otros'],
-      'Transfer': ['Gastos', 'Ingresos', 'Propias'],
-      'Vivienda': ['Alquiler / Hipoteca', 'Comunidad', 'Electricidad / Gas', 'Agua / Internet'],
-      'Seguros y Servicios': ['Seguro Hogar', 'Seguro Vida / Salud', 'Comisiones / Servicios'],
-      'Transporte': ['Gasolina / Combustible', 'Transporte Público / Taxi', 'Parking / Peaje'],
-      'Inversiones y Ahorro': ['Fondos / Acciones', 'Planes de Pensiones'],
-      'Actividades y Ocio': ['Deportes / Club', 'Hotel / Apartamento', 'Viajes / Turismo', 'Entretenimiento'],
-      'Suscripciones': ['Plataformas TV / Música', 'Software / Apps'],
-      'Ingresos': ['Nómina / Sueldo', 'Dividendo / Intereses', 'Otros Ingresos'],
-      'Otros': ['General / Varios']
+      "Alimentación": [
+        "Supermercado",
+        "Restaurante",
+        "Cafetería / Bar",
+        "Comida preparada"
+      ],
+      "Compras": [
+        "Ropa",
+        "Electrónica",
+        "Otros"
+      ],
+      "Transfer": [
+        "Gastos",
+        "Ingresos",
+        "Entre cuentas"
+      ],
+      "Vivienda": [
+        "Comunidad",
+        "Electricidad / Gas",
+        "Agua / Internet",
+        "Alquiler",
+        "Hipoteca"
+      ],
+      "Seguros y Servicios": [
+        "Seguro Hogar",
+        "Seguro Vida / Salud",
+        "Comisiones / Servicios"
+      ],
+      "Transporte": [
+        "Gasolina / Combustible",
+        "Transporte Público / Taxi",
+        "Parking / Peaje",
+        "Coche"
+      ],
+      "Inversiones y Ahorro": [
+        "Fondos / Acciones",
+        "Planes de Pensiones"
+      ],
+      "Actividades y Ocio": [
+        "Deportes / Club",
+        "Hotel / Apartamento",
+        "Viajes / Turismo",
+        "Entretenimiento"
+      ],
+      "Suscripciones": [
+        "Plataformas TV / Música",
+        "Software / Apps"
+      ],
+      "Ingresos": [
+        "Nómina / Sueldo",
+        "Dividendo / Intereses",
+        "Otros Ingresos",
+        "Alquiler",
+        "Restaurante"
+      ],
+      "Otros": [
+        "General / Varios"
+      ]
     };
 
     let CATEGORIAS_ESTRUCTURA = {};
@@ -883,6 +900,56 @@
       CAT1_LISTA = Object.keys(CATEGORIAS_ESTRUCTURA);
       renderCatEditor();
       if (moveData.length > 0) renderAll();
+    }
+
+    const GRUPOS_CATEGORIAS = ['Ingresos', 'Gastos', 'Inversiones', 'Transferencias', 'Otros'];
+    const comparadorCategorias = new Intl.Collator('es', { sensitivity: 'base' });
+
+    function escaparHtml(value) {
+      return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+    }
+
+    function ordenarCategorias(values) {
+      return [...values].sort(comparadorCategorias.compare);
+    }
+
+    function grupoDeCat1(cat1) {
+      const tipo = getTipoGeneralFromCat1(cat1);
+      if (tipo === 'ingresos') return 'Ingresos';
+      if (tipo === 'inversiones') return 'Inversiones';
+      if (tipo === 'no-computables') return 'Transferencias';
+      return normalizarCat1(cat1) === 'Otros' ? 'Otros' : 'Gastos';
+    }
+
+    function crearOpcionesCat1(valorSeleccionado = '', etiquetaTodos = '') {
+      const categorias = ordenarCategorias(Object.keys(CATEGORIAS_ESTRUCTURA));
+      const grupos = Object.fromEntries(GRUPOS_CATEGORIAS.map(grupo => [grupo, []]));
+      categorias.forEach(cat1 => grupos[grupoDeCat1(cat1)].push(cat1));
+
+      let html = etiquetaTodos ? `<option value="${etiquetaTodos === 'Todas' ? 'todos' : ''}">${etiquetaTodos}</option>` : '';
+      GRUPOS_CATEGORIAS.forEach(grupo => {
+        if (!grupos[grupo].length) return;
+        html += `<optgroup label="${grupo}">${grupos[grupo].map(cat1 => `<option value="${escaparHtml(cat1)}" ${valorSeleccionado === cat1 ? 'selected' : ''}>${escaparHtml(cat1)}</option>`).join('')}</optgroup>`;
+      });
+      if (valorSeleccionado && !categorias.includes(valorSeleccionado)) {
+        html += `<optgroup label="No disponibles"><option value="${escaparHtml(valorSeleccionado)}" selected>${escaparHtml(valorSeleccionado)} (Eliminada)</option></optgroup>`;
+      }
+      return html;
+    }
+
+    function crearOpcionesCat2(cat1Seleccionada = '', valorSeleccionado = '', etiquetaTodos = '') {
+      const categorias = cat1Seleccionada ? [cat1Seleccionada] : ordenarCategorias(Object.keys(CATEGORIAS_ESTRUCTURA));
+      let html = etiquetaTodos ? `<option value="${etiquetaTodos === 'Todas' ? 'todos' : ''}">${etiquetaTodos}</option>` : '';
+      categorias.forEach(cat1 => {
+        const cat2 = ordenarCategorias(CATEGORIAS_ESTRUCTURA[cat1] || []);
+        if (!cat2.length) return;
+        html += `<optgroup label="${escaparHtml(cat1)}">${cat2.map(categoria => `<option value="${escaparHtml(categoria)}" ${valorSeleccionado === categoria ? 'selected' : ''}>${escaparHtml(categoria)}</option>`).join('')}</optgroup>`;
+      });
+      const cat2Disponibles = categorias.flatMap(cat1 => CATEGORIAS_ESTRUCTURA[cat1] || []);
+      if (valorSeleccionado && !cat2Disponibles.includes(valorSeleccionado)) {
+        html += `<optgroup label="No disponibles"><option value="${escaparHtml(valorSeleccionado)}" selected>${escaparHtml(valorSeleccionado)} (Eliminada)</option></optgroup>`;
+      }
+      return html;
     }
 
     // Modal UI
@@ -978,6 +1045,7 @@
     let barChartCat2 = null;
     let currentFilteredData = [];
     let selectedCat1ForCat2 = null;
+    let selectedCat2ForTable = null; // { cat1, cat2 } seleccionado desde gráfica Cat2
     const DUENOS = ['Familia', 'Belén', 'Jorge'];
 
     // Colores base para Cat1 (en formato HSL para facilitar variaciones)
@@ -1057,7 +1125,12 @@
       const cat1 = normalizarCat1(mov.cat1);
       if (cat1 === 'Ingresos') return 'ingresos';
       if (cat1 === 'Inversiones y Ahorro') return 'inversiones';
-      if (cat1 === 'Transfer') return 'no-computables';
+      if (cat1 === 'Transfer') {
+        const cat2 = String(mov.cat2 || '').trim();
+        if (cat2 === 'Gastos') return 'gastos';
+        if (cat2 === 'Ingresos') return 'ingresos';
+        return 'no-computables';
+      }
       return 'gastos';
     }
 
@@ -1153,13 +1226,6 @@
       }
     }
 
-    // Cargar Pluxee (reemplaza datos)
-    document.getElementById('pluxeeFile').addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      processPluxeeFile(file, false);
-      document.getElementById('pluxeeFile').value = '';
-    });
 
     // Añadir Pluxee (merge sin duplicados)
     document.getElementById('appendPluxeeFile').addEventListener('change', (e) => {
@@ -1414,17 +1480,14 @@
       const cat1Select = document.getElementById('filterCat1');
       const cat2Select = document.getElementById('filterCat2');
       const selectedCat1 = cat1Select.value;
-      const options = selectedCat1 === 'todos'
-        ? Object.values(CATEGORIAS_ESTRUCTURA).flat()
-        : (CATEGORIAS_ESTRUCTURA[selectedCat1] || []);
-      const uniqueOptions = Array.from(new Set(options));
-      cat2Select.innerHTML = '<option value="todos">Todas</option>' + uniqueOptions.map(v => `<option value="${v}">${v}</option>`).join('');
+      const selectedCat2 = cat2Select.value;
+      cat2Select.innerHTML = crearOpcionesCat2(selectedCat1 === 'todos' ? '' : selectedCat1, selectedCat2, 'Todas');
     }
 
     window.addEventListener('DOMContentLoaded', async () => {
       await cargarCategorias();
       const cat1Select = document.getElementById('filterCat1');
-      cat1Select.innerHTML = '<option value="todos">Todas</option>' + CAT1_LISTA.map(c => `<option value="${c}">${c}</option>`).join('');
+      cat1Select.innerHTML = crearOpcionesCat1('todos', 'Todas');
       updateCat2FilterOptions();
       syncTableFilterOptions();
       const saved = localStorage.getItem('finanzas_pwa_data_v4'); // V4 por la migración de Dueño
@@ -1438,6 +1501,8 @@
               ? getDefaultCat2('Transfer')
               : (m.cat2 || ''),
             revisado: typeof m.revisado === 'boolean' ? m.revisado : false,
+            // Los movimientos ya existentes se toman como referencia inicial.
+            modificado: typeof m.modificado === 'boolean' ? m.modificado : false,
             origen: m.origen || 'CaixaBank'
           }));
           if (moveData.length > 0) renderAll(getTableFilterValues());
@@ -1463,19 +1528,6 @@
       }
     });
 
-    // Cargar CSV
-    document.getElementById('csvFile').addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      Papa.parse(file, {
-        encoding: "UTF-8",
-        skipEmptyLines: 'greedy',
-        complete: (results) => {
-          processCsvResults(results, false);
-          document.getElementById('csvFile').value = '';
-        }
-      });
-    });
 
     // Añadir CSV (merge sin duplicados)
     document.getElementById('appendCsvFile').addEventListener('change', (e) => {
@@ -1587,7 +1639,9 @@
           cat1: cat1,
           cat2: cat2,
           notas: (indiceNotas !== -1 ? (row[indiceNotas] || '').trim() : '') || '',
-          revisado: indiceRevisado !== -1 ? (String(row[indiceRevisado]).trim() === 'Si' || String(row[indiceRevisado]).trim() === 'Sí' || String(row[indiceRevisado]).trim() === 'true') : false
+          revisado: indiceRevisado !== -1 ? (String(row[indiceRevisado]).trim() === 'Si' || String(row[indiceRevisado]).trim() === 'Sí' || String(row[indiceRevisado]).trim() === 'true') : false,
+          // Cada importación establece una nueva referencia de movimientos.
+          modificado: false
         });
       });
 
@@ -1678,20 +1732,20 @@
       const item = moveData.find(m => m.id === id);
       if (item) {
         item[field] = value;
+        item.modificado = true;
         if (field === 'cat1') {
           item.cat2 = getDefaultCat2(value);
         }
         saveData();
-        if (field !== 'notas' && field !== 'fechaAplicable') {
-          const visibleMatch = currentVisibleData.find(m => m.id === id);
-          if (visibleMatch) {
+        const visibleMatch = currentVisibleData.find(m => m.id === id);
+        if (visibleMatch) {
             visibleMatch[field] = value;
+            visibleMatch.modificado = true;
             if (field === 'cat1') {
               visibleMatch.cat2 = getDefaultCat2(value);
             }
           }
-          renderAll(getTableFilterValues());
-        }
+        renderAll(getTableFilterValues());
       }
     }
 
@@ -1703,7 +1757,6 @@
         document.getElementById('dashboard').style.display = 'none';
         document.getElementById('exportBtn').style.display = 'none';
         document.getElementById('clearBtn').style.display = 'none';
-        document.getElementById('csvFile').value = '';
         document.getElementById('jsonFile').value = '';
       }
     });
@@ -1714,7 +1767,8 @@
       cat1: 'todos',
       cat2: 'todos',
       tipo: 'todos',
-      dueno: 'todos'
+      dueno: 'todos',
+      estado: 'todos'
     };
     let currentMainTab = 'todas';
     let currentVisibleData = [];
@@ -1754,7 +1808,8 @@
         cat1: document.getElementById('filterCat1').value,
         cat2: document.getElementById('filterCat2').value,
         tipo: document.getElementById('filterTipo').value,
-        dueno: document.getElementById('filterDueno').value
+        dueno: document.getElementById('filterDueno').value,
+        estado: document.getElementById('filterEstado').value
       };
     }
 
@@ -1767,12 +1822,13 @@
       document.getElementById('filterCat2').value = 'todos';
       document.getElementById('filterTipo').value = 'todos';
       document.getElementById('filterDueno').value = 'todos';
+      document.getElementById('filterEstado').value = 'todos';
       updateCat2FilterOptions();
       applyFilters();
     }
 
     function clearTableColumnFilters() {
-      ['tableFilterFechaOrig','tableFilterFechaAplicable','tableFilterConcepto','tableFilterMasDatos','tableFilterOrigen','tableFilterDueno','tableFilterCat1','tableFilterCat2','tableFilterImporte','tableFilterNotas'].forEach(id => {
+      ['tableFilterFechaOrig','tableFilterFechaAplicable','tableFilterConcepto','tableFilterMasDatos','tableFilterOrigen','tableFilterDueno','tableFilterEstado','tableFilterModificado','tableFilterCat1','tableFilterCat2','tableFilterImporte','tableFilterNotas'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = '';
       });
@@ -1787,6 +1843,8 @@
         masDatos: document.getElementById('tableFilterMasDatos').value.trim().toLowerCase(),
         origen: document.getElementById('tableFilterOrigen').value.trim().toLowerCase(),
         dueno: document.getElementById('tableFilterDueno').value,
+        estado: document.getElementById('tableFilterEstado').value,
+        modificado: document.getElementById('tableFilterModificado').value,
         cat1: document.getElementById('tableFilterCat1').value,
         cat2: document.getElementById('tableFilterCat2').value,
         importe: document.getElementById('tableFilterImporte').value.trim().toLowerCase(),
@@ -1824,6 +1882,7 @@
       const fCat1 = appliedFilters.cat1;
       const fCat2 = appliedFilters.cat2;
       const fTipo = appliedFilters.tipo;
+      const fEstado = appliedFilters.estado;
 
       let filteredData = moveData.filter(m => {
         // Filtrado por pestaña principal (CaixaBank / Pluxee / Todas)
@@ -1843,6 +1902,9 @@
         if (fTipo === 'gastos' && tipoGeneral !== 'gastos') return false;
         if (fTipo === 'inversiones' && tipoGeneral !== 'inversiones') return false;
         if (fTipo === 'entrecuentas' && tipoGeneral !== 'no-computables') return false;
+
+        if (fEstado === 'revisado' && !m.revisado) return false;
+        if (fEstado === 'pendiente' && m.revisado) return false;
 
         return true;
       });
@@ -1864,13 +1926,27 @@
         if (tableFilters.masDatos && !String(m.masDatos || '').toLowerCase().includes(tableFilters.masDatos)) return false;
         if (tableFilters.origen && !String(m.origen || '').toLowerCase().includes(tableFilters.origen)) return false;
         if (tableFilters.dueno && m.dueno !== tableFilters.dueno) return false;
+        if (tableFilters.estado === 'revisado' && !m.revisado) return false;
+        if (tableFilters.modificado === 'modificado' && !m.modificado) return false;
+        if (tableFilters.modificado === 'sin-modificar' && m.modificado) return false;
+        if (tableFilters.estado === 'pendiente' && m.revisado) return false;
         if (tableFilters.cat1 && normalizarCat1(m.cat1) !== tableFilters.cat1) return false;
         if (tableFilters.cat2 && m.cat2 !== tableFilters.cat2) return false;
         if (tableFilters.importe && !String(m.importe.toFixed(2)).includes(tableFilters.importe)) return false;
         if (tableFilters.notas && !String(m.notas || '').toLowerCase().includes(tableFilters.notas)) return false;
         
-        // Filtro por selección en gráfico Cat1
-        if (selectedCat1ForCat2 && normalizarCat1(m.cat1) !== selectedCat1ForCat2) return false;
+        // Filtro por selección en gráfico Cat1 (muestra solo revisados de esa categoría)
+        if (selectedCat1ForCat2) {
+          if (normalizarCat1(m.cat1) !== selectedCat1ForCat2) return false;
+          if (!m.revisado) return false;
+        }
+
+        // Filtro por selección en gráfico Cat2
+        if (selectedCat2ForTable) {
+          if (normalizarCat1(m.cat1) !== selectedCat2ForTable.cat1) return false;
+          if (m.cat2 !== selectedCat2ForTable.cat2) return false;
+          if (!m.revisado) return false;
+        }
 
         return true;
       });
@@ -1915,19 +1991,20 @@
       filteredData.forEach(m => {
         const cat1Normalizada = normalizarCat1(m.cat1);
         const tipoGeneral = getTipoGeneralMovimiento(m);
-        const absVal = Math.abs(m.importe);
+        const netVal = getNetCategoryValue(cat1Normalizada, m.importe);
+        const esNoClasificado = cat1Normalizada === 'Otros' || !m.cat1;
 
-        // En los gráficos no queremos mostrar no-computables si estamos en la vista 'todos'
-        if (!(currentView === 'todos' && tipoGeneral === 'no-computables')) {
-          cat1TotalsMap[cat1Normalizada] = (cat1TotalsMap[cat1Normalizada] || 0) + absVal;
+        // Las gráficas únicamente computan movimientos revisados (m.revisado === true)
+        if (m.revisado && !(currentView === 'todos' && tipoGeneral === 'no-computables') && !esNoClasificado) {
+          cat1TotalsMap[cat1Normalizada] = (cat1TotalsMap[cat1Normalizada] || 0) + netVal;
           const cat2Key = `${cat1Normalizada}|${m.cat2 || 'Otros'}`;
-          cat2TotalsMap[cat2Key] = (cat2TotalsMap[cat2Key] || 0) + absVal;
+          cat2TotalsMap[cat2Key] = (cat2TotalsMap[cat2Key] || 0) + netVal;
         }
 
         if (tipoGeneral === 'ingresos') ingresos += m.importe;
-        else if (tipoGeneral === 'gastos') gastos += absVal;
-        else if (tipoGeneral === 'no-computables') entreCuentas += absVal;
-        else if (tipoGeneral === 'inversiones') inversiones += absVal;
+        else if (tipoGeneral === 'gastos') gastos += (-m.importe);
+        else if (tipoGeneral === 'no-computables') entreCuentas += (-m.importe);
+        else if (tipoGeneral === 'inversiones') inversiones += (-m.importe);
       });
 
       currentFilteredData = filteredData;
@@ -1955,16 +2032,20 @@
       syncTableFilterOptions();
     }
 
+    function getNetCategoryValue(cat1, importe) {
+      const type = getTipoGeneralFromCat1(cat1);
+      if (type === 'ingresos') return importe;
+      return -importe;
+    }
+
     function syncTableFilterOptions() {
       const cat1Select = document.getElementById('tableFilterCat1');
       const cat2Select = document.getElementById('tableFilterCat2');
       if (!cat1Select || !cat2Select) return;
-      const selected = cat1Select.value;
-      cat1Select.innerHTML = '<option value="">Todos</option>' + CAT1_LISTA.map(c => `<option value="${c}" ${selected === c ? 'selected' : ''}>${c}</option>`).join('');
-      const options = selected ? (CATEGORIAS_ESTRUCTURA[selected] || []) : Object.values(CATEGORIAS_ESTRUCTURA).flat();
-      const uniqueOptions = Array.from(new Set(options));
+      const selectedCat1 = cat1Select.value;
       const selectedCat2 = cat2Select.value;
-      cat2Select.innerHTML = '<option value="">Todos</option>' + uniqueOptions.map(v => `<option value="${v}" ${selectedCat2 === v ? 'selected' : ''}>${v}</option>`).join('');
+      cat1Select.innerHTML = crearOpcionesCat1(selectedCat1, 'Todos');
+      cat2Select.innerHTML = crearOpcionesCat2(selectedCat1, selectedCat2, 'Todos');
     }
 
     function getTipoGeneralFromCat1(cat1) {
@@ -2005,26 +2086,50 @@
 
     function updateSelectedCat1ForCat2(cat1) {
       selectedCat1ForCat2 = selectedCat1ForCat2 === cat1 ? null : cat1;
+      selectedCat2ForTable = null; // limpiar selección Cat2 al cambiar Cat1
       document.getElementById('btnLimpiarCat2').style.display = selectedCat1ForCat2 ? 'inline-flex' : 'none';
+      document.getElementById('btnLimpiarCat2Sel').style.display = 'none';
       renderAll(getTableFilterValues());
     }
 
     function resetCat2Filter() {
       selectedCat1ForCat2 = null;
+      selectedCat2ForTable = null;
       document.getElementById('btnLimpiarCat2').style.display = 'none';
+      document.getElementById('btnLimpiarCat2Sel').style.display = 'none';
+      renderAll(getTableFilterValues());
+    }
+
+    function selectCat2ForTable(cat1, cat2) {
+      if (selectedCat2ForTable && selectedCat2ForTable.cat1 === cat1 && selectedCat2ForTable.cat2 === cat2) {
+        selectedCat2ForTable = null;
+      } else {
+        selectedCat2ForTable = { cat1, cat2 };
+      }
+      document.getElementById('btnLimpiarCat2Sel').style.display = selectedCat2ForTable ? 'inline-flex' : 'none';
+      renderAll(getTableFilterValues());
+    }
+
+    function clearCat2Selection() {
+      selectedCat2ForTable = null;
+      document.getElementById('btnLimpiarCat2Sel').style.display = 'none';
       renderAll(getTableFilterValues());
     }
 
     function renderCat2BarChartFromData(filteredData) {
       const totals = {};
       filteredData.forEach(m => {
+        if (!m.revisado) return; // Solo movimientos revisados en gráficas
         const tipoGeneral = getTipoGeneralMovimiento(m);
+        const cat1 = normalizarCat1(m.cat1);
+        if (cat1 === 'Otros' || !m.cat1) return;
+
         // Excluir no-computables en gráficos si estamos en vista 'todos'
         if (currentView === 'todos' && tipoGeneral === 'no-computables') return;
 
-        const cat1 = normalizarCat1(m.cat1);
         const cat2 = m.cat2 || 'Otros';
-        totals[`${cat1}|${cat2}`] = (totals[`${cat1}|${cat2}`] || 0) + Math.abs(m.importe);
+        const netVal = getNetCategoryValue(cat1, m.importe);
+        totals[`${cat1}|${cat2}`] = (totals[`${cat1}|${cat2}`] || 0) + netVal;
       });
       renderCat2BarChart(totals, selectedCat1ForCat2);
     }
@@ -2041,59 +2146,129 @@
       });
     });
 
-    function renderCat1BarChart(cat1Map) {
-      const ctx = document.getElementById('chartCat1Bar').getContext('2d');
-      if (barChartCat1) barChartCat1.destroy();
-
-      const sorted = Object.entries(cat1Map).sort((a,b) => b[1] - a[1]);
-      const labels = sorted.map(item => item[0]);
-      const data = sorted.map(item => item[1]);
-      const colors = sorted.map(([cat]) => getBarColorForCat1(cat));
-
-      barChartCat1 = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels,
-          datasets: [{
-            label: 'Total Cat1 (€)',
-            data,
-            backgroundColor: colors,
-            borderRadius: 6
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          onClick: (evt, elements) => {
-            if (!elements.length) return;
-            const index = elements[0].index;
-            updateSelectedCat1ForCat2(labels[index]);
-          },
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              callbacks: {
-                label: function(context) { return context.raw.toFixed(2) + ' €'; }
-              }
+    const chartValueLabelsPlugin = {
+      id: 'chartValueLabels',
+      afterDatasetsDraw(chart) {
+        const { ctx } = chart;
+        chart.data.datasets.forEach((dataset, i) => {
+          const meta = chart.getDatasetMeta(i);
+          meta.data.forEach((bar, index) => {
+            const value = dataset.data[index];
+            if (value === undefined || value === null || value === 0) return;
+            const text = value.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+            ctx.save();
+            ctx.fillStyle = '#f8fafc';
+            ctx.font = '600 11px "Plus Jakarta Sans", sans-serif';
+            ctx.textAlign = 'center';
+            if (value >= 0) {
+              ctx.textBaseline = 'bottom';
+              ctx.fillText(text, bar.x, bar.y - 4);
+            } else {
+              ctx.textBaseline = 'top';
+              ctx.fillText(text, bar.x, bar.y + 4);
             }
-          },
-          scales: {
-            x: {
-              grid: { display: false },
-              ticks: { color: '#f8fafc', font: { family: 'Plus Jakarta Sans', size: 11 } }
-            },
-            y: {
-              grid: { color: 'rgba(255,255,255,0.05)' },
-              ticks: { color: '#94a3b8' }
+            ctx.restore();
+          });
+        });
+      }
+    };
+
+    // Calcula bloques equitativos: máximo MAX_BARS por bloque
+    const MAX_BARS = 8;
+    function splitIntoBlocks(items, maxPerBlock) {
+      const total = items.length;
+      if (total <= maxPerBlock) return [items];
+      const numBlocks = Math.ceil(total / maxPerBlock);
+      const perBlock = Math.ceil(total / numBlocks);
+      const blocks = [];
+      for (let i = 0; i < total; i += perBlock) {
+        blocks.push(items.slice(i, i + perBlock));
+      }
+      return blocks;
+    }
+
+    function buildChartOptions(onClickCallback) {
+      return {
+        responsive: true,
+        maintainAspectRatio: false,
+        onClick: onClickCallback,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(context) { return context.raw.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €'; }
             }
           }
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: { color: '#f8fafc', font: { family: 'Plus Jakarta Sans', size: 11 } }
+          },
+          y: {
+            grace: '12%',
+            grid: { color: 'rgba(255,255,255,0.05)' },
+            ticks: { color: '#94a3b8' }
+          }
         }
+      };
+    }
+
+    function renderCat1BarChart(cat1Map) {
+      const container = document.getElementById('chartCat1Container');
+      // Destruir charts previos
+      if (barChartCat1) {
+        (Array.isArray(barChartCat1) ? barChartCat1 : [barChartCat1]).forEach(c => c.destroy());
+      }
+      barChartCat1 = [];
+      container.innerHTML = '';
+
+      const sorted = Object.entries(cat1Map).sort((a,b) => b[1] - a[1]);
+      if (!sorted.length) return;
+
+      const allLabels = sorted.map(item => item[0]);
+      const allData   = sorted.map(item => item[1]);
+      const allColors = sorted.map(([cat]) => getBarColorForCat1(cat));
+
+      const blocks = splitIntoBlocks(sorted, MAX_BARS);
+      blocks.forEach((block, blockIdx) => {
+        const labels = block.map(item => item[0]);
+        const data   = block.map(item => item[1]);
+        const colors = block.map(([cat]) => getBarColorForCat1(cat));
+        // Offset de index respecto al array global (para click)
+        const offset = blockIdx * Math.ceil(allLabels.length / blocks.length);
+
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = 'position:relative; width:100%; height:260px; margin-bottom: 16px;';
+        const canvas = document.createElement('canvas');
+        wrapper.appendChild(canvas);
+        container.appendChild(wrapper);
+
+        const chart = new Chart(canvas.getContext('2d'), {
+          type: 'bar',
+          plugins: [chartValueLabelsPlugin],
+          data: {
+            labels,
+            datasets: [{ label: 'Total Cat1 (€)', data, backgroundColor: colors, borderRadius: 6 }]
+          },
+          options: buildChartOptions((evt) => {
+            const elements = chart.getElementsAtEventForMode(evt, 'index', { intersect: false }, true);
+            if (!elements.length) return;
+            const globalIdx = offset + elements[0].index;
+            updateSelectedCat1ForCat2(allLabels[globalIdx]);
+          })
+        });
+        barChartCat1.push(chart);
       });
     }
 
     function renderCat2BarChart(cat2Map, selectedCat1 = null) {
-      const ctx = document.getElementById('chartCat2Bar').getContext('2d');
-      if (barChartCat2) barChartCat2.destroy();
+      const container = document.getElementById('chartCat2Container');
+      if (barChartCat2) {
+        (Array.isArray(barChartCat2) ? barChartCat2 : [barChartCat2]).forEach(c => c.destroy());
+      }
+      barChartCat2 = [];
+      container.innerHTML = '';
 
       const filtered = Object.entries(cat2Map)
         .filter(([key]) => !selectedCat1 || key.startsWith(selectedCat1 + '|'))
@@ -2103,45 +2278,39 @@
         })
         .sort((a,b) => b.value - a.value);
 
-      const labels = filtered.map(item => item.cat2);
-      const data = filtered.map(item => item.value);
-      const colors = filtered.map((item, idx) => getBarColorForCat2(item.cat1, idx, filtered.length));
-
       document.getElementById('cat2ChartTitle').innerText = selectedCat1 ? `🏷️ Totales Cat2 de ${selectedCat1}` : '🏷️ Totales por Subcategoría (Cat2)';
+      if (!filtered.length) return;
 
-      barChartCat2 = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels,
-          datasets: [{
-            label: selectedCat1 ? `Cat2 dentro de ${selectedCat1}` : 'Total Cat2 (€)',
-            data,
-            backgroundColor: colors,
-            borderRadius: 6
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              callbacks: {
-                label: function(context) { return context.raw.toFixed(2) + ' €'; }
-              }
-            }
+      const blocks = splitIntoBlocks(filtered, MAX_BARS);
+      let blockOffset = 0;
+      blocks.forEach((block) => {
+        const labels = block.map(item => item.cat2);
+        const data   = block.map(item => item.value);
+        const colors = block.map((item, idx) => getBarColorForCat2(item.cat1, idx, block.length));
+
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = 'position:relative; width:100%; height:260px; margin-bottom: 16px;';
+        const canvas = document.createElement('canvas');
+        wrapper.appendChild(canvas);
+        container.appendChild(wrapper);
+
+        const localBlock = block; // capture for closure
+        const chart = new Chart(canvas.getContext('2d'), {
+          type: 'bar',
+          plugins: [chartValueLabelsPlugin],
+          data: {
+            labels,
+            datasets: [{ label: selectedCat1 ? `Cat2 dentro de ${selectedCat1}` : 'Total Cat2 (€)', data, backgroundColor: colors, borderRadius: 6 }]
           },
-          scales: {
-            x: {
-              grid: { display: false },
-              ticks: { color: '#f8fafc', font: { family: 'Plus Jakarta Sans', size: 11 } }
-            },
-            y: {
-              grid: { color: 'rgba(255,255,255,0.05)' },
-              ticks: { color: '#94a3b8' }
-            }
-          }
-        }
+          options: buildChartOptions((evt) => {
+            const elements = chart.getElementsAtEventForMode(evt, 'index', { intersect: false }, true);
+            if (!elements.length) return;
+            const item = localBlock[elements[0].index];
+            selectCat2ForTable(item.cat1, item.cat2);
+          })
+        });
+        barChartCat2.push(chart);
+        blockOffset += block.length;
       });
     }
 
@@ -2158,25 +2327,11 @@
           `<option value="${d}" ${m.dueno === d ? 'selected' : ''}>${d}</option>`
         ).join('');
 
-        // Cat1
+        // Categorías agrupadas y ordenadas alfabéticamente.
         const currentCat1 = normalizarCat1(m.cat1);
-        const cat1Options = CAT1_LISTA.map(c1 => 
-          `<option value="${c1}" ${currentCat1 === c1 ? 'selected' : ''}>${c1}</option>`
-        );
-        // Fallback si la cat1 no existe en la estructura (fue eliminada)
-        if (!CAT1_LISTA.includes(currentCat1)) {
-          cat1Options.unshift(`<option value="${currentCat1}" selected>${currentCat1} (Eliminada)</option>`);
-        }
-
-        // Cat2
+        const cat1Options = crearOpcionesCat1(currentCat1);
         const cat1Value = normalizarCat1(m.cat1);
-        const availableCat2 = CATEGORIAS_ESTRUCTURA[cat1Value] || [m.cat2];
-        const cat2Options = availableCat2.map(c2 => 
-          `<option value="${c2}" ${m.cat2 === c2 ? 'selected' : ''}>${c2}</option>`
-        );
-        if (!availableCat2.includes(m.cat2)) {
-          cat2Options.unshift(`<option value="${m.cat2}" selected>${m.cat2} (Eliminada)</option>`);
-        }
+        const cat2Options = crearOpcionesCat2(cat1Value, m.cat2);
 
         const isEntreCuentas = (normalizarCat1(m.cat1) === 'Transfer');
         const amountClass = isEntreCuentas ? 'amount-neutral' : (m.importe >= 0 ? 'amount-pos' : 'amount-neg');
@@ -2189,6 +2344,9 @@
               <input type="checkbox" class="review-toggle" ${m.revisado ? 'checked' : ''} onchange="updateField('${m.id}', 'revisado', this.checked)">
             </div>
           </td>
+          <td class="review-cell">
+            <span class="review-status ${m.modificado ? 'modificado' : 'sin-modificar'}" title="${m.modificado ? 'Modificado desde la última carga' : 'Sin modificar desde la última carga'}"></span>
+          </td>
           <td style="white-space:nowrap; color: var(--text-muted);">${m.fecha}</td>
           <td>
             <input type="date" class="input-table" value="${m.fechaAplicable || ''}" onchange="updateField('${m.id}', 'fechaAplicable', this.value)">
@@ -2196,25 +2354,25 @@
           <td style="font-weight:500;">${m.concepto}</td>
           <td>
             <select class="cat-select" onchange="updateField('${m.id}', 'cat1', this.value)">
-              ${cat1Options.join('')}
+              ${cat1Options}
             </select>
           </td>
           <td>
             <select class="cat-select" onchange="updateField('${m.id}', 'cat2', this.value)">
-              ${cat2Options.join('')}
+              ${cat2Options}
             </select>
           </td>
           <td class="${amountClass}" style="text-align:right; white-space:nowrap;">${formattedAmount}</td>
           <td>
             <input type="text" class="input-table" placeholder="Añadir nota..." value="${m.notas || ''}" onchange="updateField('${m.id}', 'notas', this.value)">
           </td>
-          <td style="color: var(--text-muted); font-size: 0.85em;">${m.masDatos || ''}</td>
           <td style="color: var(--text-muted); font-size: 0.85em;">${m.origen || ''}</td>
           <td>
             <select class="cat-select" onchange="updateField('${m.id}', 'dueno', this.value)">
               ${duenoOptions}
             </select>
           </td>
+          <td style="color: var(--text-muted); font-size: 0.85em;">${m.masDatos || ''}</td>
         `;
         tbody.appendChild(tr);
       });
@@ -2234,7 +2392,8 @@
         'Categoria 2': m.cat2,
         'Importe': m.importe,
         'Notas': m.notas || '',
-        'Revisado': m.revisado ? 'Si' : 'No'
+        'Revisado': m.revisado ? 'Si' : 'No',
+        'Modificado': m.modificado ? 'Si' : 'No'
       }));
 
       const csvContent = Papa.unparse(rows);
@@ -2277,6 +2436,8 @@
               if (!m.dueno || m.dueno === 'Pluxee') m.dueno = 'Familia'; 
               if (!m.origen) m.origen = 'CaixaBank';
               if (typeof m.revisado === 'undefined') m.revisado = false; 
+              // La importación de una base de datos reinicia el punto de referencia.
+              m.modificado = false;
             });
             saveData();
             renderAll();
