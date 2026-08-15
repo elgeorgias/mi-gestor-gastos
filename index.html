@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gestor de Gastos y Finanzas</title>
+  <title>GG</title>
   <meta name="theme-color" content="#0f172a">
-  <link rel="manifest" href='data:application/manifest+json,{"name":"Gestor de Gastos","short_name":"Gastos","start_url":".","display":"standalone","background_color":"%230f172a","theme_color":"%230f172a"}'>
+  <link rel="manifest" href='data:application/manifest+json,{"name":"GG","short_name":"GG","start_url":".","display":"standalone","background_color":"%230f172a","theme_color":"%230f172a"}'>
   
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -580,28 +580,43 @@
 <body>
   <div class="container">
     <div class="header">
-      <h1>📊 Gestor de Gastos</h1>
-      <p>Control visual de tus movimientos bancarios</p>
+      <h1>📊 GG</h1>
+      <p>GG te ayuda, sin reirte de ti ;)</p>
     </div>
 
     <div class="main-tabs-bar" style="display: flex; gap: 0.75rem; margin-bottom: 1.25rem; justify-content: center; flex-wrap: wrap;">
       <button type="button" class="tab-btn main-tab active" data-tab="todas" onclick="switchMainTab('todas')">🌐 Todas</button>
-      <button type="button" class="tab-btn main-tab" data-tab="caixabank" onclick="switchMainTab('caixabank')">🏦 CaixaBank (CB)</button>
+      <button type="button" class="tab-btn main-tab" data-tab="caixabank" onclick="switchMainTab('caixabank')">🏦 CaixaBank</button>
+      <button type="button" class="tab-btn main-tab" data-tab="sabadell" onclick="switchMainTab('sabadell')">🏦 Sabadell</button>
+      <button type="button" class="tab-btn main-tab" data-tab="ing" onclick="switchMainTab('ing')">🏦 ING</button>
+      <button type="button" class="tab-btn main-tab" data-tab="bankinter" onclick="switchMainTab('bankinter')">🏦 Bankinter</button>
       <button type="button" class="tab-btn main-tab" data-tab="pluxee" onclick="switchMainTab('pluxee')">🍕 Pluxee</button>
     </div>
 
     <div class="card">
       <div class="btn-group">
         <div id="groupCbButtons" style="display: flex; gap: 0.75rem; flex-wrap: wrap; justify-content: center;">
-          <label class="btn btn-secondary" for="appendCsvFile">➕ Añadir (CSV)</label>
+          <label class="btn btn-secondary" for="appendCsvFile">➕ CaixaBank</label>
           <input type="file" id="appendCsvFile" accept=".csv" style="display:none;">
         </div>
         <div id="groupPluxeeButtons" style="display: flex; gap: 0.75rem; flex-wrap: wrap; justify-content: center;">
-          <label class="btn btn-secondary" for="appendPluxeeFile">➕ Añadir Pluxee</label>
+          <label class="btn btn-secondary" for="appendPluxeeFile">➕ Pluxee</label>
           <input type="file" id="appendPluxeeFile" accept=".csv, .xlsx, .xls" style="display:none;">
         </div>
+        <div id="groupSabadellButtons" style="display: flex; gap: 0.75rem; flex-wrap: wrap; justify-content: center;">
+          <label class="btn btn-secondary" for="appendSabadellFile">➕ Sabadell</label>
+          <input type="file" id="appendSabadellFile" accept=".xls, .xlsx" style="display:none;">
+        </div>
+        <div id="groupIngButtons" style="display: flex; gap: 0.75rem; flex-wrap: wrap; justify-content: center;">
+          <label class="btn btn-secondary" for="appendIngFile">➕ ING</label>
+          <input type="file" id="appendIngFile" accept=".xls, .xlsx" style="display:none;">
+        </div>
+        <div id="groupBankinterButtons" style="display: flex; gap: 0.75rem; flex-wrap: wrap; justify-content: center;">
+          <label class="btn btn-secondary" for="appendBankinterFile">➕ Bankinter</label>
+          <input type="file" id="appendBankinterFile" accept=".xls, .xlsx" style="display:none;">
+        </div>
         <div id="groupCommonButtons" style="display: flex; gap: 0.75rem; flex-wrap: wrap; justify-content: center;">
-          <label class="btn" for="jsonFile">📁 Importar BD (JSON)</label>
+          <label class="btn" for="jsonFile" style="background-color: #ffeb3b; color: #0f172a; font-weight: 600;">📁 Importar BD (JSON)</label>
           <input type="file" id="jsonFile" accept=".json">
           <button class="btn btn-success" id="exportBtn" style="display:none;">📥 Exportar CSV + JSON</button>
           <button class="btn btn-warning" onclick="openCatModal()">🗂️ Categorías</button>
@@ -801,7 +816,7 @@
           Edita la estructura de categorías. Los cambios se guardarán automáticamente en tu navegador.
         </p>
         <div class="btn-group" style="justify-content: flex-start;">
-          <button class="btn btn-success" onclick="addCat1()">+ Añadir Categoría Principal</button>
+          <button class="btn btn-success" onclick="addCat1()">+ Categoría Principal</button>
           <button class="btn" style="background: #8b5cf6;" onclick="exportarCategorias()">📥 Exportar Estructura (JSON)</button>
         </div>
       </div>
@@ -884,7 +899,8 @@
         "Restaurante"
       ],
       "Otros": [
-        "General / Varios"
+        "General / Varios",
+        "NA"
       ]
     };
 
@@ -1137,12 +1153,16 @@
 
     function getTipoGeneralMovimiento(mov) {
       const cat1 = normalizarCat1(mov.cat1);
+      const cat2 = String(mov.cat2 || '').trim();
+
       if (cat1 === 'Ingresos') return 'ingresos';
       if (cat1 === 'Inversiones y Ahorro') return 'inversiones';
       if (cat1 === 'Transfer') {
-        const cat2 = String(mov.cat2 || '').trim();
         if (cat2 === 'Gastos') return 'gastos';
         if (cat2 === 'Ingresos') return 'ingresos';
+        return 'no-computables';
+      }
+      if (cat1 === 'Otros' && cat2 === 'NA') {
         return 'no-computables';
       }
       return 'gastos';
@@ -1240,6 +1260,54 @@
       }
     }
 
+    // Procesar archivo Sabadell (XLS/XLSX)
+    function processSabadellFile(file, isAppend = false) {
+      const bankConfig = {
+        dueno: 'Familia',
+        origen: 'Sabadell',
+        fecha: ['F. Operativa', 'f operativa', 'f.operativa'],
+        concepto: ['Concepto'],
+        importe: ['Importe']
+      };
+
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        const data = new Uint8Array(evt.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        const results = {
+          data: XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false })
+        };
+        processCsvResults(results, isAppend, bankConfig);
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    // Procesar archivo Bankinter (XLS/XLSX)
+    function processBankinterFile(file, isAppend = false) {
+      const bankConfig = {
+        dueno: 'Familia',
+        origen: 'Bankinter',
+        fecha: ['Fecha contable', 'Fecha valor', 'FECHA CONTABLE', 'FECHA VALOR'],
+        concepto: ['Descripción', 'DESCRIPCIÓN', 'DESCRIPCION'],
+        importe: ['Importe', 'IMPORTE']
+      };
+
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        const data = new Uint8Array(evt.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        const results = {
+          data: XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false })
+        };
+        processCsvResults(results, isAppend, bankConfig);
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
 
     // Añadir Pluxee (merge sin duplicados)
     document.getElementById('appendPluxeeFile').addEventListener('change', (e) => {
@@ -1249,12 +1317,42 @@
       document.getElementById('appendPluxeeFile').value = '';
     });
 
+    // Añadir Sabadell (merge sin duplicados)
+    document.getElementById('appendSabadellFile').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      processSabadellFile(file, true);
+      document.getElementById('appendSabadellFile').value = '';
+    });
+
+    // Añadir ING (merge sin duplicados)
+    document.getElementById('appendIngFile').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      processIngFile(file, true);
+      document.getElementById('appendIngFile').value = '';
+    });
+
+    // Añadir Bankinter (merge sin duplicados)
+    document.getElementById('appendBankinterFile').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      processBankinterFile(file, true);
+      document.getElementById('appendBankinterFile').value = '';
+    });
+
     function encontrarCabecera(filas) {
       return filas.findIndex(fila => {
         const cabeceras = fila.map(normalizarBusqueda);
         const tieneFecha = cabeceras.includes(normalizarBusqueda('fecha')) || 
                           cabeceras.includes(normalizarBusqueda('Fecha Original')) ||
-                          cabeceras.includes(normalizarBusqueda('FechaOriginal'));
+                          cabeceras.includes(normalizarBusqueda('FechaOriginal')) ||
+                          cabeceras.includes(normalizarBusqueda('F. Operativa')) ||
+                          cabeceras.includes(normalizarBusqueda('F.Operativa')) ||
+                          cabeceras.includes(normalizarBusqueda('F. VALOR')) ||
+                          cabeceras.includes(normalizarBusqueda('F.VALOR')) ||
+                          cabeceras.includes(normalizarBusqueda('Fecha contable')) ||
+                          cabeceras.includes(normalizarBusqueda('Fecha valor'));
         const tieneConcepto = cabeceras.some(cabecera => 
           ['concepto', 'movimiento', 'descripcion'].some(nombre => cabecera === normalizarBusqueda(nombre))
         );
@@ -1271,8 +1369,8 @@
         if (c.includes('CARGA')) return { cat1: 'Ingresos', cat2: 'Otros Ingresos' };
         return { cat1: CAT1_ALIMENTACION, cat2: 'Restaurante' };
       }
-      if (c.includes('TRANSFER') || c.includes('TRASPASO') || c.includes('PAGO TRANSFERENCIAS')) {
-        if (c.includes('ENTRE CUENTAS') || c.includes('PROPIA') || c.includes('MISMO TITULAR')) return { cat1: 'Transfer', cat2: 'Entre cuentas' };
+      if (c.includes('TRANSFER') || c.includes('TRASPASO') || c.includes('PAGO TRANSFERENCIAS') || c.includes('BIZUM')) {
+        if (c.includes('ENTRE CUENTAS') || c.includes('PROPIA') || c.includes('MISMO TITULAR') || c.includes('BIZUM')) return { cat1: 'Transfer', cat2: 'Entre cuentas' };
         const defaultCat2 = getDefaultCat2('Transfer');
         return { cat1: 'Transfer', cat2: defaultCat2 };
       }
@@ -1603,9 +1701,9 @@
       ));
 
       results.data.slice(filaCabecera + 1).forEach((row, idx) => {
-        const concepto = (row[indiceConcepto] || '').trim();
-        const masDatos = (indiceMasDatos !== -1 ? (row[indiceMasDatos] || '') : '').trim();
-        const fecha = (row[indiceFecha] || '').trim();
+        const concepto = String(row[indiceConcepto] || '').trim();
+        const masDatos = (indiceMasDatos !== -1 ? String(row[indiceMasDatos] || '') : '').trim();
+        const fecha = String(row[indiceFecha] || '').trim();
         const rawImporte = row[indiceImporte] || '';
 
         if (!fecha || !concepto || !rawImporte) return;
@@ -1635,10 +1733,10 @@
         }
 
         const fechaISO = (indiceFechaAplicable !== -1 && row[indiceFechaAplicable]) 
-            ? formatFechaISO(row[indiceFechaAplicable].trim()) 
+            ? formatFechaISO(String(row[indiceFechaAplicable]).trim()) 
             : formatFechaISO(fecha);
 
-        let itemDueno = (indiceDueno !== -1 ? (row[indiceDueno] || '').trim() : defaultDueno) || defaultDueno;
+        let itemDueno = (indiceDueno !== -1 ? String(row[indiceDueno] || '').trim() : defaultDueno) || defaultDueno;
         if (itemDueno === 'Pluxee') itemDueno = 'Familia';
 
         newItems.push({
@@ -1649,10 +1747,10 @@
           masDatos: masDatos,
           importe: val,
           dueno: itemDueno,
-          origen: (indiceOrigen !== -1 ? (row[indiceOrigen] || '').trim() : defaultOrigen) || defaultOrigen,
+          origen: (indiceOrigen !== -1 ? String(row[indiceOrigen] || '').trim() : defaultOrigen) || defaultOrigen,
           cat1: cat1,
           cat2: cat2,
-          notas: (indiceNotas !== -1 ? (row[indiceNotas] || '').trim() : '') || '',
+          notas: (indiceNotas !== -1 ? String(row[indiceNotas] || '').trim() : '') || '',
           revisado: indiceRevisado !== -1 ? (String(row[indiceRevisado]).trim() === 'Si' || String(row[indiceRevisado]).trim() === 'Sí' || String(row[indiceRevisado]).trim() === 'true') : false,
           // Cada importación establece una nueva referencia de movimientos.
           modificado: false
@@ -1663,13 +1761,8 @@
         moveData = moveData.concat(newItems);
         openImportResultModal(newItems, skippedItems);
       } else {
-        if (defaultOrigen === 'Pluxee') {
-          // Reemplaza solo la BD de Pluxee (mantiene CaixaBank)
-          moveData = moveData.filter(m => m.origen !== 'Pluxee').concat(newItems);
-        } else {
-          // Reemplaza solo la BD de CaixaBank (mantiene Pluxee)
-          moveData = moveData.filter(m => m.origen === 'Pluxee').concat(newItems);
-        }
+        // Reemplaza solo los datos del origen actual
+        moveData = moveData.filter(m => m.origen !== defaultOrigen).concat(newItems);
         openImportResultModal(newItems, []);
       }
 
@@ -1797,16 +1890,46 @@
       
       const cbGroup = document.getElementById('groupCbButtons');
       const pluxeeGroup = document.getElementById('groupPluxeeButtons');
+      const sabadellGroup = document.getElementById('groupSabadellButtons');
+      const ingGroup = document.getElementById('groupIngButtons');
+      const bankinterGroup = document.getElementById('groupBankinterButtons');
 
       if (tabName === 'caixabank') {
         cbGroup.style.display = 'flex';
         pluxeeGroup.style.display = 'none';
+        sabadellGroup.style.display = 'none';
+        ingGroup.style.display = 'none';
+        bankinterGroup.style.display = 'none';
       } else if (tabName === 'pluxee') {
         cbGroup.style.display = 'none';
         pluxeeGroup.style.display = 'flex';
+        sabadellGroup.style.display = 'none';
+        ingGroup.style.display = 'none';
+        bankinterGroup.style.display = 'none';
+      } else if (tabName === 'sabadell') {
+        cbGroup.style.display = 'none';
+        pluxeeGroup.style.display = 'none';
+        sabadellGroup.style.display = 'flex';
+        ingGroup.style.display = 'none';
+        bankinterGroup.style.display = 'none';
+      } else if (tabName === 'ing') {
+        cbGroup.style.display = 'none';
+        pluxeeGroup.style.display = 'none';
+        sabadellGroup.style.display = 'none';
+        ingGroup.style.display = 'flex';
+        bankinterGroup.style.display = 'none';
+      } else if (tabName === 'bankinter') {
+        cbGroup.style.display = 'none';
+        pluxeeGroup.style.display = 'none';
+        sabadellGroup.style.display = 'none';
+        ingGroup.style.display = 'none';
+        bankinterGroup.style.display = 'flex';
       } else {
         cbGroup.style.display = 'flex';
         pluxeeGroup.style.display = 'flex';
+        sabadellGroup.style.display = 'flex';
+        ingGroup.style.display = 'flex';
+        bankinterGroup.style.display = 'flex';
       }
 
       if (moveData.length > 0) {
@@ -1897,9 +2020,12 @@
       const fEstado = appliedFilters.estado;
 
       let filteredData = moveData.filter(m => {
-        // Filtrado por pestaña principal (CaixaBank / Pluxee / Todas)
-        if (currentMainTab === 'caixabank' && m.origen === 'Pluxee') return false;
+        // Filtrado por pestaña principal (CaixaBank / Sabadell / ING / Pluxee / Todas)
+        if (currentMainTab === 'caixabank' && m.origen !== 'CaixaBank') return false;
         if (currentMainTab === 'pluxee' && m.origen !== 'Pluxee') return false;
+        if (currentMainTab === 'sabadell' && m.origen !== 'Sabadell') return false;
+        if (currentMainTab === 'ing' && m.origen !== 'ING') return false;
+        if (currentMainTab === 'bankinter' && m.origen !== 'Bankinter') return false;
 
         const fechaEvaluar = m.fechaAplicable || formatFechaISO(m.fecha);
         if (fDesde && fechaEvaluar < fDesde) return false;

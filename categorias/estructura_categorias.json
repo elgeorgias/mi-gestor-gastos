@@ -20,7 +20,8 @@
     "Electricidad / Gas",
     "Agua / Internet",
     "Alquiler",
-    "Hipoteca"
+    "Hipoteca",
+    "Impuestos/Ibi"
   ],
   "Seguros y Servicios": [
     "Seguro Hogar",
@@ -41,7 +42,8 @@
     "Deportes / Club",
     "Hotel / Apartamento",
     "Viajes / Turismo",
-    "Entretenimiento"
+    "Entretenimiento",
+    "Trabajo"
   ],
   "Suscripciones": [
     "Plataformas TV / Música",
@@ -52,9 +54,11 @@
     "Dividendo / Intereses",
     "Otros Ingresos",
     "Alquiler",
-    "Restaurante"
+    "Restaurante",
+    "Trabajo"
   ],
   "Otros": [
-    "General / Varios"
+    "General / Varios",
+    "NA"
   ]
 }
