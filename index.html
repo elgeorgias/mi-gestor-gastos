@@ -488,6 +488,21 @@
     .amount-pos { color: #34d399; font-weight: 600; }
     .amount-neutral { color: var(--text-muted); font-weight: 600; }
 
+    .input-table-date-hidden {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      opacity: 0;
+      cursor: pointer;
+      z-index: 2;
+    }
+    /* Asegurar que el input de fecha no muestre nada en navegadores que lo soporten */
+    .input-table-date-hidden::-webkit-calendar-picker-indicator {
+      width: 100%; height: 100%;
+      margin: 0; padding: 0;
+      cursor: pointer;
+    }
+
     /* Custom scrollbar */
     ::-webkit-scrollbar { width: 8px; height: 8px; }
     ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.6); }
@@ -673,8 +688,7 @@
               <tr>
                 <th style="min-width:64px; cursor:pointer;" onclick="setSort('revisado')">Rev</th>
                 <th style="min-width:64px; cursor:pointer;" onclick="setSort('modificado')">Mod</th>
-                <th style="min-width:85px; cursor:pointer;" onclick="setSort('fecha')">Fecha Orig.</th>
-                <th style="min-width:110px; cursor:pointer;" onclick="setSort('fechaAplicable')">Fecha Aplicable</th>
+                <th style="min-width:120px; cursor:pointer;" onclick="setSort('fecha')">Fecha</th>
                 <th style="min-width:150px; cursor:pointer;" onclick="setSort('concepto')">Concepto</th>
                 <th style="min-width:140px; cursor:pointer;" onclick="setSort('cat1')">Cat 1 (Principal)</th>
                 <th style="min-width:140px; cursor:pointer;" onclick="setSort('cat2')">Cat 2 (Detalle)</th>
@@ -701,8 +715,7 @@
                     <option value="sin-modificar">Azul</option>
                   </select>
                 </th>
-                <th><label for="tableFilterFechaOrig" class="sr-only">Filtrar Fecha Orig.</label><input type="text" class="table-filter-input" id="tableFilterFechaOrig" oninput="applyFilters()" placeholder="Filtrar"></th>
-                <th><label for="tableFilterFechaAplicable" class="sr-only">Filtrar Fecha Aplicable</label><input type="text" class="table-filter-input" id="tableFilterFechaAplicable" oninput="applyFilters()" placeholder="Filtrar"></th>
+                <th><label for="tableFilterFecha" class="sr-only">Filtrar Fecha</label><input type="text" class="table-filter-input" id="tableFilterFecha" oninput="applyFilters()" placeholder="Filtrar"></th>
                 <th><label for="tableFilterConcepto" class="sr-only">Filtrar Concepto</label><input type="text" class="table-filter-input" id="tableFilterConcepto" oninput="applyFilters()" placeholder="Filtrar"></th>
                 <th>
                   <label for="tableFilterCat1" class="sr-only">Filtrar Cat 1</label>
@@ -812,9 +825,10 @@
   </div>
 
   <script>
+    const CAT1_ALIMENTACION = 'Alimentación';
     // --- LÓGICA DE CATEGORÍAS ---
     const DEFAULT_CATEGORIAS = {
-      "Alimentación": [
+      [CAT1_ALIMENTACION]: [
         "Supermercado",
         "Restaurante",
         "Cafetería / Bar",
@@ -1255,7 +1269,7 @@
       const c = concepto.toUpperCase();
       if (origen === 'Pluxee' || dueno === 'Pluxee') {
         if (c.includes('CARGA')) return { cat1: 'Ingresos', cat2: 'Otros Ingresos' };
-        return { cat1: 'Alimentación', cat2: 'Restaurante' };
+        return { cat1: CAT1_ALIMENTACION, cat2: 'Restaurante' };
       }
       if (c.includes('TRANSFER') || c.includes('TRASPASO') || c.includes('PAGO TRANSFERENCIAS')) {
         if (c.includes('ENTRE CUENTAS') || c.includes('PROPIA') || c.includes('MISMO TITULAR')) return { cat1: 'Transfer', cat2: 'Entre cuentas' };
@@ -1269,9 +1283,9 @@
       }
       if (c.includes('ZARA') || c.includes('MANGO') || c.includes('PULL') || c.includes('CORTE INGLES')) return { cat1: 'Compras', cat2: 'Ropa' };
       if (c.includes('AMAZON') || c.includes('MEDIA MARKT') || c.includes('APPLE') || c.includes('FNAC')) return { cat1: 'Compras', cat2: 'Electrónica' };
-      if (c.includes('TGTG') || c.includes('TOO GOOD TO GO')) return { cat1: 'Alimentación', cat2: 'Comida a domicilio' };
-      if (c.includes('SUPERMERC') || c.includes('MERCADONA') || c.includes('CARREFOUR') || c.includes('LIDL') || c.includes('ALDI')) return { cat1: 'Alimentación', cat2: 'Supermercado' };
-      if (c.includes('BAR') || c.includes('RESTAURANTE') || c.includes('DEHESA') || c.includes('CAFETERIA')) return { cat1: 'Alimentación', cat2: 'Restaurante' };
+      if (c.includes('TGTG') || c.includes('TOO GOOD TO GO')) return { cat1: CAT1_ALIMENTACION, cat2: 'Comida a domicilio' };
+      if (c.includes('SUPERMERC') || c.includes('MERCADONA') || c.includes('CARREFOUR') || c.includes('LIDL') || c.includes('ALDI')) return { cat1: CAT1_ALIMENTACION, cat2: 'Supermercado' };
+      if (c.includes('BAR') || c.includes('RESTAURANTE') || c.includes('DEHESA') || c.includes('CAFETERIA')) return { cat1: CAT1_ALIMENTACION, cat2: 'Restaurante' };
       if (c.includes('SEGURO HOGAR')) return { cat1: 'Seguros y Servicios', cat2: 'Seguro Hogar' };
       if (c.includes('SEGURO VIDA') || c.includes('SEGURO')) return { cat1: 'Seguros y Servicios', cat2: 'Seguro Vida / Salud' };
       if (c.includes('CUSTODIA') || c.includes('COMISION')) return { cat1: 'Seguros y Servicios', cat2: 'Comisiones / Servicios' };
@@ -1382,7 +1396,7 @@
       if (isOpen) return;
       const hiddenInput = document.getElementById(kind === 'desde' ? 'filterDesde' : 'filterHasta');
       if (hiddenInput.value) {
-        const [y, m, d] = hiddenInput.value.split('-').map(Number);
+        const [y, m] = hiddenInput.value.split('-').map(Number);
         datePickerState.kind = kind;
         datePickerState.year = y;
         datePickerState.month = m - 1;
@@ -1514,9 +1528,9 @@
           try {
             moveData = JSON.parse(oldSaved);
             moveData.forEach(m => {
-              if (m.dueño) {
-                if (!m.dueno) m.dueno = m.dueño;
-                delete m.dueño;
+              if (m.dueno) {
+                if (!m.dueno) m.dueno = m.dueno;
+                delete m.dueno;
               }
               if (!m.dueno) m.dueno = 'Familia'; // Migración
               if (!m.origen) m.origen = 'CaixaBank';
@@ -1649,8 +1663,7 @@
         moveData = moveData.concat(newItems);
         openImportResultModal(newItems, skippedItems);
       } else {
-        const targetOrigen = defaultOrigen;
-        if (targetOrigen === 'Pluxee') {
+        if (defaultOrigen === 'Pluxee') {
           // Reemplaza solo la BD de Pluxee (mantiene CaixaBank)
           moveData = moveData.filter(m => m.origen !== 'Pluxee').concat(newItems);
         } else {
@@ -1828,7 +1841,7 @@
     }
 
     function clearTableColumnFilters() {
-      ['tableFilterFechaOrig','tableFilterFechaAplicable','tableFilterConcepto','tableFilterMasDatos','tableFilterOrigen','tableFilterDueno','tableFilterEstado','tableFilterModificado','tableFilterCat1','tableFilterCat2','tableFilterImporte','tableFilterNotas'].forEach(id => {
+      ['tableFilterFecha','tableFilterConcepto','tableFilterMasDatos','tableFilterOrigen','tableFilterDueno','tableFilterEstado','tableFilterModificado','tableFilterCat1','tableFilterCat2','tableFilterImporte','tableFilterNotas'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = '';
       });
@@ -1837,8 +1850,7 @@
 
     function getTableFilterValues() {
       return {
-        fechaOrig: document.getElementById('tableFilterFechaOrig').value.trim().toLowerCase(),
-        fechaAplicable: document.getElementById('tableFilterFechaAplicable').value.trim().toLowerCase(),
+        fecha: document.getElementById('tableFilterFecha').value.trim().toLowerCase(),
         concepto: document.getElementById('tableFilterConcepto').value.trim().toLowerCase(),
         masDatos: document.getElementById('tableFilterMasDatos').value.trim().toLowerCase(),
         origen: document.getElementById('tableFilterOrigen').value.trim().toLowerCase(),
@@ -1903,33 +1915,45 @@
         if (fTipo === 'inversiones' && tipoGeneral !== 'inversiones') return false;
         if (fTipo === 'entrecuentas' && tipoGeneral !== 'no-computables') return false;
 
-        if (fEstado === 'revisado' && !m.revisado) return false;
-        if (fEstado === 'pendiente' && m.revisado) return false;
+        if (fEstado === 'revisado') {
+          if (!m.revisado) return false;
+        } else if (fEstado === 'pendiente') {
+          if (m.revisado) return false;
+        }
 
         return true;
       });
 
     filteredData = filteredData.filter(m => {
-      const tipoGeneral = getTipoGeneralMovimiento(m);
-      if (currentView === 'ingresos' && tipoGeneral !== 'ingresos') return false;
-      if (currentView === 'gastos' && tipoGeneral !== 'gastos') return false;
-      if (currentView === 'inversiones' && tipoGeneral !== 'inversiones') return false;
-      if (currentView === 'no-computables' && tipoGeneral !== 'no-computables') return false;
+      const tg = getTipoGeneralMovimiento(m);
+      if (currentView === 'ingresos') return tg === 'ingresos';
+      if (currentView === 'gastos') return tg === 'gastos';
+      if (currentView === 'inversiones') return tg === 'inversiones';
+      if (currentView === 'no-computables') return tg === 'no-computables';
       return true;
     });
 
       filteredData = filteredData.filter(m => {
         if (!tableFilters) return true;
-        if (tableFilters.fechaOrig && !String(m.fecha || '').toLowerCase().includes(tableFilters.fechaOrig)) return false;
-        if (tableFilters.fechaAplicable && !String(m.fechaAplicable || '').toLowerCase().includes(tableFilters.fechaAplicable)) return false;
+        if (tableFilters.fecha) {
+          const val1 = String(m.fecha || '').toLowerCase();
+          const val2 = String(m.fechaAplicable || '').toLowerCase();
+          if (!val1.includes(tableFilters.fecha) && !val2.includes(tableFilters.fecha)) return false;
+        }
         if (tableFilters.concepto && !String(m.concepto || '').toLowerCase().includes(tableFilters.concepto)) return false;
         if (tableFilters.masDatos && !String(m.masDatos || '').toLowerCase().includes(tableFilters.masDatos)) return false;
         if (tableFilters.origen && !String(m.origen || '').toLowerCase().includes(tableFilters.origen)) return false;
         if (tableFilters.dueno && m.dueno !== tableFilters.dueno) return false;
-        if (tableFilters.estado === 'revisado' && !m.revisado) return false;
-        if (tableFilters.modificado === 'modificado' && !m.modificado) return false;
-        if (tableFilters.modificado === 'sin-modificar' && m.modificado) return false;
-        if (tableFilters.estado === 'pendiente' && m.revisado) return false;
+        if (tableFilters.estado === 'revisado') {
+          if (!m.revisado) return false;
+        } else if (tableFilters.estado === 'pendiente') {
+          if (m.revisado) return false;
+        }
+        if (tableFilters.modificado === 'modificado') {
+          if (!m.modificado) return false;
+        } else if (tableFilters.modificado === 'sin-modificar') {
+          if (m.modificado) return false;
+        }
         if (tableFilters.cat1 && normalizarCat1(m.cat1) !== tableFilters.cat1) return false;
         if (tableFilters.cat2 && m.cat2 !== tableFilters.cat2) return false;
         if (tableFilters.importe && !String(m.importe.toFixed(2)).includes(tableFilters.importe)) return false;
@@ -1978,8 +2002,6 @@
       });
 
       currentVisibleData = filteredData;
-
-      const viewType = currentView === 'ingresos' ? 'ingresos' : (currentView === 'gastos' ? 'gastos' : (currentView === 'inversiones' ? 'inversiones' : (currentView === 'no-computables' ? 'no-computables' : 'todos')));
 
       // Totales
       let ingresos = 0, gastos = 0, entreCuentas = 0, inversiones = 0;
@@ -2072,12 +2094,12 @@
       const type = getTipoGeneralFromCat1(cat1);
       const base = getTypeBaseColor(type);
       if (type === 'gastos') {
-        const [h,s,l] = hexToHsl(base);
+        const [h,s] = hexToHsl(base);
         const newL = Math.min(80, Math.max(40, 70 - (index / Math.max(total - 1, 1)) * 25));
         return `hsl(${h.toFixed(1)},${s.toFixed(1)}%,${newL.toFixed(1)}%)`;
       }
       if (type === 'ingresos' || type === 'inversiones') {
-        const [h,s,l] = hexToHsl(base);
+        const [h,s] = hexToHsl(base);
         const newL = Math.min(75, Math.max(45, 60 - (index / Math.max(total - 1, 1)) * 15));
         return `hsl(${h.toFixed(1)},${s.toFixed(1)}%,${newL.toFixed(1)}%)`;
       }
@@ -2227,8 +2249,6 @@
       if (!sorted.length) return;
 
       const allLabels = sorted.map(item => item[0]);
-      const allData   = sorted.map(item => item[1]);
-      const allColors = sorted.map(([cat]) => getBarColorForCat1(cat));
 
       const blocks = splitIntoBlocks(sorted, MAX_BARS);
       blocks.forEach((block, blockIdx) => {
@@ -2337,6 +2357,17 @@
         const amountClass = isEntreCuentas ? 'amount-neutral' : (m.importe >= 0 ? 'amount-pos' : 'amount-neg');
         const formattedAmount = (m.importe > 0 ? '+' : '') + m.importe.toFixed(2).replace('.', ',') + ' €';
 
+        let fechaHtml;
+        if (m.fechaAplicable && m.fechaAplicable !== formatFechaISO(m.fecha)) {
+          const fechaAplicableFormato = m.fechaAplicable.split('-').reverse().join('/');
+          fechaHtml = `<div style="display: flex; flex-direction: column; line-height: 1.2;">
+                         <span style="color: #facc15; font-weight: 600;">${fechaAplicableFormato}</span>
+                         <small style="color: var(--text-muted); font-size: 0.75rem;">(${escaparHtml(m.fecha)})</small>
+                       </div>`;
+        } else {
+          fechaHtml = `<span>${escaparHtml(m.fecha)}</span>`;
+        }
+
         tr.innerHTML = `
           <td class="review-cell">
             <div style="display:flex; align-items:center; justify-content:center; gap:0.35rem;">
@@ -2347,9 +2378,14 @@
           <td class="review-cell">
             <span class="review-status ${m.modificado ? 'modificado' : 'sin-modificar'}" title="${m.modificado ? 'Modificado desde la última carga' : 'Sin modificar desde la última carga'}"></span>
           </td>
-          <td style="white-space:nowrap; color: var(--text-muted);">${m.fecha}</td>
-          <td>
-            <input type="date" class="input-table" value="${m.fechaAplicable || ''}" onchange="updateField('${m.id}', 'fechaAplicable', this.value)">
+          <td style="white-space:nowrap; vertical-align: middle;">
+            <div style="display: flex; align-items: center; gap: 0.6rem;">
+              ${fechaHtml}
+              <div style="position: relative; width: 22px; height: 22px; flex-shrink: 0;">
+                <input type="date" class="input-table-date-hidden" value="${m.fechaAplicable || ''}" onchange="updateField('${m.id}', 'fechaAplicable', this.value)" onclick="try { this.showPicker(); } catch(e) {}">
+                <span style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none; font-size: 0.9rem; filter: drop-shadow(0 0 2px rgba(0,0,0,0.5));">📅</span>
+              </div>
+            </div>
           </td>
           <td style="font-weight:500;">${m.concepto}</td>
           <td>
@@ -2429,9 +2465,9 @@
             moveData = importedData;
             // Migración por si el JSON antiguo no tiene dueño
             moveData.forEach(m => { 
-              if (m.dueño) {
-                if (!m.dueno) m.dueno = m.dueño;
-                delete m.dueño;
+              if (m.dueno) {
+                if (!m.dueno) m.dueno = m.dueno;
+                delete m.dueno;
               }
               if (!m.dueno || m.dueno === 'Pluxee') m.dueno = 'Familia'; 
               if (!m.origen) m.origen = 'CaixaBank';
