@@ -580,8 +580,8 @@
 <body>
   <div class="container">
     <div class="header">
-      <h1>📊 GG</h1>
-      <p>GG te ayuda, sin reirte de ti ;)</p>
+      <h1>📊 GG (Gestor Gastos)</h1>
+      <p>GG te ayuda, sin reirse de ti ;)</p>
     </div>
 
     <div class="main-tabs-bar" style="display: flex; gap: 0.75rem; margin-bottom: 1.25rem; justify-content: center; flex-wrap: wrap;">
@@ -590,6 +590,7 @@
       <button type="button" class="tab-btn main-tab" data-tab="sabadell" onclick="switchMainTab('sabadell')">🏦 Sabadell</button>
       <button type="button" class="tab-btn main-tab" data-tab="ing" onclick="switchMainTab('ing')">🏦 ING</button>
       <button type="button" class="tab-btn main-tab" data-tab="bankinter" onclick="switchMainTab('bankinter')">🏦 Bankinter</button>
+      <button type="button" class="tab-btn main-tab" data-tab="openbank" onclick="switchMainTab('openbank')">🏦 OpenBank</button>
       <button type="button" class="tab-btn main-tab" data-tab="pluxee" onclick="switchMainTab('pluxee')">🍕 Pluxee</button>
     </div>
 
@@ -614,6 +615,10 @@
         <div id="groupBankinterButtons" style="display: flex; gap: 0.75rem; flex-wrap: wrap; justify-content: center;">
           <label class="btn btn-secondary" for="appendBankinterFile">➕ Bankinter</label>
           <input type="file" id="appendBankinterFile" accept=".xls, .xlsx" style="display:none;">
+        </div>
+        <div id="groupOpenBankButtons" style="display: flex; gap: 0.75rem; flex-wrap: wrap; justify-content: center;">
+          <label class="btn btn-secondary" for="appendOpenBankFile">➕ OpenBank</label>
+          <input type="file" id="appendOpenBankFile" accept=".xls, .xlsx" style="display:none;">
         </div>
         <div id="groupCommonButtons" style="display: flex; gap: 0.75rem; flex-wrap: wrap; justify-content: center;">
           <label class="btn" for="jsonFile" style="background-color: #ffeb3b; color: #0f172a; font-weight: 600;">📁 Importar BD (JSON/CSV)</label>
@@ -1310,6 +1315,30 @@
       reader.readAsArrayBuffer(file);
     }
 
+    // Procesar archivo OpenBank (XLS/HTML)
+    function processOpenBankFile(file, isAppend = false) {
+      const bankConfig = {
+        dueno: 'Belen',
+        origen: 'OpenBank',
+        fecha: ['fecha', 'operacion', 'valor'],
+        concepto: ['concepto', 'descripcion', 'movimiento'],
+        importe: ['importe', 'cantidad']
+      };
+
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        const data = new Uint8Array(evt.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        const results = {
+          data: XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false })
+        };
+        processCsvResults(results, isAppend, bankConfig);
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
 
     // Añadir Pluxee (merge sin duplicados)
     document.getElementById('appendPluxeeFile').addEventListener('change', (e) => {
@@ -1343,23 +1372,25 @@
       document.getElementById('appendBankinterFile').value = '';
     });
 
+    // Añadir OpenBank (merge sin duplicados)
+    document.getElementById('appendOpenBankFile').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      processOpenBankFile(file, true);
+      document.getElementById('appendOpenBankFile').value = '';
+    });
+
     function encontrarCabecera(filas) {
       return filas.findIndex(fila => {
         const cabeceras = fila.map(normalizarBusqueda);
-        const tieneFecha = cabeceras.includes(normalizarBusqueda('fecha')) || 
-                          cabeceras.includes(normalizarBusqueda('Fecha Original')) ||
-                          cabeceras.includes(normalizarBusqueda('FechaOriginal')) ||
-                          cabeceras.includes(normalizarBusqueda('F. Operativa')) ||
-                          cabeceras.includes(normalizarBusqueda('F.Operativa')) ||
-                          cabeceras.includes(normalizarBusqueda('F. VALOR')) ||
-                          cabeceras.includes(normalizarBusqueda('F.VALOR')) ||
-                          cabeceras.includes(normalizarBusqueda('Fecha contable')) ||
-                          cabeceras.includes(normalizarBusqueda('Fecha valor'));
-        const tieneConcepto = cabeceras.some(cabecera => 
-          ['concepto', 'movimiento', 'descripcion'].some(nombre => cabecera === normalizarBusqueda(nombre))
+        const tieneFecha = cabeceras.some(c => 
+          c.includes('fecha') || c.includes('foperativa') || c.includes('fvalor') || c.includes('f.operativa') || c.includes('f.valor')
         );
-        const tieneImporte = cabeceras.some(cabecera => 
-          ['importe', 'cantidad'].some(nombre => cabecera === normalizarBusqueda(nombre))
+        const tieneConcepto = cabeceras.some(c => 
+          c.includes('concepto') || c.includes('movimiento') || c.includes('descripcion') || c.includes('detalle')
+        );
+        const tieneImporte = cabeceras.some(c => 
+          c.includes('importe') || c.includes('cantidad')
         );
         return tieneFecha && tieneConcepto && tieneImporte;
       });
@@ -1665,8 +1696,10 @@
     });
 
     function processCsvResults(results, isAppend = false, bankConfig = {}, isFullReplace = false) {
+      console.log('Procesando resultados CSV/Excel...', { isAppend, bankConfig, rowCount: results.data.length });
       const filaCabecera = encontrarCabecera(results.data);
       if (filaCabecera === -1) {
+        console.error('No se pudo encontrar la cabecera en los datos:', results.data.slice(0, 10));
         alert('CSV no compatible.');
         return;
       }
@@ -1905,6 +1938,7 @@
       const sabadellGroup = document.getElementById('groupSabadellButtons');
       const ingGroup = document.getElementById('groupIngButtons');
       const bankinterGroup = document.getElementById('groupBankinterButtons');
+      const openBankGroup = document.getElementById('groupOpenBankButtons');
 
       if (tabName === 'caixabank') {
         cbGroup.style.display = 'flex';
@@ -1912,36 +1946,49 @@
         sabadellGroup.style.display = 'none';
         ingGroup.style.display = 'none';
         bankinterGroup.style.display = 'none';
+        openBankGroup.style.display = 'none';
       } else if (tabName === 'pluxee') {
         cbGroup.style.display = 'none';
         pluxeeGroup.style.display = 'flex';
         sabadellGroup.style.display = 'none';
         ingGroup.style.display = 'none';
         bankinterGroup.style.display = 'none';
+        openBankGroup.style.display = 'none';
       } else if (tabName === 'sabadell') {
         cbGroup.style.display = 'none';
         pluxeeGroup.style.display = 'none';
         sabadellGroup.style.display = 'flex';
         ingGroup.style.display = 'none';
         bankinterGroup.style.display = 'none';
+        openBankGroup.style.display = 'none';
       } else if (tabName === 'ing') {
         cbGroup.style.display = 'none';
         pluxeeGroup.style.display = 'none';
         sabadellGroup.style.display = 'none';
         ingGroup.style.display = 'flex';
         bankinterGroup.style.display = 'none';
+        openBankGroup.style.display = 'none';
       } else if (tabName === 'bankinter') {
         cbGroup.style.display = 'none';
         pluxeeGroup.style.display = 'none';
         sabadellGroup.style.display = 'none';
         ingGroup.style.display = 'none';
         bankinterGroup.style.display = 'flex';
+        openBankGroup.style.display = 'none';
+      } else if (tabName === 'openbank') {
+        cbGroup.style.display = 'none';
+        pluxeeGroup.style.display = 'none';
+        sabadellGroup.style.display = 'none';
+        ingGroup.style.display = 'none';
+        bankinterGroup.style.display = 'none';
+        openBankGroup.style.display = 'flex';
       } else {
         cbGroup.style.display = 'flex';
         pluxeeGroup.style.display = 'flex';
         sabadellGroup.style.display = 'flex';
         ingGroup.style.display = 'flex';
         bankinterGroup.style.display = 'flex';
+        openBankGroup.style.display = 'flex';
       }
 
       if (moveData.length > 0) {
@@ -2038,6 +2085,7 @@
         if (currentMainTab === 'sabadell' && m.origen !== 'Sabadell') return false;
         if (currentMainTab === 'ing' && m.origen !== 'ING') return false;
         if (currentMainTab === 'bankinter' && m.origen !== 'Bankinter') return false;
+        if (currentMainTab === 'openbank' && m.origen !== 'OpenBank') return false;
 
         const fechaEvaluar = m.fechaAplicable || formatFechaISO(m.fecha);
         if (fDesde && fechaEvaluar < fDesde) return false;
