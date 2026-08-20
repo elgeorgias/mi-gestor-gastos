@@ -488,6 +488,77 @@
     .amount-pos { color: #34d399; font-weight: 600; }
     .amount-neutral { color: var(--text-muted); font-weight: 600; }
 
+    /* Bulk Action Bar & Row Selection */
+    .bulk-action-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.95));
+      border: 1px solid rgba(59, 130, 246, 0.4);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+      border-radius: 12px;
+      padding: 0.6rem 0.9rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .bulk-info {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .bulk-badge {
+      background: rgba(59, 130, 246, 0.25);
+      color: #93c5fd;
+      border: 1px solid rgba(59, 130, 246, 0.5);
+      font-weight: 600;
+      font-size: 0.85rem;
+      padding: 0.3rem 0.7rem;
+      border-radius: 999px;
+    }
+
+    .bulk-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+
+    .bulk-control-item {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .bulk-control-item label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .bulk-control-item select {
+      max-width: 170px;
+      font-size: 0.8rem;
+      padding: 0.3rem 0.5rem;
+    }
+
+    tr.selected-row {
+      background: rgba(59, 130, 246, 0.18) !important;
+    }
+    tr.selected-row:hover {
+      background: rgba(59, 130, 246, 0.28) !important;
+    }
+
+    .row-select-checkbox, #selectAllCheckbox {
+      width: 1.1rem;
+      height: 1.1rem;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
     .input-table-date-hidden {
       position: absolute;
       top: 0; left: 0;
@@ -702,10 +773,47 @@
             </div>
           </div>
         </div>
+
+        <!-- Barra de Acciones Masivas (visible al seleccionar movimientos) -->
+        <div id="bulkActionBar" class="bulk-action-bar" style="display: none;">
+          <div class="bulk-info">
+            <span class="bulk-badge">✨ <span id="selectedCount">0</span> seleccionados</span>
+            <button type="button" class="btn btn-small btn-secondary" onclick="clearSelection()">Deseleccionar</button>
+          </div>
+          <div class="bulk-controls">
+            <div class="bulk-control-item">
+              <label for="bulkCat1Select">Cat 1:</label>
+              <select id="bulkCat1Select" class="filter-select" onchange="handleBulkCat1Change(this.value)">
+                <option value="">Cambiar Cat 1...</option>
+              </select>
+            </div>
+            <div class="bulk-control-item">
+              <label for="bulkCat2Select">Cat 2:</label>
+              <select id="bulkCat2Select" class="filter-select" onchange="handleBulkCat2Change(this.value)">
+                <option value="">Cambiar Cat 2...</option>
+              </select>
+            </div>
+            <div class="bulk-control-item">
+              <label for="bulkDuenoSelect">Dueño:</label>
+              <select id="bulkDuenoSelect" class="filter-select" onchange="handleBulkDuenoChange(this.value)">
+                <option value="">Cambiar dueño...</option>
+                <option value="Familia">Familia</option>
+                <option value="Belén">Belén</option>
+                <option value="Jorge">Jorge</option>
+              </select>
+            </div>
+            <div class="bulk-control-item" style="gap: 0.35rem;">
+              <button type="button" class="btn btn-small btn-success" onclick="bulkSetRevisado(true)" title="Marcar seleccionados como revisados">✓ Revisado</button>
+              <button type="button" class="btn btn-small btn-danger" onclick="bulkSetRevisado(false)" title="Marcar seleccionados como pendientes">✕ Pendiente</button>
+            </div>
+          </div>
+        </div>
+
         <div class="table-container">
           <table>
             <thead>
               <tr>
+                <th style="min-width:36px; text-align:center;"><input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this.checked)" title="Seleccionar todos los visibles"></th>
                 <th style="min-width:64px; cursor:pointer;" onclick="setSort('revisado')">Rev</th>
                 <th style="min-width:64px; cursor:pointer;" onclick="setSort('modificado')">Mod</th>
                 <th style="min-width:120px; cursor:pointer;" onclick="setSort('fecha')">Fecha</th>
@@ -719,6 +827,9 @@
                 <th style="min-width:150px; cursor:pointer;" onclick="setSort('masDatos')">Más datos</th>
               </tr>
               <tr>
+                <th class="review-cell" style="text-align:center;">
+                  <button type="button" onclick="clearSelection()" title="Deseleccionar todos" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:0.8rem;">✕</button>
+                </th>
                 <th class="review-cell">
                   <label for="tableFilterEstado" class="sr-only">Filtrar Estado</label>
                   <select class="table-filter-input" id="tableFilterEstado" onchange="applyFilters()" style="padding: 0.2rem; font-size: 0.75rem;">
@@ -1205,6 +1316,10 @@
         const preferred = subcats.find(s => s === 'Entre cuentas' || s === 'Propias');
         return preferred === 'Propias' ? 'Entre cuentas' : (preferred || 'Entre cuentas');
       }
+      if (cat1 === 'Compras') {
+        const preferred = subcats.find(s => s === 'Otros');
+        return preferred || 'Otros';
+      }
       return subcats[0] || 'General / Varios';
     }
 
@@ -1236,6 +1351,48 @@
       return Number(texto);
     }
 
+    // Parsea datos binarios de Excel (XLS/XLSX) o archivos HTML guardados con extensión XLS
+    function parseExcelOrHtmlData(data) {
+      const bytes = data instanceof Uint8Array ? data : new Uint8Array(data);
+      const isBinaryXls = bytes.length >= 4 && bytes[0] === 0xD0 && bytes[1] === 0xCF && bytes[2] === 0x11 && bytes[3] === 0xE0;
+      const isBinaryXlsx = bytes.length >= 4 && bytes[0] === 0x50 && bytes[1] === 0x4B && (bytes[2] === 0x03 || bytes[2] === 0x05 || bytes[2] === 0x07);
+
+      if (!isBinaryXls && !isBinaryXlsx) {
+        let text = '';
+        try {
+          text = new TextDecoder('windows-1252').decode(bytes);
+        } catch (e) {
+          try {
+            text = new TextDecoder('iso-8859-1').decode(bytes);
+          } catch (e2) {
+            text = new TextDecoder('utf-8').decode(bytes);
+          }
+        }
+
+        if (text.includes('<table') || text.includes('<TABLE') || text.includes('<html') || text.includes('<HTML') || text.includes('<!DOCTYPE') || text.includes('<!doctype')) {
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(text, 'text/html');
+          const trElements = doc.querySelectorAll('tr');
+          if (trElements.length > 0) {
+            const rows = [];
+            trElements.forEach(tr => {
+              const row = [];
+              tr.querySelectorAll('th, td').forEach(cell => {
+                row.push(cell.textContent !== undefined ? cell.textContent.trim() : '');
+              });
+              rows.push(row);
+            });
+            return rows;
+          }
+        }
+      }
+
+      const workbook = XLSX.read(bytes, { type: 'array' });
+      const firstSheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[firstSheetName];
+      return XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false });
+    }
+
     // Procesar archivo Pluxee (CSV/XLSX)
     function processPluxeeFile(file, isAppend = false) {
       const bankConfig = {
@@ -1247,12 +1404,8 @@
         const reader = new FileReader();
         reader.onload = (evt) => {
           const data = new Uint8Array(evt.target.result);
-          const workbook = XLSX.read(data, { type: 'array' });
-          const firstSheetName = workbook.SheetNames[0];
-          const worksheet = workbook.Sheets[firstSheetName];
-          const results = {
-            data: XLSX.utils.sheet_to_json(worksheet, { header: 1 })
-          };
+          const rows = parseExcelOrHtmlData(data);
+          const results = { data: rows };
           processCsvResults(results, isAppend, bankConfig);
         };
         reader.readAsArrayBuffer(file);
@@ -1280,12 +1433,8 @@
       const reader = new FileReader();
       reader.onload = (evt) => {
         const data = new Uint8Array(evt.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
-        const firstSheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[firstSheetName];
-        const results = {
-          data: XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false })
-        };
+        const rows = parseExcelOrHtmlData(data);
+        const results = { data: rows };
         processCsvResults(results, isAppend, bankConfig);
       };
       reader.readAsArrayBuffer(file);
@@ -1294,7 +1443,7 @@
     // Procesar archivo Bankinter (XLS/XLSX)
     function processBankinterFile(file, isAppend = false) {
       const bankConfig = {
-        dueno: 'Belen',
+        dueno: 'Belén',
         origen: 'Bankinter',
         fecha: ['Fecha contable', 'Fecha valor', 'FECHA CONTABLE', 'FECHA VALOR'],
         concepto: ['Descripción', 'DESCRIPCIÓN', 'DESCRIPCION'],
@@ -1304,12 +1453,8 @@
       const reader = new FileReader();
       reader.onload = (evt) => {
         const data = new Uint8Array(evt.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
-        const firstSheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[firstSheetName];
-        const results = {
-          data: XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false })
-        };
+        const rows = parseExcelOrHtmlData(data);
+        const results = { data: rows };
         processCsvResults(results, isAppend, bankConfig);
       };
       reader.readAsArrayBuffer(file);
@@ -1318,22 +1463,38 @@
     // Procesar archivo OpenBank (XLS/HTML)
     function processOpenBankFile(file, isAppend = false) {
       const bankConfig = {
-        dueno: 'Belen',
+        dueno: 'Familia',
         origen: 'OpenBank',
-        fecha: ['fecha', 'operacion', 'valor'],
-        concepto: ['concepto', 'descripcion', 'movimiento'],
+        fecha: ['fecha operacion', 'fecha operación', 'fecha', 'operacion', 'operación', 'valor'],
+        concepto: ['concepto', 'descripcion', 'descripción', 'movimiento'],
         importe: ['importe', 'cantidad']
       };
 
       const reader = new FileReader();
       reader.onload = (evt) => {
         const data = new Uint8Array(evt.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
-        const firstSheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[firstSheetName];
-        const results = {
-          data: XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false })
-        };
+        const rows = parseExcelOrHtmlData(data);
+        const results = { data: rows };
+        processCsvResults(results, isAppend, bankConfig);
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    // Procesar archivo ING (XLS/XLSX)
+    function processIngFile(file, isAppend = false) {
+      const bankConfig = {
+        dueno: 'Jorge',
+        origen: 'ING',
+        fecha: ['f. valor', 'f valor', 'fecha valor', 'fecha', 'f.valor'],
+        concepto: ['descripcion', 'descripción', 'concepto', 'movimiento'],
+        importe: ['importe', 'cantidad']
+      };
+
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        const data = new Uint8Array(evt.target.result);
+        const rows = parseExcelOrHtmlData(data);
+        const results = { data: rows };
         processCsvResults(results, isAppend, bankConfig);
       };
       reader.readAsArrayBuffer(file);
@@ -1382,7 +1543,7 @@
 
     function encontrarCabecera(filas) {
       return filas.findIndex(fila => {
-        const cabeceras = fila.map(normalizarBusqueda);
+        const cabeceras = fila.map(normalizarBusqueda).filter(Boolean);
         const tieneFecha = cabeceras.some(c => 
           c.includes('fecha') || c.includes('foperativa') || c.includes('fvalor') || c.includes('f.operativa') || c.includes('f.valor')
         );
@@ -1706,9 +1867,10 @@
 
       const cabeceras = results.data[filaCabecera].map(normalizarCabecera);
       const indice = (...nombres) => {
-        const targets = nombres.map(normalizarBusqueda);
+        const targets = nombres.map(normalizarBusqueda).filter(Boolean);
         return cabeceras.findIndex(cabecera => {
           const header = normalizarBusqueda(cabecera);
+          if (!header) return false;
           return targets.some(target =>
             header === target ||
             header.includes(target) ||
@@ -1780,6 +1942,7 @@
 
         let itemDueno = (indiceDueno !== -1 ? String(row[indiceDueno] || '').trim() : defaultDueno) || defaultDueno;
         if (itemDueno === 'Pluxee') itemDueno = 'Familia';
+        if (itemDueno === 'Belen') itemDueno = 'Belén';
 
         newItems.push({
           id: idx + '_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
@@ -1879,32 +2042,184 @@
       localStorage.setItem('finanzas_pwa_data_v4', JSON.stringify(moveData));
     }
 
-    function updateField(id, field, value) {
-      const item = moveData.find(m => m.id === id);
-      if (item) {
-        item[field] = value;
-        item.modificado = true;
-        if (field === 'cat1') {
-          item.cat2 = getDefaultCat2(value);
+    let selectedMovIds = new Set();
+    let lastCheckedRowIndex = null;
+
+    function updateBulkActionBar() {
+      const bar = document.getElementById('bulkActionBar');
+      const countSpan = document.getElementById('selectedCount');
+      const selectAllCb = document.getElementById('selectAllCheckbox');
+      
+      if (!bar) return;
+
+      const count = selectedMovIds.size;
+      if (countSpan) countSpan.innerText = count;
+
+      if (count > 0) {
+        bar.style.display = 'flex';
+        const bulkCat1 = document.getElementById('bulkCat1Select');
+        if (bulkCat1 && bulkCat1.options.length <= 1) {
+          bulkCat1.innerHTML = '<option value="">Cambiar Cat 1...</option>' + crearOpcionesCat1('', '');
         }
-        saveData();
-        const visibleMatch = currentVisibleData.find(m => m.id === id);
-        if (visibleMatch) {
-            visibleMatch[field] = value;
-            visibleMatch.modificado = true;
-            if (field === 'cat1') {
-              visibleMatch.cat2 = getDefaultCat2(value);
-            }
-          }
-        renderAll(getTableFilterValues());
+      } else {
+        bar.style.display = 'none';
+      }
+
+      if (selectAllCb && currentVisibleData.length > 0) {
+        const visibleSelectedCount = currentVisibleData.filter(m => selectedMovIds.has(m.id)).length;
+        if (visibleSelectedCount === currentVisibleData.length) {
+          selectAllCb.checked = true;
+          selectAllCb.indeterminate = false;
+        } else if (visibleSelectedCount > 0) {
+          selectAllCb.checked = false;
+          selectAllCb.indeterminate = true;
+        } else {
+          selectAllCb.checked = false;
+          selectAllCb.indeterminate = false;
+        }
+      } else if (selectAllCb) {
+        selectAllCb.checked = false;
+        selectAllCb.indeterminate = false;
       }
     }
 
+    function toggleSelectAll(checked) {
+      if (checked) {
+        currentVisibleData.forEach(m => selectedMovIds.add(m.id));
+      } else {
+        currentVisibleData.forEach(m => selectedMovIds.delete(m.id));
+      }
+      renderMovementsTable(currentVisibleData);
+      updateBulkActionBar();
+    }
+
+    function clearSelection() {
+      selectedMovIds.clear();
+      lastCheckedRowIndex = null;
+      renderMovementsTable(currentVisibleData);
+      updateBulkActionBar();
+    }
+
+    function handleRowSelectCheckbox(id, checked, event) {
+      const currentIndex = currentVisibleData.findIndex(m => m.id === id);
+
+      if (event && event.shiftKey && lastCheckedRowIndex !== null && currentIndex !== -1) {
+        const start = Math.min(lastCheckedRowIndex, currentIndex);
+        const end = Math.max(lastCheckedRowIndex, currentIndex);
+        for (let i = start; i <= end; i++) {
+          const item = currentVisibleData[i];
+          if (item) {
+            if (checked) selectedMovIds.add(item.id);
+            else selectedMovIds.delete(item.id);
+          }
+        }
+      } else {
+        if (checked) {
+          selectedMovIds.add(id);
+        } else {
+          selectedMovIds.delete(id);
+        }
+      }
+      lastCheckedRowIndex = currentIndex;
+      renderMovementsTable(currentVisibleData);
+      updateBulkActionBar();
+    }
+
+    function handleBulkCat1Change(cat1) {
+      if (!cat1 || selectedMovIds.size === 0) return;
+      const cat1Norm = normalizarCat1(cat1);
+      const defaultCat2 = getDefaultCat2(cat1Norm);
+
+      selectedMovIds.forEach(id => {
+        const item = moveData.find(m => m.id === id);
+        if (item) {
+          item.cat1 = cat1Norm;
+          item.cat2 = defaultCat2;
+          item.modificado = true;
+        }
+      });
+      saveData();
+      renderAll(getTableFilterValues());
+      const bulkCat2 = document.getElementById('bulkCat2Select');
+      if (bulkCat2) {
+        bulkCat2.innerHTML = '<option value="">Cambiar Cat 2...</option>' + crearOpcionesCat2(cat1Norm, defaultCat2);
+      }
+      document.getElementById('bulkCat1Select').value = '';
+    }
+
+    function handleBulkCat2Change(cat2) {
+      if (!cat2 || selectedMovIds.size === 0) return;
+      selectedMovIds.forEach(id => {
+        const item = moveData.find(m => m.id === id);
+        if (item) {
+          item.cat2 = cat2;
+          item.modificado = true;
+        }
+      });
+      saveData();
+      renderAll(getTableFilterValues());
+      document.getElementById('bulkCat2Select').value = '';
+    }
+
+    function handleBulkDuenoChange(dueno) {
+      if (!dueno || selectedMovIds.size === 0) return;
+      selectedMovIds.forEach(id => {
+        const item = moveData.find(m => m.id === id);
+        if (item) {
+          item.dueno = dueno;
+          item.modificado = true;
+        }
+      });
+      saveData();
+      renderAll(getTableFilterValues());
+      document.getElementById('bulkDuenoSelect').value = '';
+    }
+
+    function bulkSetRevisado(revisado) {
+      if (selectedMovIds.size === 0) return;
+      selectedMovIds.forEach(id => {
+        const item = moveData.find(m => m.id === id);
+        if (item) {
+          item.revisado = revisado;
+          item.modificado = true;
+        }
+      });
+      saveData();
+      renderAll(getTableFilterValues());
+    }
+
+    function updateField(id, field, value) {
+      const isSelected = selectedMovIds.has(id);
+      const targetIds = (isSelected && selectedMovIds.size > 1) ? Array.from(selectedMovIds) : [id];
+
+      targetIds.forEach(targetId => {
+        const item = moveData.find(m => m.id === targetId);
+        if (item) {
+          item[field] = value;
+          item.modificado = true;
+          if (field === 'cat1') {
+            item.cat2 = getDefaultCat2(value);
+          }
+        }
+        const visibleMatch = currentVisibleData.find(m => m.id === targetId);
+        if (visibleMatch) {
+          visibleMatch[field] = value;
+          visibleMatch.modificado = true;
+          if (field === 'cat1') {
+            visibleMatch.cat2 = getDefaultCat2(value);
+          }
+        }
+      });
+      saveData();
+      renderAll(getTableFilterValues());
+    }
 
     document.getElementById('clearBtn').addEventListener('click', () => {
       if (confirm('¿Borrar todos los datos cargados?')) {
         localStorage.removeItem('finanzas_pwa_data_v4');
         moveData = [];
+        selectedMovIds.clear();
+        updateBulkActionBar();
         document.getElementById('dashboard').style.display = 'none';
         document.getElementById('exportBtn').style.display = 'none';
         document.getElementById('clearBtn').style.display = 'none';
@@ -2574,6 +2889,8 @@
 
       data.forEach(m => {
         const tr = document.createElement('tr');
+        const isSelected = selectedMovIds.has(m.id);
+        if (isSelected) tr.classList.add('selected-row');
         
         // Dueños
         const duenoOptions = DUENOS.map(d => 
@@ -2602,6 +2919,9 @@
         }
 
         tr.innerHTML = `
+          <td class="select-cell" style="text-align:center; vertical-align:middle;">
+            <input type="checkbox" class="row-select-checkbox" data-id="${m.id}" ${isSelected ? 'checked' : ''} onchange="handleRowSelectCheckbox('${m.id}', this.checked, event)">
+          </td>
           <td class="review-cell">
             <div style="display:flex; align-items:center; justify-content:center; gap:0.35rem;">
               <span class="review-status ${m.revisado ? 'revisado' : 'pendiente'}" title="${m.revisado ? 'Revisado' : 'Pendiente'}"></span>
@@ -2620,7 +2940,7 @@
               </div>
             </div>
           </td>
-          <td style="font-weight:500;">${m.concepto}</td>
+          <td style="font-weight:500;">${escaparHtml(m.concepto)}</td>
           <td>
             <select class="cat-select" onchange="updateField('${m.id}', 'cat1', this.value)">
               ${cat1Options}
@@ -2633,18 +2953,20 @@
           </td>
           <td class="${amountClass}" style="text-align:right; white-space:nowrap;">${formattedAmount}</td>
           <td>
-            <input type="text" class="input-table" placeholder="Añadir nota..." value="${m.notas || ''}" onchange="updateField('${m.id}', 'notas', this.value)">
+            <input type="text" class="input-table" placeholder="Añadir nota..." value="${escaparHtml(m.notas || '')}" onchange="updateField('${m.id}', 'notas', this.value)">
           </td>
-          <td style="color: var(--text-muted); font-size: 0.85em;">${m.origen || ''}</td>
+          <td style="color: var(--text-muted); font-size: 0.85em;">${escaparHtml(m.origen || '')}</td>
           <td>
             <select class="cat-select" onchange="updateField('${m.id}', 'dueno', this.value)">
               ${duenoOptions}
             </select>
           </td>
-          <td style="color: var(--text-muted); font-size: 0.85em;">${m.masDatos || ''}</td>
+          <td style="color: var(--text-muted); font-size: 0.85em;">${escaparHtml(m.masDatos || '')}</td>
         `;
         tbody.appendChild(tr);
       });
+
+      updateBulkActionBar();
     }
 
     document.getElementById('exportBtn').addEventListener('click', () => {
@@ -2707,6 +3029,7 @@
             const importedData = JSON.parse(event.target.result);
             if (Array.isArray(importedData)) {
               moveData = importedData;
+              selectedMovIds.clear();
               // Migración por si el JSON antiguo no tiene dueño
               moveData.forEach(m => { 
                 if (m.dueno) {

@@ -1,4 +1,4 @@
-exports/
-exports-app
+exports-app/
 .idea/
-.junie
+.DS_Store
+.junie/
