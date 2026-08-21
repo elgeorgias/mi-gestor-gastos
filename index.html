@@ -176,8 +176,14 @@
 
     .stats {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(5, 1fr);
       gap: 0.75rem;
+    }
+
+    @media (max-width: 900px) {
+      .stats {
+        grid-template-columns: repeat(3, 1fr);
+      }
     }
 
     .stat-box {
@@ -487,6 +493,7 @@
     .amount-neg { color: #f87171; font-weight: 600; }
     .amount-pos { color: #34d399; font-weight: 600; }
     .amount-neutral { color: var(--text-muted); font-weight: 600; }
+    .amount-inv { color: #60a5fa; font-weight: 600; }
 
     /* Bulk Action Bar & Row Selection */
     .bulk-action-bar {
@@ -655,17 +662,27 @@
       <p>GG te ayuda, sin reirse de ti ;)</p>
     </div>
 
-    <div class="main-tabs-bar" style="display: flex; gap: 0.75rem; margin-bottom: 1.25rem; justify-content: center; flex-wrap: wrap;">
-      <button type="button" class="tab-btn main-tab active" data-tab="todas" onclick="switchMainTab('todas')">🌐 Todas</button>
-      <button type="button" class="tab-btn main-tab" data-tab="caixabank" onclick="switchMainTab('caixabank')">🏦 CaixaBank</button>
-      <button type="button" class="tab-btn main-tab" data-tab="sabadell" onclick="switchMainTab('sabadell')">🏦 Sabadell</button>
-      <button type="button" class="tab-btn main-tab" data-tab="ing" onclick="switchMainTab('ing')">🏦 ING</button>
-      <button type="button" class="tab-btn main-tab" data-tab="bankinter" onclick="switchMainTab('bankinter')">🏦 Bankinter</button>
-      <button type="button" class="tab-btn main-tab" data-tab="openbank" onclick="switchMainTab('openbank')">🏦 OpenBank</button>
-      <button type="button" class="tab-btn main-tab" data-tab="pluxee" onclick="switchMainTab('pluxee')">🍕 Pluxee</button>
+    <!-- 1. Cuentas -->
+    <div class="card">
+      <div class="chart-header">
+        <h2>🏦 Cuentas</h2>
+      </div>
+      <div class="main-tabs-bar" style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
+        <button type="button" class="tab-btn main-tab active" data-tab="todas" onclick="switchMainTab('todas')">🌐 Todas</button>
+        <button type="button" class="tab-btn main-tab" data-tab="caixabank" onclick="switchMainTab('caixabank')">🏦 CaixaBank</button>
+        <button type="button" class="tab-btn main-tab" data-tab="sabadell" onclick="switchMainTab('sabadell')">🏦 Sabadell</button>
+        <button type="button" class="tab-btn main-tab" data-tab="ing" onclick="switchMainTab('ing')">🏦 ING</button>
+        <button type="button" class="tab-btn main-tab" data-tab="bankinter" onclick="switchMainTab('bankinter')">🏦 Bankinter</button>
+        <button type="button" class="tab-btn main-tab" data-tab="openbank" onclick="switchMainTab('openbank')">🏦 OpenBank</button>
+        <button type="button" class="tab-btn main-tab" data-tab="pluxee" onclick="switchMainTab('pluxee')">🍕 Pluxee</button>
+      </div>
     </div>
 
+    <!-- 2. Funciones -->
     <div class="card">
+      <div class="chart-header">
+        <h2>⚡ Funciones</h2>
+      </div>
       <div class="btn-group">
         <div id="groupCbButtons" style="display: flex; gap: 0.75rem; flex-wrap: wrap; justify-content: center;">
           <label class="btn btn-secondary" for="appendCsvFile">➕ CaixaBank</label>
@@ -702,63 +719,68 @@
     </div>
 
     <div id="dashboard" style="display:none;">
-      <!-- Filtros Globales -->
-      <div class="filters-bar">
-        <!-- Bloque de Fechas -->
-        <div class="date-filters-group">
-          <div class="filter-item" style="position:relative;">
-            <label for="filterDesdeDisplay">Fecha inicio</label>
-            <div class="date-input-wrapper">
-              <input type="text" class="filter-select" id="filterDesdeDisplay" placeholder="dd/mm/aaaa" oninput="handleDateInput('desde', this.value)">
-              <input type="hidden" id="filterDesde">
-              <button type="button" class="date-picker-btn" onclick="toggleDatePicker('desde', event)">📅</button>
-              <button type="button" class="date-picker-btn" style="right: 2rem;" onclick="clearDateFilter('desde')" title="Borrar fecha">✕</button>
-              <div class="date-picker-popover" id="datePickerDesde">
-                <div class="cal-nav"><button type="button" onclick="changeDatePickerMonth('desde', -1)">&#8249;</button><span id="datePickerDesdeMonth"></span><button type="button" onclick="changeDatePickerMonth('desde', 1)">&#8250;</button></div>
-                <div class="cal-grid" id="datePickerDesdeGrid"></div>
-                <div class="cal-footer" style="padding: 0.5rem; border-top: 1px solid var(--card-border); text-align: center;"><button type="button" class="btn btn-small" style="width: 100%;" onclick="setDatePickerToToday('desde'); selectDatePicker('desde', dateToStr(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()))">Hoy</button></div>
-              </div>
-            </div>
-          </div>
-          <div class="filter-item" style="position:relative;">
-            <label for="filterHastaDisplay">Fecha fin</label>
-            <div class="date-input-wrapper">
-              <input type="text" class="filter-select" id="filterHastaDisplay" placeholder="dd/mm/aaaa" oninput="handleDateInput('hasta', this.value)">
-              <input type="hidden" id="filterHasta">
-              <button type="button" class="date-picker-btn" onclick="toggleDatePicker('hasta', event)">📅</button>
-              <button type="button" class="date-picker-btn" style="right: 2rem;" onclick="clearDateFilter('hasta')" title="Borrar fecha">✕</button>
-              <div class="date-picker-popover" id="datePickerHasta">
-                <div class="cal-nav"><button type="button" onclick="changeDatePickerMonth('hasta', -1)">&#8249;</button><span id="datePickerHastaMonth"></span><button type="button" onclick="changeDatePickerMonth('hasta', 1)">&#8250;</button></div>
-                <div class="cal-grid" id="datePickerHastaGrid"></div>
-                <div class="cal-footer" style="padding: 0.5rem; border-top: 1px solid var(--card-border); text-align: center;"><button type="button" class="btn btn-small" style="width: 100%;" onclick="setDatePickerToToday('hasta'); selectDatePicker('hasta', dateToStr(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()))">Hoy</button></div>
-              </div>
-            </div>
-          </div>
-          <div class="filter-item filter-range-actions">
-            <label>Rango rápido</label>
-            <div class="quick-range-buttons">
-              <button type="button" class="btn btn-small" style="flex: 1;" onclick="setDateRangeQuick('currentMonth')">Mes actual</button>
-              <button type="button" class="btn btn-small" style="flex: 1;" onclick="setDateRangeQuick('previousMonth')">Mes anterior</button>
-              <button type="button" class="btn btn-small" style="flex: 1;" onclick="setDateRangeQuick('yearToDate')">Todo el año</button>
-            </div>
-          </div>
+      <!-- 3. Filtro General -->
+      <div class="card">
+        <div class="chart-header">
+          <h2>🔍 Filtro General</h2>
         </div>
+        <div class="filters-bar" style="margin-bottom: 0; background: transparent; padding: 0; border: none;">
+          <!-- Bloque de Fechas -->
+          <div class="date-filters-group">
+            <div class="filter-item" style="position:relative;">
+              <label for="filterDesdeDisplay">Fecha inicio</label>
+              <div class="date-input-wrapper">
+                <input type="text" class="filter-select" id="filterDesdeDisplay" placeholder="dd/mm/aaaa" oninput="handleDateInput('desde', this.value)">
+                <input type="hidden" id="filterDesde">
+                <button type="button" class="date-picker-btn" onclick="toggleDatePicker('desde', event)">📅</button>
+                <button type="button" class="date-picker-btn" style="right: 2rem;" onclick="clearDateFilter('desde')" title="Borrar fecha">✕</button>
+                <div class="date-picker-popover" id="datePickerDesde">
+                  <div class="cal-nav"><button type="button" onclick="changeDatePickerMonth('desde', -1)">&#8249;</button><span id="datePickerDesdeMonth"></span><button type="button" onclick="changeDatePickerMonth('desde', 1)">&#8250;</button></div>
+                  <div class="cal-grid" id="datePickerDesdeGrid"></div>
+                  <div class="cal-footer" style="padding: 0.5rem; border-top: 1px solid var(--card-border); text-align: center;"><button type="button" class="btn btn-small" style="width: 100%;" onclick="setDatePickerToToday('desde'); selectDatePicker('desde', dateToStr(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()))">Hoy</button></div>
+                </div>
+              </div>
+            </div>
+            <div class="filter-item" style="position:relative;">
+              <label for="filterHastaDisplay">Fecha fin</label>
+              <div class="date-input-wrapper">
+                <input type="text" class="filter-select" id="filterHastaDisplay" placeholder="dd/mm/aaaa" oninput="handleDateInput('hasta', this.value)">
+                <input type="hidden" id="filterHasta">
+                <button type="button" class="date-picker-btn" onclick="toggleDatePicker('hasta', event)">📅</button>
+                <button type="button" class="date-picker-btn" style="right: 2rem;" onclick="clearDateFilter('hasta')" title="Borrar fecha">✕</button>
+                <div class="date-picker-popover" id="datePickerHasta">
+                  <div class="cal-nav"><button type="button" onclick="changeDatePickerMonth('hasta', -1)">&#8249;</button><span id="datePickerHastaMonth"></span><button type="button" onclick="changeDatePickerMonth('hasta', 1)">&#8250;</button></div>
+                  <div class="cal-grid" id="datePickerHastaGrid"></div>
+                  <div class="cal-footer" style="padding: 0.5rem; border-top: 1px solid var(--card-border); text-align: center;"><button type="button" class="btn btn-small" style="width: 100%;" onclick="setDatePickerToToday('hasta'); selectDatePicker('hasta', dateToStr(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()))">Hoy</button></div>
+                </div>
+              </div>
+            </div>
+            <div class="filter-item filter-range-actions">
+              <label>Rango rápido</label>
+              <div class="quick-range-buttons">
+                <button type="button" class="btn btn-small" style="flex: 1;" onclick="setDateRangeQuick('currentMonth')">Mes actual</button>
+                <button type="button" class="btn btn-small" style="flex: 1;" onclick="setDateRangeQuick('previousMonth')">Mes anterior</button>
+                <button type="button" class="btn btn-small" style="flex: 1;" onclick="setDateRangeQuick('yearToDate')">Todo el año</button>
+              </div>
+            </div>
+          </div>
 
-        <!-- Resto de filtros -->
-        <div class="filter-item"><label for="filterCat1">Cat. 1</label><select class="filter-select" id="filterCat1" onchange="updateCat2FilterOptions()"><option value="todos">Todas</option></select></div>
-        <div class="filter-item"><label for="filterCat2">Cat. 2</label><select class="filter-select" id="filterCat2"><option value="todos">Todas</option></select></div>
-        <div class="filter-item"><label for="filterTipo">Tipo</label><select class="filter-select" id="filterTipo"><option value="todos">Todos</option><option value="ingresos">Ingresos</option><option value="gastos">Gastos</option><option value="inversiones">Inversiones</option><option value="entrecuentas">No computables</option></select></div>
-        <div class="filter-item"><label for="filterDueno">Dueño</label><select class="filter-select" id="filterDueno"><option value="todos">Todos</option><option value="Familia">Familia</option><option value="Belén">Belén</option><option value="Jorge">Jorge</option></select></div>
-        <div class="filter-item"><label for="filterEstado">Estado</label><select class="filter-select" id="filterEstado"><option value="todos">Todos</option><option value="revisado">Revisados</option><option value="pendiente">Pendientes</option></select></div>
+          <!-- Resto de filtros -->
+          <div class="filter-item"><label for="filterCat1">Cat. 1</label><select class="filter-select" id="filterCat1" onchange="updateCat2FilterOptions()"><option value="todos">Todas</option></select></div>
+          <div class="filter-item"><label for="filterCat2">Cat. 2</label><select class="filter-select" id="filterCat2"><option value="todos">Todas</option></select></div>
+          <div class="filter-item"><label for="filterTipo">Tipo</label><select class="filter-select" id="filterTipo"><option value="todos">Todos</option><option value="ingresos">Ingresos</option><option value="gastos">Gastos</option><option value="inversiones">Inversiones</option><option value="entrecuentas">No computables</option></select></div>
+          <div class="filter-item"><label for="filterDueno">Dueño</label><select class="filter-select" id="filterDueno"><option value="todos">Todos</option><option value="Familia">Familia</option><option value="Belén">Belén</option><option value="Jorge">Jorge</option></select></div>
+          <div class="filter-item"><label for="filterEstado">Estado</label><select class="filter-select" id="filterEstado"><option value="todos">Todos</option><option value="revisado">Revisados</option><option value="pendiente">Pendientes</option></select></div>
 
-        <!-- Botones de acción -->
-        <div class="filter-actions">
-          <button type="button" class="btn" onclick="applyFilters()">Aplicar</button>
-          <button type="button" class="btn btn-warning" onclick="clearGeneralFilters()">Limpiar</button>
+          <!-- Botones de acción -->
+          <div class="filter-actions">
+            <button type="button" class="btn" onclick="applyFilters()">Aplicar</button>
+            <button type="button" class="btn btn-warning" onclick="clearGeneralFilters()">Limpiar</button>
+          </div>
         </div>
       </div>
 
-      <!-- Tabla de Movimientos -->
+      <!-- 4. Movimientos -->
       <div class="card">
         <div class="chart-header" style="flex-direction: column; align-items: flex-start; gap: 0.5rem;">
           <h2>📋 Movimientos (<span id="movCount">0</span>)</h2>
@@ -880,40 +902,60 @@
         </div>
       </div>
 
-      <!-- Resumen General -->
+      <!-- 5. Calculos -->
       <div class="card">
+        <div class="chart-header">
+          <h2>🧮 Cálculos</h2>
+        </div>
         <div class="stats">
           <div class="stat-box"><small>Ingresos</small><span id="totalIngresos" class="amount-pos">0,00 €</span></div>
           <div class="stat-box"><small>Gastos</small><span id="totalGastos" class="amount-neg">0,00 €</span></div>
+          <div class="stat-box"><small>Inversiones</small><span id="totalInversiones" class="amount-inv">0,00 €</span></div>
           <div class="stat-box"><small>Balance Net</small><span id="totalBalance">0,00 €</span></div>
           <div class="stat-box"><small>No computable</small><span id="totalEntreCuentas" class="amount-neutral">0,00 €</span></div>
         </div>
       </div>
 
-      <div class="dashboard-grid">
-        <div class="card">
-          <div class="chart-header">
-            <h2>🏷️ Totales por Categoría (Cat1)</h2>
-          </div>
-          <div id="chartSummaryContainer" style="margin-bottom: 2rem;"></div>
-          <div id="chartCat1Container">
-            <!-- Los bloques de canvas se generan dinámicamente -->
-          </div>
-          <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.75rem;">
-            Haz clic en una barra para ver el desglose de Cat2 dentro de esa categoría.
-          </p>
+      <!-- 6. Gráficas Totales -->
+      <div class="card" id="cardGraficasTotales">
+        <div class="chart-header">
+          <h2>📊 Gráficas Totales</h2>
         </div>
+        <div id="chartSummaryContainer"></div>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.75rem;">
+          Haz clic en una barra para filtrar por ese tipo de movimiento.
+        </p>
+      </div>
 
-        <div class="card">
-          <div class="chart-header">
-            <h2 id="cat2ChartTitle">🏷️ Totales por Subcategoría (Cat2)</h2>
-            <div style="display:flex; gap:0.5rem;">
-              <button type="button" class="btn btn-small btn-warning" id="btnLimpiarCat2" style="display:none;" onclick="resetCat2Filter()">Limpiar Cat1</button>
-              <button type="button" class="btn btn-small btn-warning" id="btnLimpiarCat2Sel" style="display:none;" onclick="clearCat2Selection()">Limpiar Cat2</button>
+      <!-- 7. Gráficos -->
+      <div class="card" id="cardGraficos">
+        <div class="chart-header">
+          <h2>📊 Gráficos</h2>
+        </div>
+        <div class="dashboard-grid">
+          <div class="card" style="background: rgba(15, 23, 42, 0.4); margin-bottom: 0;">
+            <div class="chart-header">
+              <h2>🏷️ Totales por Categoría (Cat1)</h2>
+              <button type="button" class="btn btn-small btn-warning" id="btnLimpiarCat1" style="display:none;" onclick="resetCat2Filter()">Limpiar Cat1</button>
             </div>
+            <div id="chartCat1Container">
+              <!-- Los bloques de canvas se generan dinámicamente -->
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.75rem;">
+              Haz clic en una barra para ver el desglose de Cat2 dentro de esa categoría.
+            </p>
           </div>
-          <div id="chartCat2Container">
-            <!-- Los bloques de canvas se generan dinámicamente -->
+
+          <div class="card" style="background: rgba(15, 23, 42, 0.4); margin-bottom: 0;">
+            <div class="chart-header">
+              <h2 id="cat2ChartTitle">🏷️ Totales por Subcategoría (Cat2)</h2>
+              <div style="display:flex; gap:0.5rem;">
+                <button type="button" class="btn btn-small btn-warning" id="btnLimpiarCat2Sel" style="display:none;" onclick="clearCat2Selection()">Limpiar Cat2</button>
+              </div>
+            </div>
+            <div id="chartCat2Container">
+              <!-- Los bloques de canvas se generan dinámicamente -->
+            </div>
           </div>
         </div>
       </div>
@@ -2518,8 +2560,8 @@
         const netVal = getNetCategoryValue(cat1Normalizada, m.importe);
         const esNoClasificado = cat1Normalizada === 'Otros' || !m.cat1;
 
-        // Las gráficas únicamente computan movimientos revisados (m.revisado === true)
-        if (m.revisado && !(currentView === 'todos' && tipoGeneral === 'no-computables')) {
+        // Las gráficas únicamente computan movimientos revisados y computables (excluye no-computables)
+        if (m.revisado && tipoGeneral !== 'no-computables') {
           if (tipoGeneral === 'ingresos') summaryTotalsMap.ingresos += m.importe;
           else if (tipoGeneral === 'gastos') summaryTotalsMap.gastos += (-m.importe);
           else if (tipoGeneral === 'inversiones') summaryTotalsMap.inversiones += (-m.importe);
@@ -2542,11 +2584,10 @@
       // Actualizar Badges de Totales
       document.getElementById('totalIngresos').innerText = ingresos.toFixed(2).replace('.', ',') + ' €';
       document.getElementById('totalGastos').innerText = gastos.toFixed(2).replace('.', ',') + ' €';
-      
-      // Si estamos en la vista de Inversiones, mostramos solo inversiones en el cuarto box,
-      // de lo contrario mostramos la suma de entre cuentas + inversiones (No computable).
-      const noComputableVal = currentView === 'inversiones' ? inversiones : (entreCuentas + inversiones);
-      document.getElementById('totalEntreCuentas').innerText = noComputableVal.toFixed(2).replace('.', ',') + ' €';
+      if (document.getElementById('totalInversiones')) {
+        document.getElementById('totalInversiones').innerText = inversiones.toFixed(2).replace('.', ',') + ' €';
+      }
+      document.getElementById('totalEntreCuentas').innerText = entreCuentas.toFixed(2).replace('.', ',') + ' €';
       
       const balance = ingresos - gastos;
       const balanceEl = document.getElementById('totalBalance');
@@ -2618,16 +2659,20 @@
     function updateSelectedCat1ForCat2(cat1) {
       selectedCat1ForCat2 = selectedCat1ForCat2 === cat1 ? null : cat1;
       selectedCat2ForTable = null; // limpiar selección Cat2 al cambiar Cat1
-      document.getElementById('btnLimpiarCat2').style.display = selectedCat1ForCat2 ? 'inline-flex' : 'none';
-      document.getElementById('btnLimpiarCat2Sel').style.display = 'none';
+      const btnCat1 = document.getElementById('btnLimpiarCat1');
+      if (btnCat1) btnCat1.style.display = selectedCat1ForCat2 ? 'inline-flex' : 'none';
+      const btnSel = document.getElementById('btnLimpiarCat2Sel');
+      if (btnSel) btnSel.style.display = 'none';
       renderAll(getTableFilterValues());
     }
 
     function resetCat2Filter() {
       selectedCat1ForCat2 = null;
       selectedCat2ForTable = null;
-      document.getElementById('btnLimpiarCat2').style.display = 'none';
-      document.getElementById('btnLimpiarCat2Sel').style.display = 'none';
+      const btnCat1 = document.getElementById('btnLimpiarCat1');
+      if (btnCat1) btnCat1.style.display = 'none';
+      const btnSel = document.getElementById('btnLimpiarCat2Sel');
+      if (btnSel) btnSel.style.display = 'none';
       renderAll(getTableFilterValues());
     }
 
@@ -2652,11 +2697,10 @@
       filteredData.forEach(m => {
         if (!m.revisado) return; // Solo movimientos revisados en gráficas
         const tipoGeneral = getTipoGeneralMovimiento(m);
+        if (tipoGeneral === 'no-computables') return;
+
         const cat1 = normalizarCat1(m.cat1);
         if (cat1 === 'Otros' || !m.cat1) return;
-
-        // Excluir no-computables en gráficos si estamos en vista 'todos'
-        if (currentView === 'todos' && tipoGeneral === 'no-computables') return;
 
         const cat2 = m.cat2 || 'Otros';
         const netVal = getNetCategoryValue(cat1, m.importe);
@@ -2667,12 +2711,12 @@
 
     function setChartView(view) {
       currentView = view;
-      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.view === view));
+      document.querySelectorAll('#chartViewTabs .tab-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.view === view));
       applyFilters();
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-      document.querySelectorAll('.tab-btn').forEach(btn => {
+      document.querySelectorAll('#chartViewTabs .tab-btn').forEach(btn => {
         btn.addEventListener('click', () => setChartView(btn.dataset.view));
       });
     });
@@ -2723,6 +2767,11 @@
         responsive: true,
         maintainAspectRatio: false,
         onClick: onClickCallback,
+        onHover: onClickCallback ? (event, chartElement) => {
+          if (event && event.native && event.native.target) {
+            event.native.target.style.cursor = chartElement && chartElement.length ? 'pointer' : 'default';
+          }
+        } : undefined,
         plugins: {
           legend: { display: false },
           tooltip: {
@@ -2747,6 +2796,7 @@
 
     function renderSummaryChart(summaryMap) {
       const container = document.getElementById('chartSummaryContainer');
+      const cardContainer = document.getElementById('cardGraficasTotales');
       if (barChartSummary) {
         barChartSummary.destroy();
       }
@@ -2756,9 +2806,11 @@
       const data = [summaryMap.ingresos, summaryMap.gastos, summaryMap.inversiones];
       
       if (data.every(v => v === 0)) {
-        container.style.display = 'none';
+        if (cardContainer) cardContainer.style.display = 'none';
+        else container.style.display = 'none';
         return;
       }
+      if (cardContainer) cardContainer.style.display = 'block';
       container.style.display = 'block';
 
       const colors = [
@@ -2780,7 +2832,20 @@
           labels,
           datasets: [{ label: 'Total (€)', data, backgroundColor: colors, borderRadius: 6 }]
         },
-        options: buildChartOptions()
+        options: buildChartOptions((evt) => {
+          const elements = barChartSummary.getElementsAtEventForMode(evt, 'index', { intersect: false }, true);
+          if (!elements.length) return;
+          const clickedLabel = labels[elements[0].index];
+          const viewMap = {
+            'Ingresos': 'ingresos',
+            'Gastos': 'gastos',
+            'Inversiones': 'inversiones'
+          };
+          const targetView = viewMap[clickedLabel];
+          if (targetView) {
+            setChartView(currentView === targetView ? 'todos' : targetView);
+          }
+        })
       });
     }
 
