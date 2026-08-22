@@ -729,8 +729,8 @@
           <input type="file" id="appendOpenBankFile" accept=".xls, .xlsx" style="display:none;">
         </div>
         <div id="groupCommonButtons" style="display: flex; gap: 0.75rem; flex-wrap: wrap; justify-content: center;">
-          <label class="btn" for="jsonFile" style="background-color: #ffeb3b; color: #0f172a; font-weight: 600;">📁 Importar BD (JSON/CSV)</label>
-          <input type="file" id="jsonFile" accept=".json,.csv">
+          <label class="btn" for="jsonFile" style="background-color: #ffeb3b; color: #0f172a; font-weight: 600;">📁 Importar BD (Excel/JSON/CSV)</label>
+          <input type="file" id="jsonFile" accept=".xlsx,.xls,.json,.csv,.zip">
           <button type="button" class="btn btn-secondary" onclick="openImportHistoryModal()">📜 Histórico Ficheros</button>
           <button class="btn btn-success" id="exportBtn" style="display:none;">📥 Exportar ZIP (Excel + CSV + JSON)</button>
           <button class="btn btn-warning" onclick="openCatModal()">🗂️ Categorías</button>
@@ -2009,7 +2009,7 @@
       });
     });
 
-    function processCsvResults(results, isAppend = false, bankConfig = {}, isFullReplace = false) {
+    function processCsvResults(results, isAppend = false, bankConfig = {}, isFullReplace = false, options = {}) {
       console.log('Procesando resultados CSV/Excel...', { isAppend, bankConfig, rowCount: results.data.length });
       const filaCabecera = encontrarCabecera(results.data);
       if (filaCabecera === -1) {
@@ -2136,15 +2136,16 @@
         openImportResultModal(newItems, []);
       }
 
-      registrarHistorialImportacion({
-        nombreArchivo: bankConfig.fileName || 'Archivo CSV/Excel',
-        origen: bankConfig.origen || defaultOrigen,
-        dueno: bankConfig.dueno || defaultDueno,
-        totalLeidos: results.data ? Math.max(0, results.data.length - (filaCabecera + 1)) : newItems.length + skippedItems.length,
-        nuevos: newItems.length,
-        duplicados: skippedItems.length,
-        movimientos: newItems
-      });
+      if (!options.skipHistoryRegistration) {
+        registrarHistorialImportacion({
+          nombreArchivo: bankConfig.fileName || 'Archivo CSV/Excel',
+          origen: bankConfig.origen || defaultOrigen,
+          dueno: bankConfig.dueno || defaultDueno,
+          totalLeidos: results.data ? Math.max(0, results.data.length - (filaCabecera + 1)) : newItems.length + skippedItems.length,
+          nuevos: newItems.length,
+          duplicados: skippedItems.length
+        });
+      }
 
       saveData();
       renderAll();
@@ -2243,30 +2244,22 @@
       return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
     }
 
-    function registrarHistorialImportacion({ nombreArchivo, origen, dueno, totalLeidos, nuevos, duplicados, movimientos }) {
+    function registrarHistorialImportacion({ nombreArchivo, origen, dueno, totalLeidos, nuevos, duplicados }) {
+      const ahora = new Date();
       const entrada = {
         id: 'imp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
-        fechaISO: new Date().toISOString(),
-        fechaFormateada: formatearFechaHora(new Date()),
+        fechaISO: ahora.toISOString(),
+        fechaFormateada: formatearFechaHora(ahora),
         nombreArchivo: nombreArchivo || 'Archivo',
         origen: origen || 'Varios',
         dueno: dueno || 'Familia',
-        totalLeidos: typeof totalLeidos === 'number' ? totalLeidos : 0,
-        nuevos: typeof nuevos === 'number' ? nuevos : (movimientos ? movimientos.length : 0),
-        duplicados: typeof duplicados === 'number' ? duplicados : 0,
-        movimientos: (movimientos || []).map(m => ({
-          fecha: m.fecha || '',
-          fechaAplicable: m.fechaAplicable || '',
-          concepto: m.concepto || '',
-          importe: typeof m.importe === 'number' ? m.importe : (Number(m.importe) || 0),
-          cat1: m.cat1 || '',
-          cat2: m.cat2 || '',
-          dueno: m.dueno || '',
-          origen: m.origen || ''
-        }))
+        totalLeidos: typeof totalLeidos === 'number' ? totalLeidos : ((nuevos || 0) + (duplicados || 0)),
+        nuevos: typeof nuevos === 'number' ? nuevos : 0,
+        duplicados: typeof duplicados === 'number' ? duplicados : 0
       };
       importHistory.unshift(entrada);
       guardarHistorialImportaciones();
+      return entrada;
     }
 
     function openImportHistoryModal() {
@@ -2344,7 +2337,7 @@
               <span style="color: ${item.duplicados > 0 ? 'var(--warning)' : 'var(--text-muted)'}; font-weight: 500;">${item.duplicados || 0}</span>
             </td>
             <td style="padding: 0.6rem 0.75rem; text-align: center; white-space: nowrap;">
-              <button type="button" class="btn btn-small btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.78rem; margin-right: 0.3rem;" onclick="openImportHistoryDetail('${item.id}')" title="Ver movimientos de este fichero">👁️ Ver</button>
+              ${(item.movimientos && item.movimientos.length > 0) ? `<button type="button" class="btn btn-small btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.78rem; margin-right: 0.3rem;" onclick="openImportHistoryDetail('${item.id}')" title="Ver movimientos de este fichero">👁️ Ver</button>` : ''}
               <button type="button" class="btn btn-small btn-danger" style="padding: 0.25rem 0.45rem; font-size: 0.78rem;" onclick="eliminarEntradaHistorial('${item.id}')" title="Eliminar este registro del histórico">🗑️</button>
             </td>
           </tr>
@@ -3497,7 +3490,7 @@
 
       const ts = timestampSuffix();
 
-      // 1. Preparar libro Excel (.xlsx) con pestañas "Movimientos" y "Últimos Movimientos"
+      // 1. Preparar libro Excel (.xlsx) con pestañas "Movimientos", "Últimos Movimientos" e "Historial Importaciones"
       let excelData = null;
       try {
         if (typeof XLSX !== 'undefined') {
@@ -3519,6 +3512,39 @@
             { wch: 15 }  // Último Importe
           ];
           XLSX.utils.book_append_sheet(wb, wsResumenBancos, 'Últimos Movimientos');
+
+          // Pestaña 3: Histórico de ficheros importados
+          const historyRows = (importHistory || []).map(h => ({
+            'Fecha Importación': h.fechaFormateada || h.fechaISO || '',
+            'Fecha ISO': h.fechaISO || '',
+            'Fichero': h.nombreArchivo || '',
+            'Cuenta / Banco': h.origen || '',
+            'Dueño': h.dueno || '',
+            'Movimientos Importados': typeof h.nuevos === 'number' ? h.nuevos : (Number(h.nuevos) || 0),
+            'Duplicados': typeof h.duplicados === 'number' ? h.duplicados : (Number(h.duplicados) || 0),
+            'Total Leídos': typeof h.totalLeidos === 'number' ? h.totalLeidos : (Number(h.totalLeidos) || 0)
+          }));
+          const wsHistorial = XLSX.utils.json_to_sheet(historyRows.length > 0 ? historyRows : [{
+            'Fecha Importación': '',
+            'Fecha ISO': '',
+            'Fichero': '',
+            'Cuenta / Banco': '',
+            'Dueño': '',
+            'Movimientos Importados': 0,
+            'Duplicados': 0,
+            'Total Leídos': 0
+          }]);
+          wsHistorial['!cols'] = [
+            { wch: 22 }, // Fecha Importación
+            { wch: 25 }, // Fecha ISO
+            { wch: 35 }, // Fichero
+            { wch: 18 }, // Cuenta / Banco
+            { wch: 15 }, // Dueño
+            { wch: 22 }, // Movimientos Importados
+            { wch: 15 }, // Duplicados
+            { wch: 15 }  // Total Leídos
+          ];
+          XLSX.utils.book_append_sheet(wb, wsHistorial, 'Historial Importaciones');
 
           excelData = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
         }
@@ -3543,7 +3569,18 @@
           zip.file(`Movimientos_Clasificados_${ts}.csv`, csvContent);
           zip.file(`finanzas_db_${ts}.json`, jsonContent);
           if (importHistory && importHistory.length > 0) {
-            zip.file(`historial_importaciones_${ts}.json`, JSON.stringify(importHistory, null, 2));
+            const cleanHistory = importHistory.map(h => ({
+              id: h.id,
+              fechaISO: h.fechaISO,
+              fechaFormateada: h.fechaFormateada,
+              nombreArchivo: h.nombreArchivo,
+              origen: h.origen,
+              dueno: h.dueno,
+              totalLeidos: h.totalLeidos,
+              nuevos: h.nuevos,
+              duplicados: h.duplicados
+            }));
+            zip.file(`historial_importaciones_${ts}.json`, JSON.stringify(cleanHistory, null, 2));
           }
 
           zip.generateAsync({ type: 'blob' }).then(zipBlob => {
@@ -3601,21 +3638,226 @@
       fallbackDescargasIndividuales();
     });
 
-    // Importar BD (JSON o CSV exportado)
+    // Importar BD (Excel, JSON o CSV exportado con movimientos e historial)
     document.getElementById('jsonFile').addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (!file) return;
 
-      if (file.name.toLowerCase().endsWith('.csv')) {
+      const fileNameLower = file.name.toLowerCase();
+
+      if (fileNameLower.endsWith('.xlsx') || fileNameLower.endsWith('.xls')) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          try {
+            const data = new Uint8Array(evt.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            
+            // 1. Buscar pestaña de Movimientos (o primera pestaña)
+            let sheetMovimientosName = workbook.SheetNames.find(n => n.toLowerCase().includes('movimiento')) || workbook.SheetNames[0];
+            const worksheetMovs = workbook.Sheets[sheetMovimientosName];
+            const movRows = XLSX.utils.sheet_to_json(worksheetMovs, { header: 1, raw: false });
+
+            // 2. Buscar pestaña de Historial de importaciones (tercera pestaña o por nombre)
+            let sheetHistorialName = workbook.SheetNames.find(n => 
+              n.toLowerCase().includes('historial') || 
+              n.toLowerCase().includes('histórico') || 
+              n.toLowerCase().includes('historico')
+            );
+            if (!sheetHistorialName && workbook.SheetNames.length >= 3) {
+              sheetHistorialName = workbook.SheetNames[2];
+            }
+
+            let importedHistoryCount = 0;
+            if (sheetHistorialName && workbook.Sheets[sheetHistorialName]) {
+              const worksheetHist = workbook.Sheets[sheetHistorialName];
+              const histRows = XLSX.utils.sheet_to_json(worksheetHist, { raw: false });
+              if (Array.isArray(histRows) && histRows.length > 0) {
+                const parsedHist = [];
+                histRows.forEach((r, idx) => {
+                  const fForm = String(r['Fecha Importación'] || r['Fecha y Hora'] || r['Fecha'] || r['fechaFormateada'] || '').trim();
+                  const fISO = String(r['Fecha ISO'] || r['fechaISO'] || '').trim();
+                  const nom = String(r['Fichero'] || r['Nombre Archivo'] || r['nombreArchivo'] || r['Archivo'] || '').trim();
+                  const orig = String(r['Cuenta / Banco'] || r['Cuenta'] || r['Banco'] || r['origen'] || '').trim();
+                  const due = String(r['Dueño'] || r['dueno'] || '').trim();
+                  const nuev = Number(r['Movimientos Importados'] || r['Movimientos Añadidos'] || r['nuevos'] || r['Movimientos'] || 0) || 0;
+                  const dupl = Number(r['Duplicados'] || r['duplicados'] || 0) || 0;
+                  const tot = Number(r['Total Leídos'] || r['totalLeidos'] || 0) || (nuev + dupl);
+
+                  if (nom || fForm || fISO || orig) {
+                    const finalISO = fISO || (formatFechaISO(fForm) ? formatFechaISO(fForm) + 'T00:00:00.000Z' : new Date().toISOString());
+                    parsedHist.push({
+                      id: 'imp_' + Date.now() + '_' + idx + '_' + Math.random().toString(36).substr(2, 5),
+                      fechaISO: finalISO,
+                      fechaFormateada: fForm || formatearFechaHora(new Date(finalISO)),
+                      nombreArchivo: nom || 'Archivo',
+                      origen: orig || 'Varios',
+                      dueno: due || 'Familia',
+                      totalLeidos: tot,
+                      nuevos: nuev,
+                      duplicados: dupl
+                    });
+                  }
+                });
+
+                if (parsedHist.length > 0) {
+                  importHistory = parsedHist;
+                  guardarHistorialImportaciones();
+                  importedHistoryCount = parsedHist.length;
+                }
+              }
+            }
+
+            // 3. Procesar movimientos y sustituir la base de datos
+            processCsvResults({ data: movRows }, false, { fileName: file.name, origen: 'Importación BD (Excel)' }, true, { skipHistoryRegistration: Boolean(importedHistoryCount > 0) });
+
+            let msg = "Base de datos importada correctamente desde Excel.";
+            if (importedHistoryCount > 0) {
+              msg = `Base de datos e historial importados correctamente desde Excel (${importedHistoryCount} registros de historial).`;
+            }
+            alert(msg);
+          } catch (errXls) {
+            console.error('Error importando BD desde Excel:', errXls);
+            alert("Error al leer el archivo Excel de Base de Datos.");
+          }
+          document.getElementById('jsonFile').value = '';
+        };
+        reader.readAsArrayBuffer(file);
+      } else if (fileNameLower.endsWith('.csv')) {
         Papa.parse(file, {
           encoding: "UTF-8",
           skipEmptyLines: 'greedy',
           complete: (results) => {
-            processCsvResults(results, false, { fileName: file.name, origen: 'Importación BD (CSV)' }, true); // isAppend=false, isFullReplace=true
+            processCsvResults(results, false, { fileName: file.name, origen: 'Importación BD (CSV)' }, true);
             document.getElementById('jsonFile').value = '';
           }
         });
+      } else if (fileNameLower.endsWith('.zip')) {
+        if (typeof JSZip !== 'undefined') {
+          const reader = new FileReader();
+          reader.onload = function(evt) {
+            JSZip.loadAsync(evt.target.result).then(zip => {
+              const excelFileEntry = Object.keys(zip.files).find(n => n.startsWith('Movimientos_Clasificados_') && n.endsWith('.xlsx'));
+              const jsonFileEntry = Object.keys(zip.files).find(n => n.startsWith('finanzas_db_') && n.endsWith('.json'));
+              const historyFileEntry = Object.keys(zip.files).find(n => n.startsWith('historial_importaciones_') && n.endsWith('.json'));
+
+              if (excelFileEntry) {
+                zip.files[excelFileEntry].async('uint8array').then(excelBytes => {
+                  try {
+                    const workbook = XLSX.read(excelBytes, { type: 'array' });
+                    let sheetMovimientosName = workbook.SheetNames.find(n => n.toLowerCase().includes('movimiento')) || workbook.SheetNames[0];
+                    const worksheetMovs = workbook.Sheets[sheetMovimientosName];
+                    const movRows = XLSX.utils.sheet_to_json(worksheetMovs, { header: 1, raw: false });
+
+                    let sheetHistorialName = workbook.SheetNames.find(n => 
+                      n.toLowerCase().includes('historial') || 
+                      n.toLowerCase().includes('histórico') || 
+                      n.toLowerCase().includes('historico')
+                    ) || (workbook.SheetNames.length >= 3 ? workbook.SheetNames[2] : null);
+
+                    let importedHistoryCount = 0;
+                    if (sheetHistorialName && workbook.Sheets[sheetHistorialName]) {
+                      const worksheetHist = workbook.Sheets[sheetHistorialName];
+                      const histRows = XLSX.utils.sheet_to_json(worksheetHist, { raw: false });
+                      if (Array.isArray(histRows) && histRows.length > 0) {
+                        const parsedHist = [];
+                        histRows.forEach((r, idx) => {
+                          const fForm = String(r['Fecha Importación'] || r['Fecha y Hora'] || r['Fecha'] || r['fechaFormateada'] || '').trim();
+                          const fISO = String(r['Fecha ISO'] || r['fechaISO'] || '').trim();
+                          const nom = String(r['Fichero'] || r['Nombre Archivo'] || r['nombreArchivo'] || r['Archivo'] || '').trim();
+                          const orig = String(r['Cuenta / Banco'] || r['Cuenta'] || r['Banco'] || r['origen'] || '').trim();
+                          const due = String(r['Dueño'] || r['dueno'] || '').trim();
+                          const nuev = Number(r['Movimientos Importados'] || r['Movimientos Añadidos'] || r['nuevos'] || r['Movimientos'] || 0) || 0;
+                          const dupl = Number(r['Duplicados'] || r['duplicados'] || 0) || 0;
+                          const tot = Number(r['Total Leídos'] || r['totalLeidos'] || 0) || (nuev + dupl);
+
+                          if (nom || fForm || fISO || orig) {
+                            const finalISO = fISO || (formatFechaISO(fForm) ? formatFechaISO(fForm) + 'T00:00:00.000Z' : new Date().toISOString());
+                            parsedHist.push({
+                              id: 'imp_' + Date.now() + '_' + idx + '_' + Math.random().toString(36).substr(2, 5),
+                              fechaISO: finalISO,
+                              fechaFormateada: fForm || formatearFechaHora(new Date(finalISO)),
+                              nombreArchivo: nom || 'Archivo',
+                              origen: orig || 'Varios',
+                              dueno: due || 'Familia',
+                              totalLeidos: tot,
+                              nuevos: nuev,
+                              duplicados: dupl
+                            });
+                          }
+                        });
+
+                        if (parsedHist.length > 0) {
+                          importHistory = parsedHist;
+                          guardarHistorialImportaciones();
+                          importedHistoryCount = parsedHist.length;
+                        }
+                      }
+                    }
+
+                    processCsvResults({ data: movRows }, false, { fileName: file.name, origen: 'Importación BD (ZIP/Excel)' }, true, { skipHistoryRegistration: true });
+                    alert("Base de datos e histórico importados correctamente desde ZIP.");
+                  } catch (e) {
+                    alert("Error al procesar el Excel dentro del ZIP.");
+                  }
+                });
+              } else if (jsonFileEntry) {
+                zip.files[jsonFileEntry].async('string').then(jsonText => {
+                  try {
+                    const importedData = JSON.parse(jsonText);
+                    if (Array.isArray(importedData)) {
+                      moveData = importedData;
+                      selectedMovIds.clear();
+                      moveData.forEach(m => {
+                        if (!m.dueno || m.dueno === 'Pluxee') m.dueno = 'Familia';
+                        if (!m.origen) m.origen = 'CaixaBank';
+                        if (typeof m.revisado === 'undefined') m.revisado = false;
+                        m.modificado = false;
+                      });
+                      saveData();
+
+                      if (historyFileEntry) {
+                        zip.files[historyFileEntry].async('string').then(histText => {
+                          try {
+                            const parsedH = JSON.parse(histText);
+                            if (Array.isArray(parsedH)) {
+                              importHistory = parsedH.map(h => ({
+                                id: h.id || ('imp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5)),
+                                fechaISO: h.fechaISO || new Date().toISOString(),
+                                fechaFormateada: h.fechaFormateada || formatearFechaHora(new Date()),
+                                nombreArchivo: h.nombreArchivo || 'Archivo',
+                                origen: h.origen || 'Varios',
+                                dueno: h.dueno || 'Familia',
+                                totalLeidos: typeof h.totalLeidos === 'number' ? h.totalLeidos : ((h.nuevos || 0) + (h.duplicados || 0)),
+                                nuevos: typeof h.nuevos === 'number' ? h.nuevos : 0,
+                                duplicados: typeof h.duplicados === 'number' ? h.duplicados : 0
+                              }));
+                              guardarHistorialImportaciones();
+                            }
+                          } catch(e){}
+                          renderAll();
+                          alert("Base de datos e histórico importados correctamente desde ZIP.");
+                        });
+                      } else {
+                        renderAll();
+                        alert("Base de datos importada correctamente desde ZIP.");
+                      }
+                    }
+                  } catch(e) {
+                    alert("Error al procesar el archivo ZIP.");
+                  }
+                });
+              } else {
+                alert("No se encontró base de datos en el archivo ZIP.");
+              }
+            }).catch(err => {
+              alert("Error al abrir el archivo ZIP.");
+            });
+            document.getElementById('jsonFile').value = '';
+          };
+          reader.readAsArrayBuffer(file);
+        }
       } else {
+        // JSON
         const reader = new FileReader();
         reader.onload = function(event) {
           try {
@@ -3623,30 +3865,43 @@
             if (Array.isArray(importedData)) {
               moveData = importedData;
               selectedMovIds.clear();
-              // Migración por si el JSON antiguo no tiene dueño
               moveData.forEach(m => { 
-                if (m.dueno) {
-                  if (!m.dueno) m.dueno = m.dueno;
-                  delete m.dueno;
-                }
                 if (!m.dueno || m.dueno === 'Pluxee') m.dueno = 'Familia'; 
                 if (!m.origen) m.origen = 'CaixaBank';
                 if (typeof m.revisado === 'undefined') m.revisado = false; 
-                // La importación de una base de datos reinicia el punto de referencia.
                 m.modificado = false;
               });
               saveData();
-              registrarHistorialImportacion({
-                nombreArchivo: file.name,
-                origen: 'BD JSON',
-                dueno: 'Varios',
-                totalLeidos: moveData.length,
-                nuevos: moveData.length,
-                duplicados: 0,
-                movimientos: moveData
-              });
               renderAll();
               alert("Base de datos importada correctamente.");
+            } else if (importedData && typeof importedData === 'object') {
+              if (Array.isArray(importedData.moveData)) {
+                moveData = importedData.moveData;
+                selectedMovIds.clear();
+                moveData.forEach(m => { 
+                  if (!m.dueno || m.dueno === 'Pluxee') m.dueno = 'Familia'; 
+                  if (!m.origen) m.origen = 'CaixaBank';
+                  if (typeof m.revisado === 'undefined') m.revisado = false; 
+                  m.modificado = false;
+                });
+                saveData();
+              }
+              if (Array.isArray(importedData.importHistory)) {
+                importHistory = importedData.importHistory.map(h => ({
+                  id: h.id || ('imp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5)),
+                  fechaISO: h.fechaISO || new Date().toISOString(),
+                  fechaFormateada: h.fechaFormateada || formatearFechaHora(new Date()),
+                  nombreArchivo: h.nombreArchivo || 'Archivo',
+                  origen: h.origen || 'Varios',
+                  dueno: h.dueno || 'Familia',
+                  totalLeidos: typeof h.totalLeidos === 'number' ? h.totalLeidos : ((h.nuevos || 0) + (h.duplicados || 0)),
+                  nuevos: typeof h.nuevos === 'number' ? h.nuevos : 0,
+                  duplicados: typeof h.duplicados === 'number' ? h.duplicados : 0
+                }));
+                guardarHistorialImportaciones();
+              }
+              renderAll();
+              alert("Base de datos e historial importados correctamente.");
             } else {
               alert("Formato de JSON inválido.");
             }
