@@ -14,7 +14,7 @@ A responsive Progressive Web App (PWA) optimized for both PC and mobile devices,
   - **Main Categories:** Compras, Alimentación, Vivienda, Seguros y Servicios, Transporte, Inversiones, Actividades y Ocio, Suscripciones, Ingresos, Transfer/Traspasos, Otros.
   - **Sub-categories:** E.g., Compras (Ropa, Electrónica, Otros), Transfer/Traspasos (Gastos, Ingresos, Entre cuentas).
 - **Interactive Reports:** Visual insights powered by Chart.js and detailed category breakdown tables.
-- **Advanced Export:** Export your classified movements to Excel (`.xlsx`) including original date, applicable date, categories, amounts, and notes.
+- **Advanced Export:** Export your classified movements in a single compressed ZIP package containing Excel (`.xlsx` with multiple sheets), CSV, and JSON database backup.
 
 ## 🛠 Tech Stack
 
@@ -24,6 +24,7 @@ A responsive Progressive Web App (PWA) optimized for both PC and mobile devices,
   - [Chart.js](https://www.chartjs.org/) - For interactive charts.
   - [PapaParse](https://www.papaparse.com/) - For robust CSV parsing.
   - [SheetJS (xlsx)](https://sheetjs.com/) - For Excel file generation.
+  - [JSZip](https://stuk.github.io/jszip/) - For zip archive packaging.
 - **Storage:** Browser `localStorage`.
 
 ## 🚀 Getting Started
@@ -63,3 +64,12 @@ This project is for personal use. TODO: Add a formal LICENSE file (e.g., MIT) if
 
 ---
 *Note: This project was originally developed in Spanish and the UI remains primarily in Spanish.*
+
+----
+Notas de los export de movimientos de cuentas:
+- Bankinter: desde la web, excel importable
+- Sabadell: desde la web, excel importable
+- CaixaBank: desde app movil, csv importable, con fecha en el name. (desde el web, excel no importable)
+- ING: desde la web, excel importable, con fecha en el name.
+- OpenBank: desde la web, excel importable, sin fecha en el name, depdende de codigo movil
+- Pluxee: desde la app movil, se envia al correo para descarga. Excel importable.

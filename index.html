@@ -29,6 +29,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 
   <style>
     :root {
@@ -100,6 +101,22 @@
       padding: 1.25rem;
       margin-bottom: 1.25rem;
       box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+      position: relative;
+    }
+
+    .card-filter-general {
+      position: relative;
+      z-index: 50;
+    }
+
+    .card-movements {
+      position: relative;
+      z-index: 10;
+    }
+
+    .card-calculos {
+      position: relative;
+      z-index: 5;
     }
 
     input[type="file"] { display: none; }
@@ -251,9 +268,11 @@
       gap: 1rem;
       flex: 0 1 auto;
       flex-wrap: wrap;
+      position: relative;
+      z-index: 60;
     }
 
-    .date-filters-group .filter-item { min-width: 160px; }
+    .date-filters-group .filter-item { min-width: 160px; position: relative; z-index: 60; }
     .filter-range-actions { min-width: 280px; }
     .quick-range-buttons { display: flex; gap: 0.5rem; }
     .filter-actions { 
@@ -334,6 +353,7 @@
       position: relative;
       display: flex;
       align-items: center;
+      z-index: 70;
     }
 
     .date-picker-btn {
@@ -354,12 +374,12 @@
       position: absolute;
       top: calc(100% + 6px);
       left: 0;
-      z-index: 200;
+      z-index: 9999;
       background: #1e293b;
-      border: 1px solid rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.18);
       border-radius: 14px;
       padding: 0.8rem;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.8);
       min-width: 280px;
     }
 
@@ -711,7 +731,8 @@
         <div id="groupCommonButtons" style="display: flex; gap: 0.75rem; flex-wrap: wrap; justify-content: center;">
           <label class="btn" for="jsonFile" style="background-color: #ffeb3b; color: #0f172a; font-weight: 600;">📁 Importar BD (JSON/CSV)</label>
           <input type="file" id="jsonFile" accept=".json,.csv">
-          <button class="btn btn-success" id="exportBtn" style="display:none;">📥 Exportar CSV + JSON</button>
+          <button type="button" class="btn btn-secondary" onclick="openImportHistoryModal()">📜 Histórico Ficheros</button>
+          <button class="btn btn-success" id="exportBtn" style="display:none;">📥 Exportar ZIP (Excel + CSV + JSON)</button>
           <button class="btn btn-warning" onclick="openCatModal()">🗂️ Categorías</button>
           <button class="btn btn-danger" id="clearBtn" style="display:none;">🧹 Limpiar</button>
         </div>
@@ -720,7 +741,7 @@
 
     <div id="dashboard" style="display:none;">
       <!-- 3. Filtro General -->
-      <div class="card">
+      <div class="card card-filter-general" id="cardFiltroGeneral">
         <div class="chart-header">
           <h2>🔍 Filtro General</h2>
         </div>
@@ -781,7 +802,7 @@
       </div>
 
       <!-- 4. Movimientos -->
-      <div class="card">
+      <div class="card card-movements" id="cardMovimientos">
         <div class="chart-header" style="flex-direction: column; align-items: flex-start; gap: 0.5rem;">
           <h2>📋 Movimientos (<span id="movCount">0</span>)</h2>
           <button type="button" class="btn btn-small btn-warning" style="margin-bottom: 0.5rem;" onclick="clearTableColumnFilters()">Limpiar</button>
@@ -827,6 +848,7 @@
             <div class="bulk-control-item" style="gap: 0.35rem;">
               <button type="button" class="btn btn-small btn-success" onclick="bulkSetRevisado(true)" title="Marcar seleccionados como revisados">✓ Revisado</button>
               <button type="button" class="btn btn-small btn-danger" onclick="bulkSetRevisado(false)" title="Marcar seleccionados como pendientes">✕ Pendiente</button>
+              <button type="button" class="btn btn-small btn-danger" style="background: rgba(239, 68, 68, 0.4); border-color: rgba(239, 68, 68, 0.7);" onclick="bulkEliminarMovimientos()" title="Eliminar seleccionados con confirmación">🗑️ Eliminar</button>
             </div>
           </div>
         </div>
@@ -847,6 +869,7 @@
                 <th style="min-width:100px; cursor:pointer;" onclick="setSort('origen')">Origen</th>
                 <th style="min-width:130px; cursor:pointer;" onclick="setSort('dueno')">Dueño</th>
                 <th style="min-width:150px; cursor:pointer;" onclick="setSort('masDatos')">Más datos</th>
+                <th style="min-width:48px; text-align:center;">Acc</th>
               </tr>
               <tr>
                 <th class="review-cell" style="text-align:center;">
@@ -895,6 +918,9 @@
                   </select>
                 </th>
                 <th><label for="tableFilterMasDatos" class="sr-only">Filtrar Más datos</label><input type="text" class="table-filter-input" id="tableFilterMasDatos" oninput="applyFilters()" placeholder="Filtrar"></th>
+                <th style="text-align:center;">
+                  <button type="button" onclick="clearTableColumnFilters()" title="Limpiar filtros de columna" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:0.8rem;">✕</button>
+                </th>
               </tr>
             </thead>
             <tbody id="movementsTable"></tbody>
@@ -994,6 +1020,73 @@
       <div id="importResultBody"></div>
       <div style="margin-top: 1.5rem; text-align: right;">
         <button class="btn" onclick="closeImportResultModal()">Aceptar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Histórico de Ficheros Importados -->
+  <div class="modal-overlay" id="importHistoryModal">
+    <div class="modal-content" style="max-width: 900px; width: 95%;">
+      <div class="modal-header">
+        <h2>📜 Histórico de Ficheros Importados</h2>
+        <button class="modal-close" onclick="closeImportHistoryModal()">✕</button>
+      </div>
+      
+      <div style="margin-bottom: 1.25rem;">
+        <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.8rem;">
+          Registro de todos los archivos importados por cuenta/banco con el resumen de movimientos procesados.
+        </p>
+        <div style="display: flex; gap: 0.75rem; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+          <div class="tab-group" id="historyOriginTabs">
+            <button type="button" class="tab-btn active" onclick="filtrarHistorialBanco('todos')">🌐 Todos</button>
+            <button type="button" class="tab-btn" onclick="filtrarHistorialBanco('CaixaBank')">🏦 CaixaBank</button>
+            <button type="button" class="tab-btn" onclick="filtrarHistorialBanco('Sabadell')">🏦 Sabadell</button>
+            <button type="button" class="tab-btn" onclick="filtrarHistorialBanco('ING')">🏦 ING</button>
+            <button type="button" class="tab-btn" onclick="filtrarHistorialBanco('Bankinter')">🏦 Bankinter</button>
+            <button type="button" class="tab-btn" onclick="filtrarHistorialBanco('OpenBank')">🏦 OpenBank</button>
+            <button type="button" class="tab-btn" onclick="filtrarHistorialBanco('Pluxee')">🍕 Pluxee</button>
+          </div>
+          <div style="display: flex; gap: 0.5rem;">
+            <button type="button" class="btn btn-small btn-secondary" onclick="exportarHistorialJSON()">📥 Exportar Historial</button>
+            <button type="button" class="btn btn-small btn-danger" onclick="vaciarHistorialImportaciones()">🧹 Vaciar Historial</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="importHistoryListContainer" style="max-height: 420px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; background: rgba(15,23,42,0.6);">
+        <!-- Generado dinámicamente -->
+      </div>
+
+      <div style="margin-top: 1.5rem; text-align: right;">
+        <button class="btn" onclick="closeImportHistoryModal()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Detalle Movimientos del Fichero Importado -->
+  <div class="modal-overlay" id="importHistoryDetailModal" style="z-index: 1100;">
+    <div class="modal-content" style="max-width: 800px; width: 95%;">
+      <div class="modal-header">
+        <h2 id="importHistoryDetailTitle">📄 Detalle del Fichero</h2>
+        <button class="modal-close" onclick="closeImportHistoryDetailModal()">✕</button>
+      </div>
+      <div id="importHistoryDetailSummary" style="font-size:0.88rem; color:var(--text-muted); margin-bottom:1rem;"></div>
+      <div style="max-height: 380px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; background: rgba(15,23,42,0.6);">
+        <table style="width:100%; font-size:0.83rem; border-collapse:collapse;">
+          <thead>
+            <tr style="background:#1e293b; position:sticky; top:0;">
+              <th style="padding:0.5rem; text-align:left;">Fecha</th>
+              <th style="padding:0.5rem; text-align:left;">Concepto</th>
+              <th style="padding:0.5rem; text-align:left;">Cat 1</th>
+              <th style="padding:0.5rem; text-align:left;">Cat 2</th>
+              <th style="padding:0.5rem; text-align:right;">Importe</th>
+            </tr>
+          </thead>
+          <tbody id="importHistoryDetailTbody"></tbody>
+        </table>
+      </div>
+      <div style="margin-top: 1.5rem; text-align: right;">
+        <button class="btn" onclick="closeImportHistoryDetailModal()">Cerrar</button>
       </div>
     </div>
   </div>
@@ -1376,6 +1469,17 @@
         .toLowerCase();
     }
 
+    function normalizarConceptoDeduplicacion(texto) {
+      if (!texto) return '';
+      let s = String(texto)
+        .replace(/[\u00A0\s]+/g, ' ')
+        .trim()
+        .toUpperCase();
+      s = s.replace(/,\s*(?:ESP|ES|E)\s*$/i, '');
+      s = s.replace(/[,.\s]+$/, '').trim();
+      return s;
+    }
+
     function normalizarBusqueda(valor) {
       return normalizarCabecera(valor).replace(/\s+/g, '');
     }
@@ -1439,7 +1543,8 @@
     function processPluxeeFile(file, isAppend = false) {
       const bankConfig = {
         dueno: 'Familia',
-        origen: 'Pluxee'
+        origen: 'Pluxee',
+        fileName: file.name
       };
 
       if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
@@ -1467,6 +1572,7 @@
       const bankConfig = {
         dueno: 'Familia',
         origen: 'Sabadell',
+        fileName: file.name,
         fecha: ['F. Operativa', 'f operativa', 'f.operativa'],
         concepto: ['Concepto'],
         importe: ['Importe']
@@ -1487,6 +1593,7 @@
       const bankConfig = {
         dueno: 'Belén',
         origen: 'Bankinter',
+        fileName: file.name,
         fecha: ['Fecha contable', 'Fecha valor', 'FECHA CONTABLE', 'FECHA VALOR'],
         concepto: ['Descripción', 'DESCRIPCIÓN', 'DESCRIPCION'],
         importe: ['Importe', 'IMPORTE']
@@ -1507,6 +1614,7 @@
       const bankConfig = {
         dueno: 'Familia',
         origen: 'OpenBank',
+        fileName: file.name,
         fecha: ['fecha operacion', 'fecha operación', 'fecha', 'operacion', 'operación', 'valor'],
         concepto: ['concepto', 'descripcion', 'descripción', 'movimiento'],
         importe: ['importe', 'cantidad']
@@ -1527,6 +1635,7 @@
       const bankConfig = {
         dueno: 'Jorge',
         origen: 'ING',
+        fileName: file.name,
         fecha: ['f. valor', 'f valor', 'fecha valor', 'fecha', 'f.valor'],
         concepto: ['descripcion', 'descripción', 'concepto', 'movimiento'],
         importe: ['importe', 'cantidad']
@@ -1837,6 +1946,7 @@
 
     window.addEventListener('DOMContentLoaded', async () => {
       await cargarCategorias();
+      cargarHistorialImportaciones();
       const cat1Select = document.getElementById('filterCat1');
       cat1Select.innerHTML = crearOpcionesCat1('todos', 'Todas');
       updateCat2FilterOptions();
@@ -1886,7 +1996,8 @@
       if (!file) return;
       const bankConfig = {
         dueno: 'Jorge',
-        origen: 'CaixaBank'
+        origen: 'CaixaBank',
+        fileName: file.name
       };
       Papa.parse(file, {
         encoding: "UTF-8",
@@ -1941,10 +2052,15 @@
       const defaultDueno = bankConfig.dueno || 'Familia';
       const defaultOrigen = bankConfig.origen || 'CaixaBank';
 
-      // Crear un set de "firmas" de movimientos existentes para búsqueda rápida
-      const existingSignatures = new Set(moveData.map(m => 
-        `${(m.fecha || '').trim()}|${(m.concepto || '').trim()}|${Number(m.importe).toFixed(2)}`
-      ));
+      // Crear un mapa de frecuencias de firmas de movimientos existentes para deduplicación precisa
+      const existingSignatureCounts = new Map();
+      moveData.forEach(m => {
+        const fISO = formatFechaISO(m.fecha) || formatFechaISO(m.fechaAplicable) || '';
+        const cNorm = normalizarConceptoDeduplicacion(m.concepto);
+        const iNorm = (typeof m.importe === 'number' ? m.importe : Number(m.importe) || 0).toFixed(2);
+        const sig = `${fISO}|${cNorm}|${iNorm}`;
+        existingSignatureCounts.set(sig, (existingSignatureCounts.get(sig) || 0) + 1);
+      });
 
       results.data.slice(filaCabecera + 1).forEach((row, idx) => {
         const concepto = String(row[indiceConcepto] || '').trim();
@@ -1957,8 +2073,12 @@
         if (isNaN(val)) return;
 
         if (isAppend) {
-          const signature = `${fecha}|${concepto}|${val.toFixed(2)}`;
-          if (existingSignatures.has(signature)) {
+          const fISO = formatFechaISO(fecha);
+          const cNorm = normalizarConceptoDeduplicacion(concepto);
+          const signature = `${fISO}|${cNorm}|${val.toFixed(2)}`;
+          const count = existingSignatureCounts.get(signature) || 0;
+          if (count > 0) {
+            existingSignatureCounts.set(signature, count - 1);
             skippedItems.push({
               fecha: fecha,
               concepto: concepto,
@@ -2015,6 +2135,16 @@
         moveData = moveData.filter(m => m.origen !== defaultOrigen).concat(newItems);
         openImportResultModal(newItems, []);
       }
+
+      registrarHistorialImportacion({
+        nombreArchivo: bankConfig.fileName || 'Archivo CSV/Excel',
+        origen: bankConfig.origen || defaultOrigen,
+        dueno: bankConfig.dueno || defaultDueno,
+        totalLeidos: results.data ? Math.max(0, results.data.length - (filaCabecera + 1)) : newItems.length + skippedItems.length,
+        nuevos: newItems.length,
+        duplicados: skippedItems.length,
+        movimientos: newItems
+      });
 
       saveData();
       renderAll();
@@ -2078,6 +2208,274 @@
 
     function closeImportResultModal() {
       document.getElementById('importResultModal').style.display = 'none';
+    }
+
+    // --- GESTIÓN DEL HISTÓRICO DE FICHEROS IMPORTADOS ---
+    let importHistory = [];
+    let currentHistoryFilterOrigin = 'todos';
+
+    function cargarHistorialImportaciones() {
+      try {
+        const data = localStorage.getItem('finanzas_pwa_import_history');
+        if (data) {
+          importHistory = JSON.parse(data);
+          if (!Array.isArray(importHistory)) importHistory = [];
+        } else {
+          importHistory = [];
+        }
+      } catch (e) {
+        console.error('Error cargando historial de importaciones:', e);
+        importHistory = [];
+      }
+    }
+
+    function guardarHistorialImportaciones() {
+      try {
+        localStorage.setItem('finanzas_pwa_import_history', JSON.stringify(importHistory));
+      } catch (e) {
+        console.error('Error guardando historial de importaciones:', e);
+      }
+    }
+
+    function formatearFechaHora(d) {
+      if (!(d instanceof Date)) d = new Date(d);
+      const pad = n => String(n).padStart(2, '0');
+      return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    }
+
+    function registrarHistorialImportacion({ nombreArchivo, origen, dueno, totalLeidos, nuevos, duplicados, movimientos }) {
+      const entrada = {
+        id: 'imp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+        fechaISO: new Date().toISOString(),
+        fechaFormateada: formatearFechaHora(new Date()),
+        nombreArchivo: nombreArchivo || 'Archivo',
+        origen: origen || 'Varios',
+        dueno: dueno || 'Familia',
+        totalLeidos: typeof totalLeidos === 'number' ? totalLeidos : 0,
+        nuevos: typeof nuevos === 'number' ? nuevos : (movimientos ? movimientos.length : 0),
+        duplicados: typeof duplicados === 'number' ? duplicados : 0,
+        movimientos: (movimientos || []).map(m => ({
+          fecha: m.fecha || '',
+          fechaAplicable: m.fechaAplicable || '',
+          concepto: m.concepto || '',
+          importe: typeof m.importe === 'number' ? m.importe : (Number(m.importe) || 0),
+          cat1: m.cat1 || '',
+          cat2: m.cat2 || '',
+          dueno: m.dueno || '',
+          origen: m.origen || ''
+        }))
+      };
+      importHistory.unshift(entrada);
+      guardarHistorialImportaciones();
+    }
+
+    function openImportHistoryModal() {
+      renderImportHistoryTable();
+      document.getElementById('importHistoryModal').style.display = 'flex';
+    }
+
+    function closeImportHistoryModal() {
+      document.getElementById('importHistoryModal').style.display = 'none';
+    }
+
+    function filtrarHistorialBanco(origen) {
+      currentHistoryFilterOrigin = origen;
+      const tabs = document.querySelectorAll('#historyOriginTabs .tab-btn');
+      tabs.forEach(btn => {
+        const text = btn.textContent.toLowerCase();
+        if ((origen === 'todos' && text.includes('todos')) || text.includes(origen.toLowerCase())) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+      renderImportHistoryTable();
+    }
+
+    function renderImportHistoryTable() {
+      const container = document.getElementById('importHistoryListContainer');
+      if (!container) return;
+
+      const filtered = currentHistoryFilterOrigin === 'todos' 
+        ? importHistory 
+        : importHistory.filter(h => (h.origen || '').toLowerCase() === currentHistoryFilterOrigin.toLowerCase());
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div style="padding: 2.5rem 1rem; text-align: center; color: var(--text-muted);">
+            <span style="font-size: 2rem; display: block; margin-bottom: 0.5rem;">📂</span>
+            <p style="margin: 0;">No hay registros de importación para el filtro seleccionado.</p>
+          </div>
+        `;
+        return;
+      }
+
+      let html = `
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+          <thead>
+            <tr style="background: #1e293b; position: sticky; top: 0; z-index: 5;">
+              <th style="padding: 0.6rem 0.75rem; text-align: left;">Fecha y Hora</th>
+              <th style="padding: 0.6rem 0.75rem; text-align: left;">Fichero</th>
+              <th style="padding: 0.6rem 0.75rem; text-align: left;">Cuenta / Banco</th>
+              <th style="padding: 0.6rem 0.75rem; text-align: left;">Dueño</th>
+              <th style="padding: 0.6rem 0.75rem; text-align: center;">Movs. Añadidos</th>
+              <th style="padding: 0.6rem 0.75rem; text-align: center;">Duplicados</th>
+              <th style="padding: 0.6rem 0.75rem; text-align: center;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      filtered.forEach(item => {
+        html += `
+          <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+            <td style="padding: 0.6rem 0.75rem; white-space: nowrap; color: var(--text-muted); font-size: 0.8rem;">${escaparHtml(item.fechaFormateada || item.fechaISO || '-')}</td>
+            <td style="padding: 0.6rem 0.75rem; font-weight: 500;">
+              <span style="word-break: break-all;">📄 ${escaparHtml(item.nombreArchivo || 'Archivo')}</span>
+            </td>
+            <td style="padding: 0.6rem 0.75rem;">
+              <span class="badge" style="background: rgba(59,130,246,0.15); color: #93c5fd; padding: 0.2rem 0.5rem; border-radius: 6px; font-size: 0.78rem;">${escaparHtml(item.origen || '-')}</span>
+            </td>
+            <td style="padding: 0.6rem 0.75rem; color: var(--text-muted); font-size: 0.82rem;">${escaparHtml(item.dueno || '-')}</td>
+            <td style="padding: 0.6rem 0.75rem; text-align: center;">
+              <span style="color: var(--success); font-weight: 600;">+${item.nuevos || 0}</span>
+            </td>
+            <td style="padding: 0.6rem 0.75rem; text-align: center;">
+              <span style="color: ${item.duplicados > 0 ? 'var(--warning)' : 'var(--text-muted)'}; font-weight: 500;">${item.duplicados || 0}</span>
+            </td>
+            <td style="padding: 0.6rem 0.75rem; text-align: center; white-space: nowrap;">
+              <button type="button" class="btn btn-small btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.78rem; margin-right: 0.3rem;" onclick="openImportHistoryDetail('${item.id}')" title="Ver movimientos de este fichero">👁️ Ver</button>
+              <button type="button" class="btn btn-small btn-danger" style="padding: 0.25rem 0.45rem; font-size: 0.78rem;" onclick="eliminarEntradaHistorial('${item.id}')" title="Eliminar este registro del histórico">🗑️</button>
+            </td>
+          </tr>
+        `;
+      });
+
+      html += `</tbody></table>`;
+      container.innerHTML = html;
+    }
+
+    function openImportHistoryDetail(historyId) {
+      const item = importHistory.find(h => h.id === historyId);
+      if (!item) return;
+
+      document.getElementById('importHistoryDetailTitle').innerText = `📄 ${item.nombreArchivo || 'Fichero importado'}`;
+      document.getElementById('importHistoryDetailSummary').innerHTML = `
+        <strong>Cuenta / Origen:</strong> ${escaparHtml(item.origen || '-')} | 
+        <strong>Fecha:</strong> ${escaparHtml(item.fechaFormateada || item.fechaISO || '-')} | 
+        <strong>Movimientos añadidos:</strong> <span style="color:var(--success); font-weight:600;">${item.movimientos ? item.movimientos.length : (item.nuevos || 0)}</span>
+      `;
+
+      const tbody = document.getElementById('importHistoryDetailTbody');
+      tbody.innerHTML = '';
+
+      if (!item.movimientos || item.movimientos.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:1.5rem; color:var(--text-muted);">No hay detalle de movimientos registrado para este archivo.</td></tr>`;
+      } else {
+        item.movimientos.forEach(m => {
+          const tr = document.createElement('tr');
+          tr.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
+          const imp = typeof m.importe === 'number' ? m.importe : (Number(m.importe) || 0);
+          const impStr = (imp > 0 ? '+' : '') + imp.toFixed(2).replace('.', ',') + ' €';
+          const impClass = imp >= 0 ? 'amount-pos' : 'amount-neg';
+          tr.innerHTML = `
+            <td style="padding:0.4rem 0.5rem; white-space:nowrap; color:var(--text-muted);">${escaparHtml(m.fechaAplicable || m.fecha || '-')}</td>
+            <td style="padding:0.4rem 0.5rem;">${escaparHtml(m.concepto || '-')}</td>
+            <td style="padding:0.4rem 0.5rem; font-size:0.8rem; color:var(--text-muted);">${escaparHtml(m.cat1 || '-')}</td>
+            <td style="padding:0.4rem 0.5rem; font-size:0.8rem; color:var(--text-muted);">${escaparHtml(m.cat2 || '-')}</td>
+            <td style="padding:0.4rem 0.5rem; text-align:right; white-space:nowrap; font-weight:600;" class="${impClass}">${impStr}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      document.getElementById('importHistoryDetailModal').style.display = 'flex';
+    }
+
+    function closeImportHistoryDetailModal() {
+      document.getElementById('importHistoryDetailModal').style.display = 'none';
+    }
+
+    function eliminarEntradaHistorial(historyId) {
+      const item = importHistory.find(h => h.id === historyId);
+      if (!item) return;
+      if (confirm(`¿Eliminar del histórico el registro de "${item.nombreArchivo}"?\n\n(Nota: Los movimientos ya cargados en la base de datos no se borrarán).`)) {
+        importHistory = importHistory.filter(h => h.id !== historyId);
+        guardarHistorialImportaciones();
+        renderImportHistoryTable();
+      }
+    }
+
+    function vaciarHistorialImportaciones() {
+      if (importHistory.length === 0) {
+        alert('El historial ya está vacío.');
+        return;
+      }
+      if (confirm('¿Estás seguro de que deseas vaciar todo el histórico de ficheros importados?\n\n(Nota: Los movimientos cargados en la base de datos no se borrarán).')) {
+        importHistory = [];
+        guardarHistorialImportaciones();
+        renderImportHistoryTable();
+      }
+    }
+
+    function exportarHistorialJSON() {
+      if (importHistory.length === 0) {
+        alert('No hay registros en el historial para exportar.');
+        return;
+      }
+      const ts = timestampSuffix();
+      const jsonStr = JSON.stringify(importHistory, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `historial_ficheros_importados_${ts}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    // --- ELIMINACIÓN DE MOVIMIENTOS ---
+    function eliminarMovimiento(id) {
+      const item = moveData.find(m => m.id === id);
+      if (!item) return;
+
+      const importeFormateado = (item.importe > 0 ? '+' : '') + Number(item.importe).toFixed(2).replace('.', ',') + ' €';
+      const fechaMostrar = item.fechaAplicable || item.fecha || '';
+      const mensaje = `¿Seguro que deseas eliminar este movimiento?\n\n📅 Fecha: ${fechaMostrar}\n📝 Concepto: ${item.concepto}\n💰 Importe: ${importeFormateado}\n🏦 Origen: ${item.origen || '-'}\n👤 Dueño: ${item.dueno || '-'}`;
+
+      if (confirm(mensaje)) {
+        moveData = moveData.filter(m => m.id !== id);
+        selectedMovIds.delete(id);
+        saveData();
+        if (moveData.length === 0) {
+          document.getElementById('dashboard').style.display = 'none';
+          document.getElementById('exportBtn').style.display = 'none';
+          document.getElementById('clearBtn').style.display = 'none';
+        } else {
+          renderAll(getTableFilterValues());
+        }
+      }
+    }
+
+    function bulkEliminarMovimientos() {
+      if (selectedMovIds.size === 0) return;
+      const count = selectedMovIds.size;
+      const mensaje = `¿Seguro que deseas eliminar los ${count} movimientos seleccionados?\n\nEsta acción eliminará permanentemente los movimientos marcados.`;
+
+      if (confirm(mensaje)) {
+        moveData = moveData.filter(m => !selectedMovIds.has(m.id));
+        selectedMovIds.clear();
+        saveData();
+        if (moveData.length === 0) {
+          document.getElementById('dashboard').style.display = 'none';
+          document.getElementById('exportBtn').style.display = 'none';
+          document.getElementById('clearBtn').style.display = 'none';
+        } else {
+          renderAll(getTableFilterValues());
+        }
+      }
     }
 
     function saveData() {
@@ -3027,11 +3425,56 @@
             </select>
           </td>
           <td style="color: var(--text-muted); font-size: 0.85em;">${escaparHtml(m.masDatos || '')}</td>
+          <td style="text-align:center; vertical-align:middle; white-space:nowrap;">
+            <button type="button" class="btn btn-small btn-danger" style="padding:0.25rem 0.45rem; font-size:0.75rem; border-radius:6px;" onclick="eliminarMovimiento('${m.id}')" title="Eliminar este movimiento">🗑️</button>
+          </td>
         `;
         tbody.appendChild(tr);
       });
 
       updateBulkActionBar();
+    }
+
+    function obtenerResumenUltimosMovimientosPorBanco(data) {
+      if (!Array.isArray(data) || data.length === 0) return [];
+
+      const grupos = {};
+      data.forEach(m => {
+        const origen = (m && m.origen) ? String(m.origen).trim() : 'CaixaBank';
+        if (!grupos[origen]) {
+          grupos[origen] = [];
+        }
+        grupos[origen].push(m);
+      });
+
+      return Object.keys(grupos).sort().map(origen => {
+        const movs = grupos[origen];
+        const sortedMovs = movs.slice().sort((a, b) => {
+          const fechaA = formatFechaISO(a.fecha) || formatFechaISO(a.fechaAplicable) || '';
+          const fechaB = formatFechaISO(b.fecha) || formatFechaISO(b.fechaAplicable) || '';
+          return fechaB.localeCompare(fechaA);
+        });
+
+        const ultimo = sortedMovs[0] || {};
+        const fechaUltimoISO = formatFechaISO(ultimo.fecha) || formatFechaISO(ultimo.fechaAplicable) || '';
+
+        let fechaLegible = ultimo.fecha || '';
+        if (fechaUltimoISO && fechaUltimoISO.includes('-')) {
+          const p = fechaUltimoISO.split('-');
+          if (p.length === 3 && p[0].length === 4) {
+            fechaLegible = `${p[2]}/${p[1]}/${p[0]}`;
+          }
+        }
+
+        return {
+          'Banco / Cuenta': origen,
+          'Fecha Último Movimiento': fechaLegible,
+          'Fecha ISO': fechaUltimoISO,
+          'Total Movimientos': movs.length,
+          'Último Concepto': ultimo.concepto || '',
+          'Último Importe': typeof ultimo.importe === 'number' ? ultimo.importe : (Number(ultimo.importe) || 0)
+        };
+      });
     }
 
     document.getElementById('exportBtn').addEventListener('click', () => {
@@ -3052,25 +3495,110 @@
         'Modificado': m.modificado ? 'Si' : 'No'
       }));
 
-      const csvContent = Papa.unparse(rows);
-      // Añadir BOM para que Excel reconozca UTF-8
-      const csvBlob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
-      const csvUrl = URL.createObjectURL(csvBlob);
-      const csvLink = document.createElement('a');
-      csvLink.href = csvUrl;
-      csvLink.download = `Movimientos_Clasificados_${timestampSuffix()}.csv`;
-      document.body.appendChild(csvLink);
-      csvLink.click();
-      document.body.removeChild(csvLink);
-      URL.revokeObjectURL(csvUrl);
+      const ts = timestampSuffix();
 
-      const jsonDataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(moveData, null, 2));
-      const jsonLink = document.createElement('a');
-      jsonLink.href = jsonDataStr;
-      jsonLink.download = `finanzas_db_${timestampSuffix()}.json`;
-      document.body.appendChild(jsonLink);
-      jsonLink.click();
-      document.body.removeChild(jsonLink);
+      // 1. Preparar libro Excel (.xlsx) con pestañas "Movimientos" y "Últimos Movimientos"
+      let excelData = null;
+      try {
+        if (typeof XLSX !== 'undefined') {
+          const wb = XLSX.utils.book_new();
+
+          // Pestaña 1: Movimientos
+          const wsMovimientos = XLSX.utils.json_to_sheet(rows);
+          XLSX.utils.book_append_sheet(wb, wsMovimientos, 'Movimientos');
+
+          // Pestaña 2: Fecha del último movimiento de cada banco/cuenta
+          const bankSummaryRows = obtenerResumenUltimosMovimientosPorBanco(moveData);
+          const wsResumenBancos = XLSX.utils.json_to_sheet(bankSummaryRows);
+          wsResumenBancos['!cols'] = [
+            { wch: 18 }, // Banco / Cuenta
+            { wch: 25 }, // Fecha Último Movimiento
+            { wch: 15 }, // Fecha ISO
+            { wch: 18 }, // Total Movimientos
+            { wch: 35 }, // Último Concepto
+            { wch: 15 }  // Último Importe
+          ];
+          XLSX.utils.book_append_sheet(wb, wsResumenBancos, 'Últimos Movimientos');
+
+          excelData = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        }
+      } catch (errXlsx) {
+        console.error('Error generando datos de Excel (XLSX):', errXlsx);
+      }
+
+      // 2. Preparar CSV con BOM UTF-8
+      const csvContent = "\uFEFF" + Papa.unparse(rows);
+
+      // 3. Preparar JSON de base de datos
+      const jsonContent = JSON.stringify(moveData, null, 2);
+
+      // Empaquetar en un único archivo ZIP si JSZip está disponible
+      if (typeof JSZip !== 'undefined') {
+        try {
+          const zip = new JSZip();
+
+          if (excelData) {
+            zip.file(`Movimientos_Clasificados_${ts}.xlsx`, excelData);
+          }
+          zip.file(`Movimientos_Clasificados_${ts}.csv`, csvContent);
+          zip.file(`finanzas_db_${ts}.json`, jsonContent);
+          if (importHistory && importHistory.length > 0) {
+            zip.file(`historial_importaciones_${ts}.json`, JSON.stringify(importHistory, null, 2));
+          }
+
+          zip.generateAsync({ type: 'blob' }).then(zipBlob => {
+            const zipUrl = URL.createObjectURL(zipBlob);
+            const zipLink = document.createElement('a');
+            zipLink.href = zipUrl;
+            zipLink.download = `Export_Finanzas_${ts}.zip`;
+            document.body.appendChild(zipLink);
+            zipLink.click();
+            document.body.removeChild(zipLink);
+            URL.revokeObjectURL(zipUrl);
+          }).catch(errZip => {
+            console.error('Error generando archivo ZIP:', errZip);
+            fallbackDescargasIndividuales();
+          });
+          return;
+        } catch (errZipSync) {
+          console.error('Error al inicializar JSZip:', errZipSync);
+        }
+      }
+
+      // Fallback: Descargas individuales si JSZip no está disponible
+      function fallbackDescargasIndividuales() {
+        if (excelData && typeof XLSX !== 'undefined') {
+          const excelBlob = new Blob([excelData], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+          const excelUrl = URL.createObjectURL(excelBlob);
+          const excelLink = document.createElement('a');
+          excelLink.href = excelUrl;
+          excelLink.download = `Movimientos_Clasificados_${ts}.xlsx`;
+          document.body.appendChild(excelLink);
+          excelLink.click();
+          document.body.removeChild(excelLink);
+          URL.revokeObjectURL(excelUrl);
+        }
+
+        const csvBlob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const csvUrl = URL.createObjectURL(csvBlob);
+        const csvLink = document.createElement('a');
+        csvLink.href = csvUrl;
+        csvLink.download = `Movimientos_Clasificados_${ts}.csv`;
+        document.body.appendChild(csvLink);
+        csvLink.click();
+        document.body.removeChild(csvLink);
+        URL.revokeObjectURL(csvUrl);
+
+        const jsonDataStr = "data:text/json;charset=utf-8," + encodeURIComponent(jsonContent);
+        const jsonLink = document.createElement('a');
+        jsonLink.href = jsonDataStr;
+        jsonLink.download = `finanzas_db_${ts}.json`;
+        document.body.appendChild(jsonLink);
+        jsonLink.click();
+        document.body.removeChild(jsonLink);
+      }
+
+      fallbackDescargasIndividuales();
     });
 
     // Importar BD (JSON o CSV exportado)
@@ -3083,7 +3611,7 @@
           encoding: "UTF-8",
           skipEmptyLines: 'greedy',
           complete: (results) => {
-            processCsvResults(results, false, {}, true); // isAppend=false, isFullReplace=true
+            processCsvResults(results, false, { fileName: file.name, origen: 'Importación BD (CSV)' }, true); // isAppend=false, isFullReplace=true
             document.getElementById('jsonFile').value = '';
           }
         });
@@ -3108,6 +3636,15 @@
                 m.modificado = false;
               });
               saveData();
+              registrarHistorialImportacion({
+                nombreArchivo: file.name,
+                origen: 'BD JSON',
+                dueno: 'Varios',
+                totalLeidos: moveData.length,
+                nuevos: moveData.length,
+                duplicados: 0,
+                movimientos: moveData
+              });
               renderAll();
               alert("Base de datos importada correctamente.");
             } else {
