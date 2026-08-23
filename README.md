@@ -1,4 +1,4 @@
-# Expense and Personal Finance Manager (Gestor de Gastos)
+# Expense and Personal Finance Manager (Gestor de Gastos) `v1.0.0`
 
 A responsive Progressive Web App (PWA) optimized for both PC and mobile devices, designed for easy hosting on GitHub Pages. This tool helps you track expenses, categorize movements, and visualize your financial health with complete privacy—all data stays in your browser.
 
@@ -69,7 +69,7 @@ This project is for personal use. TODO: Add a formal LICENSE file (e.g., MIT) if
 Notas de los export de movimientos de cuentas:
 - Bankinter: desde la web, excel importable
 - Sabadell: desde la web, excel importable
-- CaixaBank: desde app movil, csv importable, con fecha en el name. (desde el web, excel no importable)
 - ING: desde la web, excel importable, con fecha en el name.
 - OpenBank: desde la web, excel importable, sin fecha en el name, depdende de codigo movil
+- CaixaBank: desde app movil, csv importable, con fecha en el name. (desde el web, excel no importable)
 - Pluxee: desde la app movil, se envia al correo para descarga. Excel importable.
