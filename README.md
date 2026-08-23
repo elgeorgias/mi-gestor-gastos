@@ -47,13 +47,15 @@ A responsive Progressive Web App (PWA) optimized for both PC and mobile devices,
 ## 📂 Project Structure
 
 - `index.html`: The main entry point containing the UI, CSS styles, and application logic.
+- `CHANGELOG.md`: Record of all notable changes and version releases.
 - `categorias/`: Configuration files for the categorization engine.
   - `estructura_categorias.json`: Current active category structure.
 - `exports-app/`: (Symlinked/Local) Recommended directory for saving your exported CSV/Excel files and database backups.
 - `manifest.json` (inline): Basic PWA configuration for "Add to Home Screen" support.
 
 ## 📝 Scripts & Development
-- **Testing:** No automated testing framework currently implemented. TODO: Add unit tests for categorization logic.
+- **Changelog:** All updates, new features, and fixes are tracked in [CHANGELOG.md](CHANGELOG.md) following Keep a Changelog conventions.
+- **Testing:** Unit tests for data structures and parsing can be run with Python or JavaScriptCore / Node.js.
 - **Builds:** No build process required (Static HTML/JS).
 
 ## 🔐 Environment Variables
