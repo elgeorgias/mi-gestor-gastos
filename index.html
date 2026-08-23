@@ -101,6 +101,23 @@
       letter-spacing: 0.03em;
     }
 
+    .filter-indicator-badge {
+      display: inline-flex;
+      align-items: center;
+      background: rgba(239, 68, 68, 0.18);
+      border: 1px solid rgba(239, 68, 68, 0.45);
+      color: #ef4444;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.15rem 0.55rem;
+      border-radius: 9999px;
+      vertical-align: middle;
+      -webkit-text-fill-color: #ef4444;
+      letter-spacing: 0.03em;
+      margin-left: 0.5rem;
+      text-transform: none;
+    }
+
     .header p {
       color: var(--text-muted);
       margin: 0;
@@ -700,7 +717,7 @@
     <!-- 1. Cuentas -->
     <div class="card">
       <div class="chart-header">
-        <h2>🏦 Cuentas</h2>
+        <h2>🏦 Cuentas <span class="filter-indicator-badge" id="indicatorFilterCuentas" style="display:none;">(Filtrando)</span></h2>
       </div>
       <div class="main-tabs-bar" style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
         <button type="button" class="tab-btn main-tab active" data-tab="todas" onclick="switchMainTab('todas')">🌐 Todas</button>
@@ -758,7 +775,7 @@
       <!-- 3. Filtro General -->
       <div class="card card-filter-general" id="cardFiltroGeneral">
         <div class="chart-header">
-          <h2>🔍 Filtro General</h2>
+          <h2>🔍 Filtro General <span class="filter-indicator-badge" id="indicatorFilterGeneral" style="display:none;">(Filtrando)</span></h2>
         </div>
         <div class="filters-bar" style="margin-bottom: 0; background: transparent; padding: 0; border: none;">
           <!-- Bloque de Fechas -->
@@ -819,7 +836,7 @@
       <!-- 4. Movimientos -->
       <div class="card card-movements" id="cardMovimientos">
         <div class="chart-header" style="flex-direction: column; align-items: flex-start; gap: 0.5rem;">
-          <h2>📋 Movimientos (<span id="movCount">0</span>)</h2>
+          <h2>📋 Movimientos (<span id="movCount">0</span>) <span class="filter-indicator-badge" id="indicatorFilterMovimientos" style="display:none;">(Filtrando)</span></h2>
           <button type="button" class="btn btn-small btn-warning" style="margin-bottom: 0.5rem;" onclick="clearTableColumnFilters()">Limpiar</button>
           <div class="table-actions" style="width: 100%; justify-content: space-between;">
             <div class="tab-group" id="chartViewTabs">
@@ -960,7 +977,7 @@
       <!-- 6. Gráficas Totales -->
       <div class="card" id="cardGraficasTotales">
         <div class="chart-header">
-          <h2>📊 Gráficas Totales</h2>
+          <h2>📊 Gráficas Totales <span class="filter-indicator-badge" id="indicatorFilterGraficasTotales" style="display:none;">(Filtrando)</span></h2>
         </div>
         <div id="chartSummaryContainer"></div>
         <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.75rem;">
@@ -971,12 +988,12 @@
       <!-- 7. Gráficos -->
       <div class="card" id="cardGraficos">
         <div class="chart-header">
-          <h2>📊 Gráficos</h2>
+          <h2>📊 Gráficos <span class="filter-indicator-badge" id="indicatorFilterGraficos" style="display:none;">(Filtrando)</span></h2>
         </div>
         <div class="dashboard-grid">
           <div class="card" style="background: rgba(15, 23, 42, 0.4); margin-bottom: 0;">
             <div class="chart-header">
-              <h2>🏷️ Totales por Categoría (Cat1)</h2>
+              <h2>🏷️ Totales por Categoría (Cat1) <span class="filter-indicator-badge" id="indicatorFilterCat1" style="display:none;">(Filtrando)</span></h2>
               <button type="button" class="btn btn-small btn-warning" id="btnLimpiarCat1" style="display:none;" onclick="resetCat2Filter()">Limpiar Cat1</button>
             </div>
             <div id="chartCat1Container">
@@ -989,7 +1006,7 @@
 
           <div class="card" style="background: rgba(15, 23, 42, 0.4); margin-bottom: 0;">
             <div class="chart-header">
-              <h2 id="cat2ChartTitle">🏷️ Totales por Subcategoría (Cat2)</h2>
+              <h2 id="cat2ChartTitle"><span id="cat2ChartTitleText">🏷️ Totales por Subcategoría (Cat2)</span> <span class="filter-indicator-badge" id="indicatorFilterCat2" style="display:none;">(Filtrando)</span></h2>
               <div style="display:flex; gap:0.5rem;">
                 <button type="button" class="btn btn-small btn-warning" id="btnLimpiarCat2Sel" style="display:none;" onclick="clearCat2Selection()">Limpiar Cat2</button>
               </div>
@@ -1967,6 +1984,7 @@
       cat1Select.innerHTML = crearOpcionesCat1('todos', 'Todas');
       updateCat2FilterOptions();
       syncTableFilterOptions();
+      updateFilterIndicators();
       const saved = localStorage.getItem('finanzas_pwa_data_v4'); // V4 por la migración de Dueño
       if (saved) {
         try {
@@ -2673,6 +2691,7 @@
         document.getElementById('exportBtn').style.display = 'none';
         document.getElementById('clearBtn').style.display = 'none';
         document.getElementById('jsonFile').value = '';
+        updateFilterIndicators();
       }
     });
 
@@ -2757,7 +2776,73 @@
 
       if (moveData.length > 0) {
         renderAll(getTableFilterValues());
+      } else {
+        updateFilterIndicators();
       }
+    }
+
+    function isGeneralFilterActive() {
+      if (!appliedFilters) return false;
+      return Boolean(
+        (appliedFilters.desde && appliedFilters.desde.trim() !== '') ||
+        (appliedFilters.hasta && appliedFilters.hasta.trim() !== '') ||
+        (appliedFilters.cat1 && appliedFilters.cat1 !== 'todos') ||
+        (appliedFilters.cat2 && appliedFilters.cat2 !== 'todos') ||
+        (appliedFilters.tipo && appliedFilters.tipo !== 'todos') ||
+        (appliedFilters.dueno && appliedFilters.dueno !== 'todos') ||
+        (appliedFilters.estado && appliedFilters.estado !== 'todos')
+      );
+    }
+
+    function isTableColumnFilterActive() {
+      const elIds = [
+        'tableFilterFecha', 'tableFilterConcepto', 'tableFilterMasDatos',
+        'tableFilterOrigen', 'tableFilterDueno', 'tableFilterEstado',
+        'tableFilterModificado', 'tableFilterCat1', 'tableFilterCat2',
+        'tableFilterImporte', 'tableFilterNotas'
+      ];
+      return elIds.some(id => {
+        const el = document.getElementById(id);
+        return el && el.value && el.value.trim() !== '';
+      });
+    }
+
+    function updateFilterIndicators() {
+      // 1. Cuentas: pestaña seleccionada distinta de 'todas'
+      const isCuentasFiltered = (typeof currentMainTab !== 'undefined' && currentMainTab !== 'todas');
+      const indCuentas = document.getElementById('indicatorFilterCuentas');
+      if (indCuentas) indCuentas.style.display = isCuentasFiltered ? 'inline-flex' : 'none';
+
+      // 2. Filtro General
+      const isGenFiltered = isGeneralFilterActive();
+      const indGeneral = document.getElementById('indicatorFilterGeneral');
+      if (indGeneral) indGeneral.style.display = isGenFiltered ? 'inline-flex' : 'none';
+
+      // 3. Movimientos (afectado por pestañas de vista, filtros de columna o selección interactiva en gráficas)
+      const isViewFiltered = (typeof currentView !== 'undefined' && currentView !== 'todos');
+      const isTableFiltered = isTableColumnFilterActive();
+      const isChartSelectionActive = Boolean(selectedCat1ForCat2 || selectedCat2ForTable);
+      const isMovsFiltered = isViewFiltered || isTableFiltered || isChartSelectionActive;
+      const indMovs = document.getElementById('indicatorFilterMovimientos');
+      if (indMovs) indMovs.style.display = isMovsFiltered ? 'inline-flex' : 'none';
+
+      // 4. Gráficas Totales
+      const indGraficasTotales = document.getElementById('indicatorFilterGraficasTotales');
+      if (indGraficasTotales) indGraficasTotales.style.display = isViewFiltered ? 'inline-flex' : 'none';
+
+      // 5. Gráficos (panel principal)
+      const indGraficos = document.getElementById('indicatorFilterGraficos');
+      if (indGraficos) indGraficos.style.display = isChartSelectionActive ? 'inline-flex' : 'none';
+
+      // 6. Totales por Categoría (Cat1)
+      const isCat1Filtered = Boolean(selectedCat1ForCat2);
+      const indCat1 = document.getElementById('indicatorFilterCat1');
+      if (indCat1) indCat1.style.display = isCat1Filtered ? 'inline-flex' : 'none';
+
+      // 7. Totales por Subcategoría (Cat2)
+      const isCat2Filtered = Boolean(selectedCat2ForTable || selectedCat1ForCat2);
+      const indCat2 = document.getElementById('indicatorFilterCat2');
+      if (indCat2) indCat2.style.display = isCat2Filtered ? 'inline-flex' : 'none';
     }
 
     function getCurrentFilterValues() {
@@ -3006,6 +3091,7 @@
       // Tabla
       renderMovementsTable(filteredData);
       syncTableFilterOptions();
+      updateFilterIndicators();
     }
 
     function getNetCategoryValue(cat1, importe) {
@@ -3313,7 +3399,13 @@
         })
         .sort((a,b) => b.value - a.value);
 
-      document.getElementById('cat2ChartTitle').innerText = selectedCat1 ? `🏷️ Totales Cat2 de ${selectedCat1}` : '🏷️ Totales por Subcategoría (Cat2)';
+      const titleTextEl = document.getElementById('cat2ChartTitleText');
+      if (titleTextEl) {
+        titleTextEl.innerText = selectedCat1 ? `🏷️ Totales Cat2 de ${selectedCat1}` : '🏷️ Totales por Subcategoría (Cat2)';
+      } else {
+        const titleEl = document.getElementById('cat2ChartTitle');
+        if (titleEl) titleEl.innerText = selectedCat1 ? `🏷️ Totales Cat2 de ${selectedCat1}` : '🏷️ Totales por Subcategoría (Cat2)';
+      }
       if (!filtered.length) return;
 
       const blocks = splitIntoBlocks(filtered, MAX_BARS);
