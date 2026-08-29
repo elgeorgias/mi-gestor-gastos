@@ -1502,6 +1502,18 @@
         .toLowerCase();
     }
 
+    function leerCampoFlexible(fila, nombres) {
+      const claves = Object.keys(fila || {});
+      for (let i = 0; i < nombres.length; i++) {
+        const objetivo = normalizarCabecera(nombres[i]);
+        const clave = claves.find(k => normalizarCabecera(k) === objetivo);
+        if (clave !== undefined && fila[clave] !== undefined && fila[clave] !== null && String(fila[clave]).trim() !== '') {
+          return fila[clave];
+        }
+      }
+      return '';
+    }
+
     function normalizarConceptoDeduplicacion(texto) {
       if (!texto) return '';
       let s = String(texto)
@@ -3563,12 +3575,12 @@
         }
 
         return {
-          'Banco / Cuenta': origen,
-          'Fecha Último Movimiento': fechaLegible,
-          'Fecha ISO': fechaUltimoISO,
-          'Total Movimientos': movs.length,
-          'Último Concepto': ultimo.concepto || '',
-          'Último Importe': typeof ultimo.importe === 'number' ? ultimo.importe : (Number(ultimo.importe) || 0)
+          banco: origen,
+          fechaUltimoMovimiento: fechaLegible,
+          fechaISO: fechaUltimoISO,
+          totalMovimientos: movs.length,
+          ultimoConcepto: ultimo.concepto || '',
+          ultimoImporte: typeof ultimo.importe === 'number' ? ultimo.importe : (Number(ultimo.importe) || 0)
         };
       });
     }
@@ -3605,7 +3617,11 @@
 
           // Pestaña 2: Fecha del último movimiento de cada banco/cuenta
           const bankSummaryRows = obtenerResumenUltimosMovimientosPorBanco(moveData);
-          const wsResumenBancos = XLSX.utils.json_to_sheet(bankSummaryRows);
+          const bankSummaryAoa = [
+            ['Banco / Cuenta', 'Fecha Último Movimiento', 'Fecha ISO', 'Total Movimientos', 'Último Concepto', 'Último Importe'],
+            ...bankSummaryRows.map(r => [r.banco, r.fechaUltimoMovimiento, r.fechaISO, r.totalMovimientos, r.ultimoConcepto, r.ultimoImporte])
+          ];
+          const wsResumenBancos = XLSX.utils.aoa_to_sheet(bankSummaryAoa);
           wsResumenBancos['!cols'] = [
             { wch: 18 }, // Banco / Cuenta
             { wch: 25 }, // Fecha Último Movimiento
@@ -3617,26 +3633,25 @@
           XLSX.utils.book_append_sheet(wb, wsResumenBancos, 'Últimos Movimientos');
 
           // Pestaña 3: Histórico de ficheros importados
-          const historyRows = (importHistory || []).map(h => ({
-            'Fecha Importación': h.fechaFormateada || h.fechaISO || '',
-            'Fecha ISO': h.fechaISO || '',
-            'Fichero': h.nombreArchivo || '',
-            'Cuenta / Banco': h.origen || '',
-            'Dueño': h.dueno || '',
-            'Movimientos Importados': typeof h.nuevos === 'number' ? h.nuevos : (Number(h.nuevos) || 0),
-            'Duplicados': typeof h.duplicados === 'number' ? h.duplicados : (Number(h.duplicados) || 0),
-            'Total Leídos': typeof h.totalLeidos === 'number' ? h.totalLeidos : (Number(h.totalLeidos) || 0)
-          }));
-          const wsHistorial = XLSX.utils.json_to_sheet(historyRows.length > 0 ? historyRows : [{
-            'Fecha Importación': '',
-            'Fecha ISO': '',
-            'Fichero': '',
-            'Cuenta / Banco': '',
-            'Dueño': '',
-            'Movimientos Importados': 0,
-            'Duplicados': 0,
-            'Total Leídos': 0
-          }]);
+          const historyAoa = [
+            ['Fecha Importación', 'Fecha ISO', 'Fichero', 'Cuenta / Banco', 'Dueño', 'Movimientos Importados', 'Duplicados', 'Total Leídos']
+          ];
+          (importHistory || []).forEach(h => {
+            historyAoa.push([
+              h.fechaFormateada || h.fechaISO || '',
+              h.fechaISO || '',
+              h.nombreArchivo || '',
+              h.origen || '',
+              h.dueno || '',
+              typeof h.nuevos === 'number' ? h.nuevos : (Number(h.nuevos) || 0),
+              typeof h.duplicados === 'number' ? h.duplicados : (Number(h.duplicados) || 0),
+              typeof h.totalLeidos === 'number' ? h.totalLeidos : (Number(h.totalLeidos) || 0)
+            ]);
+          });
+          if (historyAoa.length === 1) {
+            historyAoa.push(['', '', '', '', '', 0, 0, 0]);
+          }
+          const wsHistorial = XLSX.utils.aoa_to_sheet(historyAoa);
           wsHistorial['!cols'] = [
             { wch: 22 }, // Fecha Importación
             { wch: 25 }, // Fecha ISO
@@ -3803,14 +3818,14 @@
               if (Array.isArray(histRows) && histRows.length > 0) {
                 const parsedHist = [];
                 histRows.forEach((r, idx) => {
-                  const fForm = String(r['Fecha Importación'] || r['Fecha y Hora'] || r['Fecha'] || r['fechaFormateada'] || '').trim();
-                  const fISO = String(r['Fecha ISO'] || r['fechaISO'] || '').trim();
-                  const nom = String(r['Fichero'] || r['Nombre Archivo'] || r['nombreArchivo'] || r['Archivo'] || '').trim();
-                  const orig = String(r['Cuenta / Banco'] || r['Cuenta'] || r['Banco'] || r['origen'] || '').trim();
-                  const due = String(r['Dueño'] || r['dueno'] || '').trim();
-                  const nuev = Number(r['Movimientos Importados'] || r['Movimientos Añadidos'] || r['nuevos'] || r['Movimientos'] || 0) || 0;
-                  const dupl = Number(r['Duplicados'] || r['duplicados'] || 0) || 0;
-                  const tot = Number(r['Total Leídos'] || r['totalLeidos'] || 0) || (nuev + dupl);
+                  const fForm = String(leerCampoFlexible(r, ['Fecha Importacion', 'Fecha y Hora', 'Fecha', 'fechaFormateada']) || '').trim();
+                  const fISO = String(leerCampoFlexible(r, ['Fecha ISO', 'fechaISO']) || '').trim();
+                  const nom = String(leerCampoFlexible(r, ['Fichero', 'Nombre Archivo', 'nombreArchivo', 'Archivo']) || '').trim();
+                  const orig = String(leerCampoFlexible(r, ['Cuenta / Banco', 'Cuenta', 'Banco', 'origen']) || '').trim();
+                  const due = String(leerCampoFlexible(r, ['Dueno']) || '').trim();
+                  const nuev = Number(leerCampoFlexible(r, ['Movimientos Importados', 'Movimientos Anadidos', 'nuevos', 'Movimientos']) || 0) || 0;
+                  const dupl = Number(leerCampoFlexible(r, ['Duplicados', 'duplicados']) || 0) || 0;
+                  const tot = Number(leerCampoFlexible(r, ['Total Leidos', 'totalLeidos']) || 0) || (nuev + dupl);
 
                   if (nom || fForm || fISO || orig) {
                     const finalISO = fISO || (formatFechaISO(fForm) ? formatFechaISO(fForm) + 'T00:00:00.000Z' : new Date().toISOString());
@@ -3890,14 +3905,14 @@
                       if (Array.isArray(histRows) && histRows.length > 0) {
                         const parsedHist = [];
                         histRows.forEach((r, idx) => {
-                          const fForm = String(r['Fecha Importación'] || r['Fecha y Hora'] || r['Fecha'] || r['fechaFormateada'] || '').trim();
-                          const fISO = String(r['Fecha ISO'] || r['fechaISO'] || '').trim();
-                          const nom = String(r['Fichero'] || r['Nombre Archivo'] || r['nombreArchivo'] || r['Archivo'] || '').trim();
-                          const orig = String(r['Cuenta / Banco'] || r['Cuenta'] || r['Banco'] || r['origen'] || '').trim();
-                          const due = String(r['Dueño'] || r['dueno'] || '').trim();
-                          const nuev = Number(r['Movimientos Importados'] || r['Movimientos Añadidos'] || r['nuevos'] || r['Movimientos'] || 0) || 0;
-                          const dupl = Number(r['Duplicados'] || r['duplicados'] || 0) || 0;
-                          const tot = Number(r['Total Leídos'] || r['totalLeidos'] || 0) || (nuev + dupl);
+                          const fForm = String(leerCampoFlexible(r, ['Fecha Importacion', 'Fecha y Hora', 'Fecha', 'fechaFormateada']) || '').trim();
+                          const fISO = String(leerCampoFlexible(r, ['Fecha ISO', 'fechaISO']) || '').trim();
+                          const nom = String(leerCampoFlexible(r, ['Fichero', 'Nombre Archivo', 'nombreArchivo', 'Archivo']) || '').trim();
+                          const orig = String(leerCampoFlexible(r, ['Cuenta / Banco', 'Cuenta', 'Banco', 'origen']) || '').trim();
+                          const due = String(leerCampoFlexible(r, ['Dueno']) || '').trim();
+                          const nuev = Number(leerCampoFlexible(r, ['Movimientos Importados', 'Movimientos Anadidos', 'nuevos', 'Movimientos']) || 0) || 0;
+                          const dupl = Number(leerCampoFlexible(r, ['Duplicados', 'duplicados']) || 0) || 0;
+                          const tot = Number(leerCampoFlexible(r, ['Total Leidos', 'totalLeidos']) || 0) || (nuev + dupl);
 
                           if (nom || fForm || fISO || orig) {
                             const finalISO = fISO || (formatFechaISO(fForm) ? formatFechaISO(fForm) + 'T00:00:00.000Z' : new Date().toISOString());
