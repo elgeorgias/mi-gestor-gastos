@@ -1035,6 +1035,10 @@
         <div class="btn-group" style="justify-content: flex-start;">
           <button class="btn btn-success" onclick="addCat1()">+ Categoría Principal</button>
           <button class="btn" style="background: #8b5cf6;" onclick="exportarCategorias()">📥 Exportar Estructura (JSON)</button>
+          <label class="btn" style="background: #eab308; cursor: pointer;">
+            📤 Importar Estructura (JSON)
+            <input type="file" id="importCatFile" style="display: none;" accept=".json" onchange="importarCategorias(this)">
+          </label>
         </div>
       </div>
 
@@ -1351,6 +1355,27 @@
       document.body.appendChild(downloadAnchorNode);
       downloadAnchorNode.click();
       downloadAnchorNode.remove();
+    }
+
+    function importarCategorias(input) {
+      const file = input.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const json = JSON.parse(e.target.result);
+          if (confirm("¿Estás seguro de que quieres importar esta estructura de categorías? Esto sobrescribirá la actual.")) {
+            CATEGORIAS_ESTRUCTURA = normalizarCategorias(json);
+            guardarCategorias();
+            alert("Categorías importadas correctamente.");
+            input.value = '';
+          }
+        } catch (err) {
+          alert("Error al importar el archivo JSON. Asegúrate de que es un archivo válido.");
+        }
+      };
+      reader.readAsText(file);
     }
 
 
