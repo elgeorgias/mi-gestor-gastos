@@ -1197,6 +1197,20 @@
     let CAT1_LISTA = [];
 
     async function cargarCategorias() {
+      const guardadas = localStorage.getItem('finanzas_pwa_categorias');
+      if (guardadas) {
+        try {
+          const parsed = JSON.parse(guardadas);
+          if (parsed && typeof parsed === 'object' && Object.keys(parsed).length > 0) {
+            CATEGORIAS_ESTRUCTURA = normalizarCategorias(parsed);
+            CAT1_LISTA = Object.keys(CATEGORIAS_ESTRUCTURA);
+            return;
+          }
+        } catch (e) {
+          console.error("Error leyendo categorías de localStorage:", e);
+        }
+      }
+
       try {
         const response = await fetch('categorias/estructura_categorias.json');
         if (response.ok) {
@@ -1208,10 +1222,10 @@
         }
       } catch (e) {}
 
-      const guardadas = localStorage.getItem('finanzas_pwa_categorias');
-      const baseCategorias = guardadas ? JSON.parse(guardadas) : JSON.parse(JSON.stringify(DEFAULT_CATEGORIAS));
+      const baseCategorias = JSON.parse(JSON.stringify(DEFAULT_CATEGORIAS));
       CATEGORIAS_ESTRUCTURA = normalizarCategorias(baseCategorias);
       CAT1_LISTA = Object.keys(CATEGORIAS_ESTRUCTURA);
+      localStorage.setItem('finanzas_pwa_categorias', JSON.stringify(CATEGORIAS_ESTRUCTURA));
     }
     
     function guardarCategorias() {
@@ -1236,7 +1250,7 @@
       const tipo = getTipoGeneralFromCat1(cat1);
       if (tipo === 'ingresos') return 'Ingresos';
       if (tipo === 'inversiones') return 'Inversiones';
-      if (tipo === 'no-computables') return 'Transferencias';
+      if (tipo === 'transferencias' || tipo === 'no-computables') return 'Transferencias';
       return 'Gastos';
     }
 
@@ -1469,9 +1483,10 @@
       if (cat1 === 'Ingresos') return 'ingresos';
       if (cat1 === 'Inversiones y Ahorro') return 'inversiones';
       if (cat1 === 'Transfer') {
-        if (cat2 === 'Gastos') return 'gastos';
+        if (cat2 === 'Entre cuentas' || cat2 === 'Propias') return 'no-computables';
         if (cat2 === 'Ingresos') return 'ingresos';
-        return 'no-computables';
+        if (cat2 === 'Gastos') return 'gastos';
+        return (mov.importe && mov.importe > 0) ? 'ingresos' : 'gastos';
       }
       if (cat1 === 'Otros' && cat2 === 'NA') {
         return 'no-computables';
@@ -2029,9 +2044,9 @@
             ...m,
             dueno: (!m.dueno || m.dueno === 'Pluxee') ? 'Familia' : m.dueno,
             cat1: normalizarCat1(m.cat1),
-            cat2: m.cat1 === 'Transfer' || m.cat1 === 'Transfer/Traspasos'
-              ? getDefaultCat2('Transfer')
-              : (m.cat2 || ''),
+            cat2: (m.cat2 && String(m.cat2).trim())
+              ? (m.cat2 === 'Propias' ? 'Entre cuentas' : m.cat2)
+              : (normalizarCat1(m.cat1) === 'Transfer' ? getDefaultCat2('Transfer') : (m.cat2 || '')),
             revisado: typeof m.revisado === 'boolean' ? m.revisado : false,
             // Los movimientos ya existentes se toman como referencia inicial.
             modificado: typeof m.modificado === 'boolean' ? m.modificado : false,
@@ -3086,7 +3101,7 @@
       filteredData.forEach(m => {
         const cat1Normalizada = normalizarCat1(m.cat1);
         const tipoGeneral = getTipoGeneralMovimiento(m);
-        const netVal = getNetCategoryValue(cat1Normalizada, m.importe);
+        const netVal = getNetCategoryValue(cat1Normalizada, m.importe, tipoGeneral);
 
         // Las gráficas únicamente computan movimientos revisados y computables (excluye no-computables)
         if (m.revisado && tipoGeneral !== 'no-computables') {
@@ -3131,7 +3146,11 @@
       updateFilterIndicators();
     }
 
-    function getNetCategoryValue(cat1, importe) {
+    function getNetCategoryValue(cat1, importe, tipoGeneral) {
+      if (tipoGeneral) {
+        if (tipoGeneral === 'ingresos') return importe;
+        return -importe;
+      }
       const type = getTipoGeneralFromCat1(cat1);
       if (type === 'ingresos') return importe;
       return -importe;
@@ -3151,7 +3170,7 @@
       const normalized = normalizarCat1(cat1);
       if (normalized === 'Ingresos') return 'ingresos';
       if (normalized === 'Inversiones y Ahorro') return 'inversiones';
-      if (normalized === 'Transfer') return 'no-computables';
+      if (normalized === 'Transfer') return 'transferencias';
       return 'gastos';
     }
 
@@ -3160,6 +3179,7 @@
       if (tipo === 'gastos') return '#f97316';
       if (tipo === 'no-computables') return '#94a3b8';
       if (tipo === 'inversiones') return '#60a5fa';
+      if (tipo === 'transferencias' || tipo === 'transfer') return '#8b5cf6';
       return '#8b5cf6';
     }
 
@@ -3170,7 +3190,7 @@
     function getBarColorForCat2(cat1, index, total) {
       const type = getTipoGeneralFromCat1(cat1);
       const base = getTypeBaseColor(type);
-      if (type === 'gastos') {
+      if (type === 'gastos' || type === 'transferencias') {
         const [h,s] = hexToHsl(base);
         const newL = Math.min(80, Math.max(40, 70 - (index / Math.max(total - 1, 1)) * 25));
         return `hsl(${h.toFixed(1)},${s.toFixed(1)}%,${newL.toFixed(1)}%)`;
@@ -3228,7 +3248,7 @@
 
         const cat1 = normalizarCat1(m.cat1);
         const cat2 = m.cat2 || 'Otros';
-        const netVal = getNetCategoryValue(cat1, m.importe);
+        const netVal = getNetCategoryValue(cat1, m.importe, tipoGeneral);
         totals[`${cat1}|${cat2}`] = (totals[`${cat1}|${cat2}`] || 0) + netVal;
       });
       renderCat2BarChart(totals, selectedCat1ForCat2);
@@ -3689,13 +3709,32 @@
           ];
           XLSX.utils.book_append_sheet(wb, wsHistorial, 'Historial Importaciones');
 
-          // Pestaña 4: Información de la Aplicación y Versión
+          // Pestaña 4: Categorías
+          const catRows = [];
+          Object.entries(CATEGORIAS_ESTRUCTURA).forEach(([cat1, subcats]) => {
+            if (Array.isArray(subcats) && subcats.length > 0) {
+              subcats.forEach(cat2 => {
+                catRows.push({ 'Categoría 1': cat1, 'Categoría 2': cat2 });
+              });
+            } else {
+              catRows.push({ 'Categoría 1': cat1, 'Categoría 2': '' });
+            }
+          });
+          const wsCategorias = XLSX.utils.json_to_sheet(catRows);
+          wsCategorias['!cols'] = [
+            { wch: 25 }, // Categoría 1
+            { wch: 30 }  // Categoría 2
+          ];
+          XLSX.utils.book_append_sheet(wb, wsCategorias, 'Categorías');
+
+          // Pestaña 5: Información de la Aplicación y Versión
           const appInfoRows = [
             { 'Propiedad': 'Aplicación', 'Valor': 'GG (Gestor Gastos)' },
             { 'Propiedad': 'Versión App', 'Valor': APP_VERSION },
             { 'Propiedad': 'Fecha Exportación', 'Valor': formatearFechaHora(new Date()) },
             { 'Propiedad': 'Fecha ISO', 'Valor': new Date().toISOString() },
             { 'Propiedad': 'Total Movimientos', 'Valor': moveData.length },
+            { 'Propiedad': 'Total Categorías', 'Valor': Object.keys(CATEGORIAS_ESTRUCTURA).length },
             { 'Propiedad': 'Total Archivos en Historial', 'Valor': (importHistory || []).length }
           ];
           const wsInfo = XLSX.utils.json_to_sheet(appInfoRows);
@@ -3727,6 +3766,8 @@
           }
           zip.file(`Movimientos_Clasificados_${ts}.csv`, csvContent);
           zip.file(`finanzas_db_${ts}.json`, jsonContent);
+          zip.file(`categorias_${ts}.json`, JSON.stringify(CATEGORIAS_ESTRUCTURA, null, 2));
+          zip.file(`estructura_categorias.json`, JSON.stringify(CATEGORIAS_ESTRUCTURA, null, 2));
           if (importHistory && importHistory.length > 0) {
             const cleanHistory = importHistory.map(h => ({
               id: h.id,
@@ -3748,6 +3789,7 @@
             fechaExportacionISO: new Date().toISOString(),
             fechaExportacionFormateada: formatearFechaHora(new Date()),
             totalMovimientos: moveData.length,
+            totalCategorias: Object.keys(CATEGORIAS_ESTRUCTURA).length,
             totalArchivosHistorial: (importHistory || []).length
           };
           zip.file(`info_app_${ts}.json`, JSON.stringify(infoAppJson, null, 2));
@@ -3802,6 +3844,14 @@
         document.body.appendChild(jsonLink);
         jsonLink.click();
         document.body.removeChild(jsonLink);
+
+        const catDataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(CATEGORIAS_ESTRUCTURA, null, 2));
+        const catLink = document.createElement('a');
+        catLink.href = catDataStr;
+        catLink.download = `categorias_${ts}.json`;
+        document.body.appendChild(catLink);
+        catLink.click();
+        document.body.removeChild(catLink);
       }
 
       fallbackDescargasIndividuales();
@@ -3876,12 +3926,45 @@
               }
             }
 
-            // 3. Procesar movimientos y sustituir la base de datos
+            // 3. Buscar pestaña de Categorías
+            let sheetCategoriasName = workbook.SheetNames.find(n => 
+              n.toLowerCase().includes('categoria') || 
+              n.toLowerCase().includes('categoría')
+            );
+            let importedCategoriesCount = 0;
+            if (sheetCategoriasName && workbook.Sheets[sheetCategoriasName]) {
+              const worksheetCats = workbook.Sheets[sheetCategoriasName];
+              const catSheetRows = XLSX.utils.sheet_to_json(worksheetCats, { raw: false });
+              if (Array.isArray(catSheetRows) && catSheetRows.length > 0) {
+                const parsedCats = {};
+                catSheetRows.forEach(r => {
+                  const c1 = String(leerCampoFlexible(r, ['Categoría 1', 'Categoria 1', 'Cat1', 'categoria1', 'Categoria']) || '').trim();
+                  const c2 = String(leerCampoFlexible(r, ['Categoría 2', 'Categoria 2', 'Cat2', 'categoria2', 'Subcategoria', 'Subcategoría']) || '').trim();
+                  if (c1) {
+                    const c1Norm = normalizarCat1(c1);
+                    if (!parsedCats[c1Norm]) parsedCats[c1Norm] = [];
+                    if (c2 && !parsedCats[c1Norm].includes(c2)) {
+                      parsedCats[c1Norm].push(c2);
+                    }
+                  }
+                });
+                if (Object.keys(parsedCats).length > 0) {
+                  CATEGORIAS_ESTRUCTURA = normalizarCategorias(parsedCats);
+                  guardarCategorias();
+                  importedCategoriesCount = Object.keys(CATEGORIAS_ESTRUCTURA).length;
+                }
+              }
+            }
+
+            // 4. Procesar movimientos y sustituir la base de datos
             processCsvResults({ data: movRows }, false, { fileName: file.name, origen: 'Importación BD (Excel)' }, true, { skipHistoryRegistration: Boolean(importedHistoryCount > 0) });
 
             let msg = "Base de datos importada correctamente desde Excel.";
-            if (importedHistoryCount > 0) {
-              msg = `Base de datos e historial importados correctamente desde Excel (${importedHistoryCount} registros de historial).`;
+            const extras = [];
+            if (importedHistoryCount > 0) extras.push(`${importedHistoryCount} registros de historial`);
+            if (importedCategoriesCount > 0) extras.push(`${importedCategoriesCount} categorías`);
+            if (extras.length > 0) {
+              msg = `Base de datos importada correctamente desde Excel (${extras.join(', ')}).`;
             }
             alert(msg);
           } catch (errXls) {
@@ -3904,10 +3987,28 @@
         if (typeof JSZip !== 'undefined') {
           const reader = new FileReader();
           reader.onload = function(evt) {
-            JSZip.loadAsync(evt.target.result).then(zip => {
+            JSZip.loadAsync(evt.target.result).then(async zip => {
               const excelFileEntry = Object.keys(zip.files).find(n => n.startsWith('Movimientos_Clasificados_') && n.endsWith('.xlsx'));
               const jsonFileEntry = Object.keys(zip.files).find(n => n.startsWith('finanzas_db_') && n.endsWith('.json'));
               const historyFileEntry = Object.keys(zip.files).find(n => n.startsWith('historial_importaciones_') && n.endsWith('.json'));
+              const catFileEntry = Object.keys(zip.files).find(n => 
+                (n.toLowerCase().includes('categoria') || n.toLowerCase().includes('categoría')) && n.endsWith('.json')
+              );
+
+              let importedCategoriesCount = 0;
+              if (catFileEntry) {
+                try {
+                  const catText = await zip.files[catFileEntry].async('string');
+                  const parsedCats = JSON.parse(catText);
+                  if (parsedCats && typeof parsedCats === 'object' && !Array.isArray(parsedCats)) {
+                    CATEGORIAS_ESTRUCTURA = normalizarCategorias(parsedCats);
+                    guardarCategorias();
+                    importedCategoriesCount = Object.keys(CATEGORIAS_ESTRUCTURA).length;
+                  }
+                } catch (eCat) {
+                  console.error("Error importando categorías desde ZIP:", eCat);
+                }
+              }
 
               if (excelFileEntry) {
                 zip.files[excelFileEntry].async('uint8array').then(excelBytes => {
@@ -3963,8 +4064,41 @@
                       }
                     }
 
+                    if (importedCategoriesCount === 0) {
+                      let sheetCategoriasName = workbook.SheetNames.find(n => 
+                        n.toLowerCase().includes('categoria') || 
+                        n.toLowerCase().includes('categoría')
+                      );
+                      if (sheetCategoriasName && workbook.Sheets[sheetCategoriasName]) {
+                        const worksheetCats = workbook.Sheets[sheetCategoriasName];
+                        const catSheetRows = XLSX.utils.sheet_to_json(worksheetCats, { raw: false });
+                        if (Array.isArray(catSheetRows) && catSheetRows.length > 0) {
+                          const parsedCats = {};
+                          catSheetRows.forEach(r => {
+                            const c1 = String(leerCampoFlexible(r, ['Categoría 1', 'Categoria 1', 'Cat1', 'categoria1', 'Categoria']) || '').trim();
+                            const c2 = String(leerCampoFlexible(r, ['Categoría 2', 'Categoria 2', 'Cat2', 'categoria2', 'Subcategoria', 'Subcategoría']) || '').trim();
+                            if (c1) {
+                              const c1Norm = normalizarCat1(c1);
+                              if (!parsedCats[c1Norm]) parsedCats[c1Norm] = [];
+                              if (c2 && !parsedCats[c1Norm].includes(c2)) {
+                                parsedCats[c1Norm].push(c2);
+                              }
+                            }
+                          });
+                          if (Object.keys(parsedCats).length > 0) {
+                            CATEGORIAS_ESTRUCTURA = normalizarCategorias(parsedCats);
+                            guardarCategorias();
+                            importedCategoriesCount = Object.keys(CATEGORIAS_ESTRUCTURA).length;
+                          }
+                        }
+                      }
+                    }
+
                     processCsvResults({ data: movRows }, false, { fileName: file.name, origen: 'Importación BD (ZIP/Excel)' }, true, { skipHistoryRegistration: true });
-                    alert("Base de datos e histórico importados correctamente desde ZIP.");
+                    const extraMsgs = [];
+                    if (importedHistoryCount > 0) extraMsgs.push(`${importedHistoryCount} registros de historial`);
+                    if (importedCategoriesCount > 0) extraMsgs.push(`${importedCategoriesCount} categorías`);
+                    alert(`Base de datos importada correctamente desde ZIP${extraMsgs.length ? ` (${extraMsgs.join(', ')})` : ''}.`);
                   } catch (e) {
                     alert("Error al procesar el Excel dentro del ZIP.");
                   }
@@ -3984,8 +4118,17 @@
                       });
                       saveData();
 
+                      const notifyComplete = (importedHistoryCount = 0) => {
+                        renderAll();
+                        const extraMsgs = [];
+                        if (importedHistoryCount > 0) extraMsgs.push(`${importedHistoryCount} registros de historial`);
+                        if (importedCategoriesCount > 0) extraMsgs.push(`${importedCategoriesCount} categorías`);
+                        alert(`Base de datos importada correctamente desde ZIP${extraMsgs.length ? ` (${extraMsgs.join(', ')})` : ''}.`);
+                      };
+
                       if (historyFileEntry) {
                         zip.files[historyFileEntry].async('string').then(histText => {
+                          let count = 0;
                           try {
                             const parsedH = JSON.parse(histText);
                             if (Array.isArray(parsedH)) {
@@ -4001,14 +4144,13 @@
                                 duplicados: typeof h.duplicados === 'number' ? h.duplicados : 0
                               }));
                               guardarHistorialImportaciones();
+                              count = importHistory.length;
                             }
                           } catch(e){}
-                          renderAll();
-                          alert("Base de datos e histórico importados correctamente desde ZIP.");
+                          notifyComplete(count);
                         });
                       } else {
-                        renderAll();
-                        alert("Base de datos importada correctamente desde ZIP.");
+                        notifyComplete(0);
                       }
                     }
                   } catch(e) {
@@ -4044,6 +4186,8 @@
               renderAll();
               alert("Base de datos importada correctamente.");
             } else if (importedData && typeof importedData === 'object') {
+              let hasImportedSomething = false;
+              let parts = [];
               if (Array.isArray(importedData.moveData)) {
                 moveData = importedData.moveData;
                 selectedMovIds.clear();
@@ -4054,6 +4198,8 @@
                   m.modificado = false;
                 });
                 saveData();
+                hasImportedSomething = true;
+                parts.push("base de datos");
               }
               if (Array.isArray(importedData.importHistory)) {
                 importHistory = importedData.importHistory.map(h => ({
@@ -4068,9 +4214,28 @@
                   duplicados: typeof h.duplicados === 'number' ? h.duplicados : 0
                 }));
                 guardarHistorialImportaciones();
+                hasImportedSomething = true;
+                parts.push("historial");
               }
-              renderAll();
-              alert("Base de datos e historial importados correctamente.");
+              const cats = importedData.categorias || importedData.CATEGORIAS_ESTRUCTURA;
+              if (cats && typeof cats === 'object' && !Array.isArray(cats)) {
+                CATEGORIAS_ESTRUCTURA = normalizarCategorias(cats);
+                guardarCategorias();
+                hasImportedSomething = true;
+                parts.push("categorías");
+              }
+              if (!hasImportedSomething && Object.keys(importedData).length > 0 && Object.values(importedData).every(v => Array.isArray(v))) {
+                CATEGORIAS_ESTRUCTURA = normalizarCategorias(importedData);
+                guardarCategorias();
+                hasImportedSomething = true;
+                parts.push("categorías");
+              }
+              if (hasImportedSomething) {
+                renderAll();
+                alert(`Importación completada correctamente (${parts.join(', ')}).`);
+              } else {
+                alert("Formato de JSON inválido.");
+              }
             } else {
               alert("Formato de JSON inválido.");
             }
