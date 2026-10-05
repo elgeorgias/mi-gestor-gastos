@@ -13,7 +13,8 @@
   "Transfer": [
     "Gastos",
     "Ingresos",
-    "Entre cuentas"
+    "Entre cuentas",
+    "Bizum"
   ],
   "Vivienda": [
     "Comunidad",
@@ -21,7 +22,8 @@
     "Agua / Internet",
     "Alquiler",
     "Hipoteca",
-    "Impuestos/Ibi"
+    "Impuestos/Ibi",
+    "Limpieza"
   ],
   "Seguros y Servicios": [
     "Seguro Hogar",
@@ -43,7 +45,9 @@
     "Hotel / Apartamento",
     "Viajes / Turismo",
     "Entretenimiento",
-    "Trabajo"
+    "Trabajo",
+    "Cumples/regalos",
+    "Formacion"
   ],
   "Suscripciones": [
     "Plataformas TV / Música",
@@ -59,7 +63,9 @@
   ],
   "Otros": [
     "General / Varios",
-    "NA"
+    "NA",
+    "Estudios/Cole",
+    "Pelu/Belleza"
   ],
   "Salud": [
     "General / Varios",

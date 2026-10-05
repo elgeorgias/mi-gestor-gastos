@@ -3767,7 +3767,6 @@
           zip.file(`Movimientos_Clasificados_${ts}.csv`, csvContent);
           zip.file(`finanzas_db_${ts}.json`, jsonContent);
           zip.file(`categorias_${ts}.json`, JSON.stringify(CATEGORIAS_ESTRUCTURA, null, 2));
-          zip.file(`estructura_categorias.json`, JSON.stringify(CATEGORIAS_ESTRUCTURA, null, 2));
           if (importHistory && importHistory.length > 0) {
             const cleanHistory = importHistory.map(h => ({
               id: h.id,

@@ -10,11 +10,17 @@ A responsive Progressive Web App (PWA) optimized for both PC and mobile devices,
 - **Customizable Movements:**
   - Editable **Applicable Date** for accrual accounting.
   - Custom **Notes** field for each movement that persists across sessions and exports.
-- **2-Level Categorization:**
-  - **Main Categories:** Compras, Alimentación, Vivienda, Seguros y Servicios, Transporte, Inversiones, Actividades y Ocio, Suscripciones, Ingresos, Transfer/Traspasos, Otros.
-  - **Sub-categories:** E.g., Compras (Ropa, Electrónica, Otros), Transfer/Traspasos (Gastos, Ingresos, Entre cuentas).
-- **Interactive Reports:** Visual insights powered by Chart.js and detailed category breakdown tables.
-- **Advanced Export:** Export your classified movements in a single compressed ZIP package containing Excel (`.xlsx` with multiple sheets), CSV, and JSON database backup.
+- **2-Level Categorization & Smart Computability:**
+  - **Main Categories:** Compras, Alimentación, Vivienda, Seguros y Servicios, Transporte, Inversiones y Ahorro, Actividades y Ocio, Suscripciones, Ingresos, Transfer, Otros, Salud.
+  - **Sub-categories:** E.g., Compras (Ropa, Electrónica, Otros), Transfer (Gastos, Ingresos, Entre cuentas).
+  - **Transfer Computability:** Within `Transfer`, only `Entre cuentas` is marked as non-computable (displayed in grey as neutral internal transfers). Subcategories such as `Gastos` and `Ingresos` are fully computable, color-coded accordingly, and included in the balance and visual charts.
+- **Interactive Reports:** Visual insights powered by Chart.js and detailed category breakdown tables with distinct color coding (including custom purple tones for transfers).
+- **Advanced Export & Full Backup:**
+  - Export your database in a compressed ZIP package containing:
+    - Multi-sheet Excel workbook (`.xlsx`) with `Movimientos`, `Últimos Movimientos`, `Historial Importaciones`, `Categorías`, and `Info App`.
+    - CSV (`Movimientos_Clasificados.csv`) with UTF-8 BOM.
+    - JSON database backup (`finanzas_db.json`), categories structure (`categorias.json`), import history, and app metadata.
+- **Comprehensive Database Import:** Import database backups from `.xlsx`, `.xls`, `.zip`, `.json`, or `.csv` files. The category structure is automatically restored and persisted in `localStorage`.
 
 ## 🛠 Tech Stack
 
@@ -23,8 +29,8 @@ A responsive Progressive Web App (PWA) optimized for both PC and mobile devices,
 - **Libraries (via CDN):**
   - [Chart.js](https://www.chartjs.org/) - For interactive charts.
   - [PapaParse](https://www.papaparse.com/) - For robust CSV parsing.
-  - [SheetJS (xlsx)](https://sheetjs.com/) - For Excel file generation.
-  - [JSZip](https://stuk.github.io/jszip/) - For zip archive packaging.
+  - [SheetJS (xlsx)](https://sheetjs.com/) - For Excel file generation and parsing.
+  - [JSZip](https://stuk.github.io/jszip/) - For zip archive packaging and extraction.
 - **Storage:** Browser `localStorage`.
 
 ## 🚀 Getting Started
@@ -48,10 +54,12 @@ A responsive Progressive Web App (PWA) optimized for both PC and mobile devices,
 
 - `index.html`: The main entry point containing the UI, CSS styles, and application logic.
 - `CHANGELOG.md`: Record of all notable changes and version releases.
+- `MEMORY.md`: Detailed technical specification and system operational reference.
 - `categorias/`: Configuration files for the categorization engine.
-  - `estructura_categorias.json`: Current active category structure.
+  - `estructura_categorias.json`: Current active canonical category structure.
 - `exports-app/`: (Symlinked/Local) Recommended directory for saving your exported CSV/Excel files and database backups.
 - `manifest.json` (inline): Basic PWA configuration for "Add to Home Screen" support.
+- `.junie/AGENTS.md`: Developer guidelines, testing instructions, and codebase conventions.
 
 ## 📝 Scripts & Development
 - **Changelog:** All updates, new features, and fixes are tracked in [CHANGELOG.md](CHANGELOG.md) following Keep a Changelog conventions.
