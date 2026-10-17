@@ -1232,6 +1232,13 @@
       localStorage.setItem('finanzas_pwa_categorias', JSON.stringify(CATEGORIAS_ESTRUCTURA));
       CAT1_LISTA = Object.keys(CATEGORIAS_ESTRUCTURA);
       renderCatEditor();
+      const cat1Select = document.getElementById('filterCat1');
+      if (cat1Select) {
+        const curCat1 = cat1Select.value || 'todos';
+        cat1Select.innerHTML = crearOpcionesCat1(curCat1, 'Todas');
+        cat1Select.value = curCat1;
+        updateCat2FilterOptions();
+      }
       if (moveData.length > 0) renderAll();
     }
 
@@ -1259,12 +1266,14 @@
       const grupos = Object.fromEntries(GRUPOS_CATEGORIAS.map(grupo => [grupo, []]));
       categorias.forEach(cat1 => grupos[grupoDeCat1(cat1)].push(cat1));
 
-      let html = etiquetaTodos ? `<option value="${etiquetaTodos === 'Todas' ? 'todos' : ''}">${etiquetaTodos}</option>` : '';
+      const valorTodos = etiquetaTodos === 'Todas' ? 'todos' : '';
+      const esTodosSeleccionado = Boolean(etiquetaTodos && (valorSeleccionado === valorTodos || valorSeleccionado === 'todos' || !valorSeleccionado));
+      let html = etiquetaTodos ? `<option value="${valorTodos}" ${esTodosSeleccionado ? 'selected' : ''}>${etiquetaTodos}</option>` : '';
       GRUPOS_CATEGORIAS.forEach(grupo => {
         if (!grupos[grupo].length) return;
-        html += `<optgroup label="${grupo}">${grupos[grupo].map(cat1 => `<option value="${escaparHtml(cat1)}" ${valorSeleccionado === cat1 ? 'selected' : ''}>${escaparHtml(cat1)}</option>`).join('')}</optgroup>`;
+        html += `<optgroup label="${grupo}">${grupos[grupo].map(cat1 => `<option value="${escaparHtml(cat1)}" ${(!esTodosSeleccionado && valorSeleccionado === cat1) ? 'selected' : ''}>${escaparHtml(cat1)}</option>`).join('')}</optgroup>`;
       });
-      if (valorSeleccionado && !categorias.includes(valorSeleccionado)) {
+      if (valorSeleccionado && valorSeleccionado !== 'todos' && valorSeleccionado !== valorTodos && !categorias.includes(valorSeleccionado)) {
         html += `<optgroup label="No disponibles"><option value="${escaparHtml(valorSeleccionado)}" selected>${escaparHtml(valorSeleccionado)} (Eliminada)</option></optgroup>`;
       }
       return html;
@@ -1272,14 +1281,16 @@
 
     function crearOpcionesCat2(cat1Seleccionada = '', valorSeleccionado = '', etiquetaTodos = '') {
       const categorias = cat1Seleccionada ? [cat1Seleccionada] : ordenarCategorias(Object.keys(CATEGORIAS_ESTRUCTURA));
-      let html = etiquetaTodos ? `<option value="${etiquetaTodos === 'Todas' ? 'todos' : ''}">${etiquetaTodos}</option>` : '';
+      const valorTodos = etiquetaTodos === 'Todas' ? 'todos' : '';
+      const esTodosSeleccionado = Boolean(etiquetaTodos && (valorSeleccionado === valorTodos || valorSeleccionado === 'todos' || !valorSeleccionado));
+      let html = etiquetaTodos ? `<option value="${valorTodos}" ${esTodosSeleccionado ? 'selected' : ''}>${etiquetaTodos}</option>` : '';
       categorias.forEach(cat1 => {
         const cat2 = ordenarCategorias(CATEGORIAS_ESTRUCTURA[cat1] || []);
         if (!cat2.length) return;
-        html += `<optgroup label="${escaparHtml(cat1)}">${cat2.map(categoria => `<option value="${escaparHtml(categoria)}" ${valorSeleccionado === categoria ? 'selected' : ''}>${escaparHtml(categoria)}</option>`).join('')}</optgroup>`;
+        html += `<optgroup label="${escaparHtml(cat1)}">${cat2.map(categoria => `<option value="${escaparHtml(categoria)}" ${(!esTodosSeleccionado && valorSeleccionado === categoria) ? 'selected' : ''}>${escaparHtml(categoria)}</option>`).join('')}</optgroup>`;
       });
       const cat2Disponibles = categorias.flatMap(cat1 => CATEGORIAS_ESTRUCTURA[cat1] || []);
-      if (valorSeleccionado && !cat2Disponibles.includes(valorSeleccionado)) {
+      if (valorSeleccionado && valorSeleccionado !== 'todos' && valorSeleccionado !== valorTodos && !cat2Disponibles.includes(valorSeleccionado)) {
         html += `<optgroup label="No disponibles"><option value="${escaparHtml(valorSeleccionado)}" selected>${escaparHtml(valorSeleccionado)} (Eliminada)</option></optgroup>`;
       }
       return html;
@@ -1466,10 +1477,19 @@
           mm = parts[1].padStart(2, '0');
           dd = parts[2].padStart(2, '0');
         } else {
-          // DD/MM/YYYY
-          dd = parts[0].padStart(2, '0');
-          mm = parts[1].padStart(2, '0');
-          yyyy = parts[2];
+          let p0 = Number(parts[0]);
+          let p1 = Number(parts[1]);
+          let p2 = parts[2];
+          yyyy = p2.length === 2 ? '20' + p2 : p2;
+          if (p1 > 12 && p0 <= 12) {
+            // Formato M/D/YYYY o M/D/YY
+            mm = parts[0].padStart(2, '0');
+            dd = parts[1].padStart(2, '0');
+          } else {
+            // Formato DD/MM/YYYY o DD/MM/YY
+            dd = parts[0].padStart(2, '0');
+            mm = parts[1].padStart(2, '0');
+          }
         }
         return `${yyyy}-${mm}-${dd}`;
       }
@@ -1618,10 +1638,10 @@
         }
       }
 
-      const workbook = XLSX.read(bytes, { type: 'array' });
+      const workbook = XLSX.read(bytes, { type: 'array', dateNF: 'yyyy-mm-dd' });
       const firstSheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[firstSheetName];
-      return XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false });
+      return XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false, dateNF: 'yyyy-mm-dd' });
     }
 
     // Procesar archivo Pluxee (CSV/XLSX)
@@ -1679,8 +1699,8 @@
         dueno: 'Belén',
         origen: 'Bankinter',
         fileName: file.name,
-        fecha: ['Fecha contable', 'Fecha valor', 'FECHA CONTABLE', 'FECHA VALOR'],
-        concepto: ['Descripción', 'DESCRIPCIÓN', 'DESCRIPCION'],
+        fecha: ['Fecha contable', 'Fecha valor', 'FECHA CONTABLE', 'FECHA VALOR', 'Fecha', 'FECHA'],
+        concepto: ['Descripción', 'DESCRIPCIÓN', 'DESCRIPCION', 'Comercio/Cajero', 'COMERCIO/CAJERO', 'Comercio', 'Cajero', 'Concepto'],
         importe: ['Importe', 'IMPORTE']
       };
 
@@ -1784,7 +1804,7 @@
           c.includes('fecha') || c.includes('foperativa') || c.includes('fvalor') || c.includes('f.operativa') || c.includes('f.valor')
         );
         const tieneConcepto = cabeceras.some(c => 
-          c.includes('concepto') || c.includes('movimiento') || c.includes('descripcion') || c.includes('detalle')
+          c.includes('concepto') || c.includes('movimiento') || c.includes('descripcion') || c.includes('detalle') || c.includes('comercio') || c.includes('cajero')
         );
         const tieneImporte = cabeceras.some(c => 
           c.includes('importe') || c.includes('cantidad')
@@ -1812,16 +1832,20 @@
         if (c.includes('DIV.') || c.includes('DIVIDENDO') || c.includes('INTERES')) return { cat1: 'Ingresos', cat2: 'Dividendo / Intereses' };
         return { cat1: 'Ingresos', cat2: 'Otros Ingresos' };
       }
-      if (c.includes('ZARA') || c.includes('MANGO') || c.includes('PULL') || c.includes('CORTE INGLES')) return { cat1: 'Compras', cat2: 'Ropa' };
+      if (c.includes('FARMACIA')) return { cat1: 'Salud', cat2: 'Farmacia' };
+      if (c.includes('ZARA') || c.includes('MANGO') || c.includes('PULL') || c.includes('CORTE INGLES') || c.includes('JD SPAIN')) return { cat1: 'Compras', cat2: 'Ropa' };
       if (c.includes('AMAZON') || c.includes('MEDIA MARKT') || c.includes('APPLE') || c.includes('FNAC')) return { cat1: 'Compras', cat2: 'Electrónica' };
       if (c.includes('TGTG') || c.includes('TOO GOOD TO GO')) return { cat1: CAT1_ALIMENTACION, cat2: 'Comida a domicilio' };
-      if (c.includes('SUPERMERC') || c.includes('MERCADONA') || c.includes('CARREFOUR') || c.includes('LIDL') || c.includes('ALDI')) return { cat1: CAT1_ALIMENTACION, cat2: 'Supermercado' };
-      if (c.includes('BAR') || c.includes('RESTAURANTE') || c.includes('DEHESA') || c.includes('CAFETERIA')) return { cat1: CAT1_ALIMENTACION, cat2: 'Restaurante' };
+      if (c.includes('SUPERMERC') || c.includes('MERCADONA') || c.includes('CARREFOUR') || c.includes('LIDL') || c.includes('ALDI') || c.includes('AHORRAMAS')) return { cat1: CAT1_ALIMENTACION, cat2: 'Supermercado' };
+      if (c.includes('BAR') || c.includes('RESTAURANTE') || c.includes('DEHESA') || c.includes('CAFETERIA') || c.includes('RODILLA') || c.includes('TABERNA')) return { cat1: CAT1_ALIMENTACION, cat2: 'Restaurante' };
       if (c.includes('SEGURO HOGAR')) return { cat1: 'Seguros y Servicios', cat2: 'Seguro Hogar' };
       if (c.includes('SEGURO VIDA') || c.includes('SEGURO')) return { cat1: 'Seguros y Servicios', cat2: 'Seguro Vida / Salud' };
       if (c.includes('CUSTODIA') || c.includes('COMISION')) return { cat1: 'Seguros y Servicios', cat2: 'Comisiones / Servicios' };
       if (c.includes('INDEXA') || c.includes('FONDOS') || c.includes('INVERSION')) return { cat1: 'Inversiones y Ahorro', cat2: 'Fondos / Acciones' };
-      if (c.includes('FREE2MOVE') || c.includes('MOVILIDAD') || c.includes('GASOLINERA')) return { cat1: 'Transporte', cat2: 'Transporte Público / Taxi' };
+      if (c.includes('GASOLINERA') || c.includes('REPSOL') || c.includes('CEPSA') || c.includes('BP ') || c.includes('E.S. ') || c.includes('WAYLET')) return { cat1: 'Transporte', cat2: 'Gasolina / Combustible' };
+      if (c.includes('FREE2MOVE') || c.includes('MOVILIDAD') || c.includes('UBER') || c.includes('CABIFY') || c.includes('TAXI')) return { cat1: 'Transporte', cat2: 'Transporte Público / Taxi' };
+      if (c.includes('SPORTS CLUB') || c.includes('GIMNASIO')) return { cat1: 'Actividades y Ocio', cat2: 'Deportes / Club' };
+      if (c.includes('ESTILISTAS') || c.includes('PELUQUERIA') || c.includes('SUNDARA')) return { cat1: 'Otros', cat2: 'Pelu/Belleza' };
       if (c.includes('ALQUILER') || c.includes('HIPOTECA') || c.includes('COMUNIDAD')) return { cat1: 'Vivienda', cat2: 'Alquiler / Hipoteca' };
       if (c.includes('IBERDROLA') || c.includes('ENDESA') || c.includes('ORANGE') || c.includes('MOVISTAR') || c.includes('AGUA')) return { cat1: 'Vivienda', cat2: 'Electricidad / Gas' };
 
@@ -2024,9 +2048,24 @@
     function updateCat2FilterOptions() {
       const cat1Select = document.getElementById('filterCat1');
       const cat2Select = document.getElementById('filterCat2');
-      const selectedCat1 = cat1Select.value;
-      const selectedCat2 = cat2Select.value;
+      if (!cat1Select || !cat2Select) return;
+      const selectedCat1 = cat1Select.value || 'todos';
+      let selectedCat2 = cat2Select.value || 'todos';
+
+      if (selectedCat1 && selectedCat1 !== 'todos') {
+        const subcats = CATEGORIAS_ESTRUCTURA[selectedCat1] || [];
+        if (selectedCat2 !== 'todos' && !subcats.includes(selectedCat2)) {
+          selectedCat2 = 'todos';
+        }
+      } else if (!selectedCat1 || selectedCat1 === 'todos') {
+        const allSubcats = Object.values(CATEGORIAS_ESTRUCTURA).flat();
+        if (selectedCat2 !== 'todos' && !allSubcats.includes(selectedCat2)) {
+          selectedCat2 = 'todos';
+        }
+      }
+
       cat2Select.innerHTML = crearOpcionesCat2(selectedCat1 === 'todos' ? '' : selectedCat1, selectedCat2, 'Todas');
+      cat2Select.value = selectedCat2 || 'todos';
     }
 
     window.addEventListener('DOMContentLoaded', async () => {
@@ -2034,7 +2073,10 @@
       cargarHistorialImportaciones();
       const cat1Select = document.getElementById('filterCat1');
       cat1Select.innerHTML = crearOpcionesCat1('todos', 'Todas');
+      cat1Select.value = 'todos';
       updateCat2FilterOptions();
+      const cat2Select = document.getElementById('filterCat2');
+      if (cat2Select) cat2Select.value = 'todos';
       syncTableFilterOptions();
       updateFilterIndicators();
       const saved = localStorage.getItem('finanzas_pwa_data_v4'); // V4 por la migración de Dueño
@@ -3161,9 +3203,17 @@
       const cat2Select = document.getElementById('tableFilterCat2');
       if (!cat1Select || !cat2Select) return;
       const selectedCat1 = cat1Select.value;
-      const selectedCat2 = cat2Select.value;
+      let selectedCat2 = cat2Select.value;
+      if (selectedCat1) {
+        const subcats = CATEGORIAS_ESTRUCTURA[selectedCat1] || [];
+        if (selectedCat2 && !subcats.includes(selectedCat2)) {
+          selectedCat2 = '';
+        }
+      }
       cat1Select.innerHTML = crearOpcionesCat1(selectedCat1, 'Todos');
       cat2Select.innerHTML = crearOpcionesCat2(selectedCat1, selectedCat2, 'Todos');
+      if (selectedCat1) cat1Select.value = selectedCat1;
+      if (selectedCat2) cat2Select.value = selectedCat2;
     }
 
     function getTipoGeneralFromCat1(cat1) {
